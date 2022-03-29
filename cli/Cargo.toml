@@ -1,0 +1,20 @@
+[package]
+name = "vault-cli"
+version = "0.3.1"
+edition = "2018"
+
+[features]
+devnet = []
+
+[dependencies]
+anchor-lang = {version = "0.22.1"}
+anchor-spl = {version = "0.22.1"}
+anchor-client = {version = "0.22.1"}
+anyhow = "1.0"
+clap = {version = "3.0.10", features=["derive"]}
+mercurial-vault = { path = "../programs/vault"}
+solana-program = "1.8.16"
+solana-sdk = "1.8.16"
+spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
+shellexpand = "2.1.0"
+spl-associated-token-account = { version = "1.0.2", features = ["no-entrypoint"] }
