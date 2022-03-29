@@ -23,20 +23,8 @@ OPTIONS:
         --provider.wallet <WALLET>            Wallet override
 
 SUBCOMMANDS:
-    claim-rewards        
-    deposit              
-    deposit-strategy     
-    disable-strategy     
-    enable-strategy      
-    enable-vault         
-    help                 Print this message or the help of the given subcommand(s)
-    init-vault           
-    set-operator         
-    set-strategy         
-    show                 
-    transfer-admin       
-    view-port-finance    
-    view-solend          
-    withdraw             
-    withdraw-strategy  
+    deposit     
+    help        Print this message or the help of the given subcommand(s)
+    show        
+    withdraw    
 ```
