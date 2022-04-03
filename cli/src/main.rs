@@ -14,8 +14,6 @@ use user::*;
 use std::rc::Rc;
 use std::str::FromStr;
 
-const BASE_KEY: &str = "HWzXGcGHy4tcpYfaRDCyLNzXqBTv3E6BttpCH2vJxArv";
-
 #[derive(Default, Debug, Parser)]
 pub struct ConfigOverride {
     /// Cluster override.
@@ -93,7 +91,7 @@ fn main() -> Result<()> {
 
     let base = match opts.cfg_override.base {
         Some(base) => Pubkey::from_str(&base).unwrap(),
-        None => Pubkey::from_str(BASE_KEY).unwrap(),
+        None => get_base_key().unwrap(),
     };
 
     let (vault, _) = Pubkey::find_program_address(
