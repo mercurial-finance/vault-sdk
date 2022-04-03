@@ -9,13 +9,13 @@ use spl_associated_token_account;
 pub fn deposit(
     program_client: &anchor_client::Program,
     token_mint: Pubkey,
-    admin: Pubkey,
+    base: Pubkey,
     token_amount: u64,
 ) -> Result<()> {
     println!("deposit {}", token_amount);
 
     let (vault, _vault_bump) = Pubkey::find_program_address(
-        &[b"vault".as_ref(), token_mint.as_ref(), admin.as_ref()],
+        &[b"vault".as_ref(), token_mint.as_ref(), base.as_ref()],
         &program_client.id(),
     );
 
@@ -55,13 +55,13 @@ pub fn deposit(
 pub fn withdraw(
     program_client: &anchor_client::Program,
     token_mint: Pubkey,
-    admin: Pubkey,
+    base: Pubkey,
     unmint_amount: u64,
 ) -> Result<()> {
     println!("withdraw {} lp token", unmint_amount);
 
     let (vault, _vault_bump) = Pubkey::find_program_address(
-        &[b"vault".as_ref(), token_mint.as_ref(), admin.as_ref()],
+        &[b"vault".as_ref(), token_mint.as_ref(), base.as_ref()],
         &program_client.id(),
     );
 

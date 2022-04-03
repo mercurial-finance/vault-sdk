@@ -5,8 +5,18 @@ pub mod strategy;
 use crate::strategy::base::StrategyType;
 use anchor_lang::prelude::*;
 use context::*;
+use std::str::FromStr;
 
 declare_id!("24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi");
+
+// get vault address from base key and token mint
+// let (vault, _vault_bump) = Pubkey::find_program_address(
+//     &[b"vault".as_ref(), token_mint.as_ref(), get_base_key().as_ref()],
+//     &program_client.id(),
+// );
+pub fn get_base_key() -> Pubkey {
+    Pubkey::from_str("HWzXGcGHy4tcpYfaRDCyLNzXqBTv3E6BttpCH2vJxArv").unwrap()
+}
 
 #[program]
 pub mod vault {
@@ -24,7 +34,7 @@ pub mod vault {
         ctx: Context<DepositWithdrawLiquidity>,
         unmint_amount: u64,
         min_out_amount: u64,
-    ) -> Result<()> {      
+    ) -> Result<()> {
         Ok(())
     }
 
