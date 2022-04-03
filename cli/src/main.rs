@@ -4,10 +4,10 @@ use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_client::Client;
 use anchor_client::Cluster;
 use anyhow::{Error, Result};
+use clap::Parser;
+use mercurial_vault::get_base_key;
 use mercurial_vault::strategy::base::StrategyType;
 use solana_sdk::signature::{read_keypair_file, Keypair};
-
-use clap::Parser;
 
 use user::*;
 
@@ -91,7 +91,7 @@ fn main() -> Result<()> {
 
     let base = match opts.cfg_override.base {
         Some(base) => Pubkey::from_str(&base).unwrap(),
-        None => get_base_key().unwrap(),
+        None => get_base_key(),
     };
 
     let (vault, _) = Pubkey::find_program_address(
