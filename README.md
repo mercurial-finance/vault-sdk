@@ -1,6 +1,6 @@
 # mercurial_sdk
 
-States and Instructions for Interacting with MerV2 Program
+States and Instructions for Interacting with Mercurial Vault Program
 
 ## Program ID:
 
