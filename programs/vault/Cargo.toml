@@ -22,4 +22,4 @@ serde = { version = "1.0.136"}
 anchor-lang = "0.24.2"
 anchor-spl = "0.24.2" 
 solana-program = "1.9.17"
-spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
+spl-token = { version = "3.2", features = ["no-entrypoint"] }

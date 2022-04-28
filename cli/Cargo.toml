@@ -15,6 +15,6 @@ clap = {version = "3.0.10", features=["derive"]}
 mercurial-vault = { path = "../programs/vault"}
 solana-program = "1.9.17"
 solana-sdk = "1.9.17"
-spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
+spl-token = { version = "3.2", features = ["no-entrypoint"] }
 shellexpand = "2.1.0"
 spl-associated-token-account = { version = "1.0.2", features = ["no-entrypoint"] }
