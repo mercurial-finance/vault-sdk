@@ -1,5 +1,5 @@
 {
-  "version": "0.3.1",
+  "version": "0.4.0",
   "name": "vault",
   "instructions": [
     {
@@ -234,6 +234,12 @@
           {
             "name": "operator",
             "type": "publicKey"
+          },
+          {
+            "name": "lockedProfitTracker",
+            "type": {
+              "defined": "LockedProfitTracker"
+            }
           }
         ]
       }
@@ -316,6 +322,26 @@
                 10
               ]
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "LockedProfitTracker",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lastUpdatedLockedProfit",
+            "type": "u64"
+          },
+          {
+            "name": "lastReport",
+            "type": "u64"
+          },
+          {
+            "name": "lockedProfitDegradation",
+            "type": "u64"
           }
         ]
       }
@@ -442,6 +468,31 @@
           "index": false
         }
       ]
+    },
+    {
+      "name": "ReportLoss",
+      "fields": [
+        {
+          "name": "strategy",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "loss",
+          "type": "u64",
+          "index": false
+        }
+      ]
+    },
+    {
+      "name": "TotalAmount",
+      "fields": [
+        {
+          "name": "totalAmount",
+          "type": "u64",
+          "index": false
+        }
+      ]
     }
   ],
   "errors": [
@@ -469,6 +520,21 @@
       "code": 6004,
       "name": "MathOverflow",
       "msg": "Math operation overflow"
+    },
+    {
+      "code": 6005,
+      "name": "ProtocolIsNotSupported",
+      "msg": "Protocol is not supported"
+    },
+    {
+      "code": 6006,
+      "name": "UnMatchReserve",
+      "msg": "Reserve does not support token mint"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidLockedProfitDegradation",
+      "msg": "lockedProfitDegradation is invalid"
     }
   ]
 }
