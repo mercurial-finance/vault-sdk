@@ -29,36 +29,31 @@ pub struct Vault {
 
 impl Vault {
     pub fn get_amount_by_share(&self, share: u64, total_supply: u64) -> Option<u64> {
-        return u64::try_from(
+        u64::try_from(
             u128::from(share)
                 .checked_mul(u128::from(self.total_amount))?
                 .checked_div(u128::from(total_supply))?,
         )
-        .ok();
+        .ok()
     }
 
     pub fn get_unmint_amount(&self, out_token: u64, total_supply: u64) -> Option<u64> {
-        return u64::try_from(
+        u64::try_from(
             u128::from(out_token)
                 .checked_mul(u128::from(total_supply))?
                 .checked_div(u128::from(self.total_amount))?,
         )
-        .ok();
+        .ok()
     }
 
     pub fn is_strategy_existed(&self, pubkey: Pubkey) -> bool {
-        for item in self.strategies.iter() {
-            if *item == pubkey {
-                return true;
-            }
-        }
-        return false;
+        self.strategies.iter().any(|p| *p == pubkey)
     }
 }
 
 impl Default for StrategyType {
     fn default() -> Self {
-        return StrategyType::PortFinanceWithoutLM;
+        StrategyType::PortFinanceWithoutLM
     }
 }
 

@@ -3,10 +3,9 @@ use anchor_client::solana_sdk::commitment_config::CommitmentConfig;
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_client::Client;
 use anchor_client::Cluster;
-use anyhow::{Error, Result};
+use anyhow::Result;
 use clap::Parser;
 use mercurial_vault::get_base_key;
-use mercurial_vault::strategy::base::StrategyType;
 use solana_sdk::signature::{read_keypair_file, Keypair};
 
 use user::*;
@@ -84,11 +83,6 @@ fn main() -> Result<()> {
         None => Pubkey::default(),
     };
 
-    let admin = match opts.cfg_override.admin {
-        Some(admin) => Pubkey::from_str(&admin).unwrap(),
-        None => program_client.payer().clone(),
-    };
-
     let base = match opts.cfg_override.base {
         Some(base) => Pubkey::from_str(&base).unwrap(),
         None => get_base_key(),
@@ -99,7 +93,7 @@ fn main() -> Result<()> {
         &program_id,
     );
 
-    println!("ProgramID {}", program_id.to_string());
+    println!("ProgramID {}", program_id);
     println!("TOKEN MINT {}", token_mint);
     println!("Base {}", base);
     println!("VAULT {}", vault);
@@ -135,10 +129,10 @@ fn show(program_client: &anchor_client::Program, vault: Pubkey) -> Result<()> {
     println!("TOKEN AMOUNT: {}", token_data.amount);
 
     let mut strategy_amount = 0u64;
-    for (i, &strategy_pubkey) in vault_data.strategies.iter().enumerate() {
-        if strategy_pubkey != Pubkey::default() {
+    for strategy_pubkey in vault_data.strategies.iter() {
+        if *strategy_pubkey != Pubkey::default() {
             let strategy_state: mercurial_vault::state::Strategy =
-                program_client.account(strategy_pubkey)?;
+                program_client.account(*strategy_pubkey)?;
 
             println!("STRATEGY DATA {}: {:#?}", strategy_pubkey, strategy_state);
 

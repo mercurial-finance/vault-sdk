@@ -1598,7 +1598,7 @@ dependencies = [
 
 [[package]]
 name = "mercurial-vault"
-version = "0.3.1"
+version = "0.3.3"
 dependencies = [
  "anchor-lang",
  "anchor-spl",

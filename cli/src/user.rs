@@ -4,7 +4,6 @@ use solana_program::pubkey::Pubkey;
 use solana_sdk::signature::Signer;
 use solana_sdk::signer::keypair::Keypair;
 use solana_sdk::system_instruction;
-use spl_associated_token_account;
 
 pub fn deposit(
     program_client: &anchor_client::Program,
@@ -33,9 +32,9 @@ pub fn deposit(
     let builder = program_client
         .request()
         .accounts(mercurial_vault::accounts::DepositWithdrawLiquidity {
-            vault: vault,
-            token_vault: token_vault,
-            lp_mint: lp_mint,
+            vault,
+            token_vault,
+            lp_mint,
             user_token,
             user_lp,
             user: program_client.payer(),
@@ -79,9 +78,9 @@ pub fn withdraw(
     let builder = program_client
         .request()
         .accounts(mercurial_vault::accounts::DepositWithdrawLiquidity {
-            vault: vault,
-            token_vault: token_vault,
-            lp_mint: lp_mint,
+            vault,
+            token_vault,
+            lp_mint,
             user_token,
             user_lp,
             user: program_client.payer(),
@@ -123,6 +122,7 @@ pub fn get_or_create_ata(
     Ok(user_token_account)
 }
 
+#[allow(dead_code)]
 pub fn create_mint(
     program_client: &anchor_client::Program,
     mint_keypair: &Keypair,
