@@ -65,23 +65,6 @@ impl LockedProfitTracker {
         let locked_profit = u64::try_from(locked_profit).ok()?;
         return Some(locked_profit);
     }
-
-    pub fn update_locked_profit(&mut self, gain: u64, loss: u64, current_time: u64) -> Option<()> {
-        let mut locked_profit = self.calculate_locked_profit(current_time)?;
-        if loss > 0 {
-            if loss < locked_profit {
-                locked_profit -= loss;
-            } else {
-                locked_profit = 0;
-            }
-        }
-        if gain > 0 {
-            locked_profit += gain;
-        }
-        self.last_updated_locked_profit = locked_profit;
-        self.last_report = current_time;
-        Some(())
-    }
 }
 
 impl Vault {
