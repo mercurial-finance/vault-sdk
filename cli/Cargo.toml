@@ -13,8 +13,8 @@ anchor-client = {version = "0.24.2"}
 anyhow = "1.0"
 clap = {version = "3.0.10", features=["derive"]}
 mercurial-vault = { path = "../programs/vault"}
-solana-program = "1.9.17"
-solana-sdk = "1.9.17"
+solana-program = "1.9.18"
+solana-sdk = "1.9.18"
 spl-token = { version = "3.2", features = ["no-entrypoint"] }
 shellexpand = "2.1.0"
 spl-associated-token-account = { version = "1.0.2", features = ["no-entrypoint"] }
