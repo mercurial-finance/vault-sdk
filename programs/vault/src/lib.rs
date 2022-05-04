@@ -63,6 +63,15 @@ pub enum VaultError {
 
     #[msg("Math operation overflow")]
     MathOverflow,
+
+    #[msg("Protocol is not supported")]
+    ProtocolIsNotSupported,
+
+    #[msg("Reserve does not support token mint")]
+    UnMatchReserve,
+
+    #[msg("lockedProfitDegradation is invalid")]
+    InvalidLockedProfitDegradation,
 }
 
 #[event]
@@ -99,4 +108,15 @@ pub struct StakingReward {
 #[event]
 pub struct PerformanceFee {
     pub lp_mint_more: u64,
+}
+
+#[event]
+pub struct ReportLoss {
+    pub strategy: Pubkey,
+    pub loss: u64,
+}
+
+#[event]
+pub struct TotalAmount {
+    pub total_amount: u64,
 }

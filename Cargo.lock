@@ -1598,7 +1598,7 @@ dependencies = [
 
 [[package]]
 name = "mercurial-vault"
-version = "0.3.1"
+version = "0.4.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -3470,7 +3470,7 @@ checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
 
 [[package]]
 name = "vault-cli"
-version = "0.3.1"
+version = "0.4.0"
 dependencies = [
  "anchor-client",
  "anchor-lang",
