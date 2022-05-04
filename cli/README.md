@@ -1,5 +1,5 @@
 
-# CLI for mercurial v2
+# CLI for mercurial vault
 
 ## Build
 

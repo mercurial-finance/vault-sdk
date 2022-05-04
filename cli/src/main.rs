@@ -7,6 +7,7 @@ use anyhow::Result;
 use clap::Parser;
 use mercurial_vault::get_base_key;
 use solana_sdk::signature::{read_keypair_file, Keypair};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use user::*;
 
@@ -118,9 +119,18 @@ fn show(program_client: &anchor_client::Program, vault: Pubkey) -> Result<()> {
     let vault_data: mercurial_vault::state::Vault = program_client.account(vault)?;
     println!("VAULT DATA: {:#?}", vault_data);
     let token_mint: anchor_spl::token::Mint = program_client.account(vault_data.lp_mint)?;
+
+    let start = SystemTime::now();
+    let since_the_epoch = start
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
+    let current_timestamp = since_the_epoch.as_secs();
+
     println!(
-        "TOTAL_AMOUNT: {}, lp_mint {}",
-        vault_data.total_amount, token_mint.supply
+        "TOTAL_AMOUNT: {}, TOTAL_UNLOCKED_AMOUNT: {}, lp_mint {}",
+        vault_data.total_amount,
+        vault_data.get_unlocked_amount(current_timestamp).unwrap(),
+        token_mint.supply
     );
 
     let token_data: anchor_spl::token::TokenAccount =
