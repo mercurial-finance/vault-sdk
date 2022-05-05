@@ -80,3 +80,8 @@ pub struct WithdrawDirectlyFromStrategy<'info> {
     
     pub token_program: Program<'info, Token>,
 }
+
+#[derive(Accounts)]
+pub struct GetUnlockedAmount<'info> {
+    pub vault: Box<Account<'info, Vault>>,
+}

@@ -5,6 +5,7 @@ pub mod strategy;
 use crate::strategy::base::StrategyType;
 use anchor_lang::prelude::*;
 use context::*;
+use std::convert::TryFrom;
 use std::str::FromStr;
 
 declare_id!("24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi");
@@ -43,6 +44,21 @@ pub mod vault {
         unmint_amount: u64,
         min_out_amount: u64,
     ) -> Result<()> {
+        Ok(())
+    }
+
+    // simulate function to get unlocked amount
+    pub fn get_unlocked_amount(ctx: Context<GetUnlockedAmount>) -> Result<()> {
+        let vault = &ctx.accounts.vault;
+        let current_time = u64::try_from(Clock::get()?.unix_timestamp)
+            .ok()
+            .ok_or(VaultError::MathOverflow)?;
+        let total_amount = vault
+            .get_unlocked_amount(current_time)
+            .ok_or(VaultError::MathOverflow)?;
+
+        emit!(TotalAmount { total_amount });
+
         Ok(())
     }
 }
