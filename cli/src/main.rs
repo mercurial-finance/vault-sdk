@@ -1,4 +1,5 @@
 mod user;
+mod utils;
 use anchor_client::solana_sdk::commitment_config::CommitmentConfig;
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_client::Client;
@@ -11,6 +12,7 @@ use solana_sdk::signature::{read_keypair_file, Keypair};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use user::*;
+use utils::*;
 
 use std::rc::Rc;
 use std::str::FromStr;
@@ -42,6 +44,7 @@ pub struct ConfigOverride {
 #[derive(Debug, Parser)]
 pub enum Command {
     Show {},
+    GetUnlockedAmount {},
     #[clap(flatten)]
     User(UserCommand),
 }
@@ -71,7 +74,11 @@ fn main() -> Result<()> {
         None => Cluster::Localnet,
     };
 
-    let client = Client::new_with_options(url, Rc::new(payer), CommitmentConfig::processed());
+    let client = Client::new_with_options(
+        url,
+        Rc::new(Keypair::from_bytes(&payer.to_bytes())?),
+        CommitmentConfig::processed(),
+    );
 
     let program_id = match opts.cfg_override.program_id {
         Some(program_id) => Pubkey::from_str(&program_id).unwrap(),
@@ -108,6 +115,7 @@ fn main() -> Result<()> {
     // Fee payer is the admin
     match opts.command {
         Command::Show {} => show(&program_client, vault)?,
+        Command::GetUnlockedAmount {} => get_unlocked_amount(&program_client, vault, &payer)?,
         Command::User(user) => match user {
             UserCommand::Deposit { token_amount } => {
                 deposit(&program_client, token_mint, base, token_amount)?
@@ -157,6 +165,24 @@ fn show(program_client: &anchor_client::Program, vault: Pubkey) -> Result<()> {
     }
     assert_eq!(vault_data.total_amount, token_data.amount + strategy_amount);
     println!("Ok");
+    Ok(())
+}
+
+fn get_unlocked_amount(
+    program_client: &anchor_client::Program,
+    vault: Pubkey,
+    payer: &Keypair,
+) -> Result<()> {
+    let builder = program_client
+        .request()
+        .accounts(mercurial_vault::accounts::GetUnlockedAmount { vault })
+        .args(mercurial_vault::instruction::GetUnlockedAmount {});
+
+    let simulation = utils::simulate_transaction(&builder, &program_client, &vec![payer]).unwrap();
+    let logs = simulation.value.logs.expect("No log in simulation found");
+    let unlocked_amount: mercurial_vault::TotalAmount =
+        utils::parse_event_log(&logs).expect("Event log not found");
+    println!("UNLOCKED AMOUNT: {}", unlocked_amount.total_amount);
     Ok(())
 }
 

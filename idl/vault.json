@@ -176,6 +176,17 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "getUnlockedAmount",
+      "accounts": [
+        {
+          "name": "vault",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
