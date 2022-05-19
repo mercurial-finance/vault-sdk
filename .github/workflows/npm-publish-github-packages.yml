@@ -23,7 +23,8 @@ jobs:
         with:
           version: 7
           run_install: false
-      
+
+      - run: cd sdk-ts
       - run: pnpm i
       - run: pnpm test
 
