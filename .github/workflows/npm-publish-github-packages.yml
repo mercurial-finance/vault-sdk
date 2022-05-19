@@ -52,6 +52,6 @@ jobs:
           version: 7
           run_install: false
       - run: pnpm i
-      - run: pnpm publish
+      - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
