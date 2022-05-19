@@ -12,6 +12,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./sdk-ts
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -24,7 +27,6 @@ jobs:
           version: 7
           run_install: false
 
-      - run: cd sdk-ts
       - run: pnpm i
       - run: pnpm test
 
