@@ -4,3 +4,5 @@
 target
 **/*.rs.bk
 node_modules
+.pnpm-debug.log
+.idea/**
