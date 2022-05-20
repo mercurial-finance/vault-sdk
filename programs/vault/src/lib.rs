@@ -1,4 +1,5 @@
 pub mod context;
+pub mod seed;
 pub mod state;
 pub mod strategy;
 
