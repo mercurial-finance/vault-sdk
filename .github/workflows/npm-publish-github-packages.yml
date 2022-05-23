@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./sdk-ts
+        working-directory: ./ts-client
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./sdk-ts
+        working-directory: ./ts-client
     permissions:
       contents: read
       packages: write
