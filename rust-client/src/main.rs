@@ -1,3 +1,4 @@
+mod strategy_handler;
 mod user;
 mod utils;
 use anchor_client::solana_sdk::commitment_config::CommitmentConfig;
@@ -9,9 +10,9 @@ use clap::Parser;
 use mercurial_vault::get_base_key;
 use solana_sdk::signature::{read_keypair_file, Keypair};
 use std::time::{SystemTime, UNIX_EPOCH};
+use strategy_handler::base::get_strategy_handler;
 
 use user::*;
-use utils::*;
 
 use std::rc::Rc;
 use std::str::FromStr;
@@ -33,9 +34,6 @@ pub struct ConfigOverride {
     #[clap(global = true, long = "provider.token_mint")]
     pub token_mint: Option<String>,
 
-    #[clap(global = true, long = "provider.admin")]
-    pub admin: Option<String>,
-
     #[clap(global = true, long = "provider.base")]
     pub base: Option<String>,
 }
@@ -50,8 +48,16 @@ pub enum Command {
 
 #[derive(Debug, Parser)]
 pub enum UserCommand {
-    Deposit { token_amount: u64 },
-    Withdraw { unmint_amount: u64 },
+    Deposit {
+        token_amount: u64,
+    },
+    Withdraw {
+        unmint_amount: u64,
+    },
+    WithdrawFromStrategy {
+        unmint_amount: u64,
+        strategy: Pubkey,
+    },
 }
 
 #[derive(Parser)]
@@ -70,7 +76,7 @@ fn main() -> Result<()> {
     };
     let url = match opts.cfg_override.cluster {
         Some(cluster) => cluster,
-        None => Cluster::Localnet,
+        None => Cluster::Mainnet,
     };
 
     let client = Client::new_with_options(
@@ -116,6 +122,22 @@ fn main() -> Result<()> {
             }
             UserCommand::Withdraw { unmint_amount } => {
                 withdraw(&program_client, token_mint, base, unmint_amount)?
+            }
+            UserCommand::WithdrawFromStrategy {
+                unmint_amount,
+                strategy,
+            } => {
+                let strategy_state: mercurial_vault::state::Strategy =
+                    program_client.account(strategy)?;
+
+                let strategy_handler = get_strategy_handler(strategy_state.strategy_type);
+                strategy_handler.withdraw_directly_from_strategy(
+                    &program_client,
+                    strategy,
+                    token_mint,
+                    base,
+                    unmint_amount,
+                )?
             }
         },
     };
