@@ -1,0 +1,25 @@
+[package]
+name = "rust-client"
+version = "0.4.0"
+edition = "2018"
+
+[features]
+devnet = []
+
+[dependencies]
+anchor-lang = {version = "0.24.2"}
+anchor-spl = {version = "0.24.2"}
+anchor-client = {version = "0.24.2"}
+anyhow = "1.0"
+clap = {version = "3.0.10", features=["derive"]}
+mercurial-vault = { path = "../programs/vault"}
+solana-program = "1.9.17"
+solana-sdk = "1.9.17"
+spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
+shellexpand = "2.1.0"
+spl-associated-token-account = { version = "1.0.2", features = ["no-entrypoint"] }
+rust_decimal="1.20.0"
+port-variable-rate-lending-instructions = "0.3.0"
+solend-program = { git="https://github.com/mercurial-finance/solana-program-library", rev="e1e3ce4f26c7840695788d4b38d657709acfde51", features = [ "no-entrypoint" ] }
+mango = {git="https://github.com/mercurial-finance/mango-v3", rev="5a23b6310fc4cfd5aaef6b9bdbcc6c6c0f3d2898", features = ["no-entrypoint"]}
+mango-common = {git="https://github.com/mercurial-finance/mango-v3", rev="5a23b6310fc4cfd5aaef6b9bdbcc6c6c0f3d2898"}
