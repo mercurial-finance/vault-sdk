@@ -1,5 +1,5 @@
 {
-  "name": "@mercurial-finance/mercurial-sdk",
+  "name": "@juiced-fi/mercurial-sdk",
   "version": "1.0.0",
   "description": "",
   "main": "lib/index.js",
