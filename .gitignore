@@ -6,3 +6,4 @@ target
 node_modules
 .pnpm-debug.log
 .idea/**
+**/lib

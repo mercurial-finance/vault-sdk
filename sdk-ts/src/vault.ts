@@ -4,16 +4,16 @@ import { AnchorProvider, Program, Wallet } from "@project-serum/anchor";
 import { Connection, PublicKey } from "@solana/web3.js";
 
 import { getVaultPdas } from "./utils";
-import { VaultState } from "../types/vault_state";
+import { VaultState } from "./vault_state";
 import { PROGRAM_ID } from "./constants";
 
 export type VaultProgram = Program<VaultIdl>;
 
 const LOCKED_PROFIT_DEGRATION_DENUMERATOR = 1_000_000_000_000;
 
-class Vault {
+export class Vault {
   private program: VaultProgram;
-  public state: VaultState;
+  public state: VaultState | undefined;
 
   constructor(wallet: Wallet, public connection: Connection) {
     const provider = new AnchorProvider(connection, wallet, {
@@ -36,14 +36,14 @@ class Vault {
   }
 
   calculateLockedProfit(currentTime) {
-    const duration = currentTime - this.state.lockedProfitTracker.lastReport;
+    const duration = currentTime - this.state!.lockedProfitTracker.lastReport;
     const lockedProfitDegradation =
-      this.state.lockedProfitTracker.lockedProfitDegradation;
+      this.state!.lockedProfitTracker.lockedProfitDegradation;
     const lockedFundRatio = duration * lockedProfitDegradation;
     if (lockedFundRatio > LOCKED_PROFIT_DEGRATION_DENUMERATOR) {
       return 0;
     }
-    const lockedProfit = this.state.lockedProfitTracker.lastUpdatedLockedProfit;
+    const lockedProfit = this.state!.lockedProfitTracker.lastUpdatedLockedProfit;
     return Math.floor(
       (lockedProfit * (LOCKED_PROFIT_DEGRATION_DENUMERATOR - lockedFundRatio)) /
         LOCKED_PROFIT_DEGRATION_DENUMERATOR
@@ -51,7 +51,7 @@ class Vault {
   }
 
   getUnlockedAmount(currentTime) {
-    return this.state.totalAmount - this.calculateLockedProfit(currentTime);
+    return this.state!.totalAmount - this.calculateLockedProfit(currentTime);
   }
 
   getAmountByShare(currentTime, share, totalSupply) {
