@@ -28,7 +28,7 @@ pub fn get_port_finance_program_id() -> Pubkey {
 
 #[cfg(not(feature = "devnet"))]
 pub fn get_port_finance_program_id() -> Pubkey {
-    port_variable_rate_lending_instructions::id()
+    Pubkey::from_str("Port7uDYB3wk6GJAw4KT1WpTeMtSu9bTcChBHkX2LfR").unwrap()
 }
 
 #[cfg(feature = "devnet")]

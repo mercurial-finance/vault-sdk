@@ -21,11 +21,5 @@ no-capture = []
 serde = { version = "1.0.136"}
 anchor-lang = "0.24.2"
 anchor-spl = "0.24.2" 
-port-variable-rate-lending-instructions = "0.3.0"
-port-staking-instructions = "0.2.0"
-solana-program = "1.9.21"
+solana-program = "1.9.*"
 spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
-mango = {git="https://github.com/mercurial-finance/mango-v3", rev="5a23b6310fc4cfd5aaef6b9bdbcc6c6c0f3d2898", features = ["no-entrypoint"]}
-mango-common = {git="https://github.com/mercurial-finance/mango-v3", rev="5a23b6310fc4cfd5aaef6b9bdbcc6c6c0f3d2898"}
-# solend-token-lending = {version = "0.1.1", features = [ "no-entrypoint" ]} // TODO why this builds failed?
-solend-program = { git="https://github.com/mercurial-finance/solana-program-library", rev="e1e3ce4f26c7840695788d4b38d657709acfde51", features = [ "no-entrypoint" ] }
