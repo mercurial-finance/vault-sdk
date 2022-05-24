@@ -1773,13 +1773,10 @@ version = "0.4.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
- "mango",
- "mango-common",
  "port-staking-instructions 0.2.0",
  "port-variable-rate-lending-instructions",
  "serde",
  "solana-program",
- "solend-program",
  "spl-token",
 ]
 
