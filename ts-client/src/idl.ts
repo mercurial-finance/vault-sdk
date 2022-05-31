@@ -720,7 +720,7 @@ export type Vault = {
       };
     },
     {
-      name: "Strategy";
+      name: "strategy";
       type: {
         kind: "struct";
         fields: [
@@ -1733,7 +1733,7 @@ export const IDL: Vault = {
       },
     },
     {
-      name: "Strategy",
+      name: "strategy",
       type: {
         kind: "struct",
         fields: [
