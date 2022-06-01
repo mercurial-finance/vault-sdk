@@ -1,18 +1,28 @@
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, SYSVAR_CLOCK_PUBKEY, ParsedAccountData } from "@solana/web3.js";
 import SolanaTokenList from "@solana/spl-token-registry/dist/module/tokens/solana.tokenlist.json";
 import { Wallet, Provider } from "@project-serum/anchor";
 
 import Vault from "../src/vault";
 import { SOL_MINT } from "../src/constants";
+import { ParsedClockState } from "../types/clock_state";
 import { airDropSol } from './utils';
 
 const mockWallet = new Wallet(new Keypair());
 const mainnetConnection = new Connection("https://api.mainnet-beta.solana.com");
 const devnetConnection = new Connection("https://api.devnet.solana.com/");
 const SOL_TOKEN_INFO = SolanaTokenList.tokens.find(token => token.symbol === 'SOL');
+let currentTime;
 
 beforeAll(async () => {
   await airDropSol(devnetConnection, mockWallet.publicKey);
+
+  const parsedClock = await mainnetConnection.getParsedAccountInfo(
+    SYSVAR_CLOCK_PUBKEY
+  );
+  const parsedClockAccount = (parsedClock.value!.data as ParsedAccountData)
+    .parsed as ParsedClockState;
+  currentTime = parsedClockAccount.info.unixTimestamp; // use on-chain time instead of local time
+  console.log("current time: ", currentTime);
 })
 
 describe('Get Mainnet vault state', () => {
@@ -20,8 +30,7 @@ describe('Get Mainnet vault state', () => {
     commitment: "processed",
   });
   const vault = new Vault(provider);
-  
-  const currentTime = Math.floor(Date.now() / 1000);
+
   let lpSupply;
   beforeAll(async () => {
     await vault.getVaultStateByMint(SOL_MINT);
@@ -56,7 +65,7 @@ describe('Get Mainnet vault state', () => {
   })
 })
 
-describe('Interact with Vault', () => {
+describe('Interact with Vault in devnet', () => {
   const provider = new Provider(devnetConnection, mockWallet, {
     commitment: "confirmed",
   });
@@ -76,7 +85,7 @@ describe('Interact with Vault', () => {
         console.log("Test with ", strategy.toString());
         const depositResult = await vault.deposit(SOL_TOKEN_INFO, 2000);
         expect(typeof depositResult).toBe("string");
-        const withdrawResult = await vault.withdrawFromStrategy(SOL_TOKEN_INFO,strategy, 1000);
+        const withdrawResult = await vault.withdrawFromStrategy(SOL_TOKEN_INFO, strategy, 1000);
         expect(typeof withdrawResult).toBe("string");
       }
     }
