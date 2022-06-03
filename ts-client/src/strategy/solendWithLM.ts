@@ -50,7 +50,7 @@ export default class SolendWithLMHandler implements StrategyHandler {
     amount: number,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[]
-  ): Promise<string | undefined> {
+  ): Promise<string> {
     const walletPublicKey = program.provider.wallet.publicKey;
     const { collateral, state } = await this.getReserveState(
       program,

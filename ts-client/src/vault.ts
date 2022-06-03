@@ -14,7 +14,7 @@ const LOCKED_PROFIT_DEGRATION_DENUMERATOR = 1_000_000_000_000;
 
 class Vault {
   public program: VaultProgram;
-  public state: VaultState;
+  public state: VaultState | null = null;
 
   constructor(provider: Provider) {
     this.program = new Program<VaultIdl>(IDL as VaultIdl, PROGRAM_ID, provider);
@@ -42,6 +42,8 @@ class Vault {
   }
 
   calculateLockedProfit(currentTime) {
+    if (!this.state) return 0;
+
     const duration = currentTime - this.state.lockedProfitTracker.lastReport;
     const lockedProfitDegradation =
       this.state.lockedProfitTracker.lockedProfitDegradation;
@@ -57,6 +59,8 @@ class Vault {
   }
 
   getUnlockedAmount(currentTime) {
+    if (!this.state) return 0;
+
     return this.state.totalAmount - this.calculateLockedProfit(currentTime);
   }
 

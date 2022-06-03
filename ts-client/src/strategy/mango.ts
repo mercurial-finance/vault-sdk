@@ -30,7 +30,7 @@ export default class MangoHandler implements StrategyHandler {
     amount: number,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[]
-  ): Promise<string | undefined> {
+  ): Promise<string> {
     const walletPublicKey = program.provider.wallet.publicKey;
 
     const [mangoAccountPK] = await PublicKey.findProgramAddress(
@@ -56,13 +56,13 @@ export default class MangoHandler implements StrategyHandler {
     );
 
     const rootBankState = mangoGroupState.rootBankAccounts[rootBankIdx];
-    if (!rootBankState) return;
+    if (!rootBankState) return '';
     const nodeBankPK = rootBankState.nodeBanks[0];
 
     const nodeBankState = rootBankState.nodeBankAccounts.find(
       (t) => t.publicKey.toBase58() === nodeBankPK.toBase58()
     );
-    if (!nodeBankState) return;
+    if (!nodeBankState) return '';
     const accountData = [
       { pubkey: MangoHandler.MangoGrouPK, isWritable: true },
       { pubkey: mangoAccountPK, isWritable: true },
