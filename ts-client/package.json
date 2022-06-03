@@ -1,6 +1,6 @@
 {
   "name": "mercurial-sdk",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/types/index.d.ts",
@@ -12,8 +12,8 @@
     "test": "jest"
   },
   "keywords": [],
-  "author": "McSam",
-  "license": "ISC",
+  "author": "raccoons",
+  "license": "MIT",
   "dependencies": {
     "@blockworks-foundation/mango-client": "^3.4.7",
     "@mercurial-finance/optimist": "^0.1.4",
