@@ -1,5 +1,5 @@
 import { Connection, Keypair, PublicKey, SYSVAR_CLOCK_PUBKEY, ParsedAccountData } from "@solana/web3.js";
-import SolanaTokenList from "@solana/spl-token-registry/dist/module/tokens/solana.tokenlist.json";
+import { StaticTokenListResolutionStrategy, TokenInfo } from "@solana/spl-token-registry";
 import { Wallet, Provider } from "@project-serum/anchor";
 
 import Vault from "../src/vault";
@@ -10,8 +10,15 @@ import { airDropSol } from './utils';
 const mockWallet = new Wallet(new Keypair());
 const mainnetConnection = new Connection("https://api.mainnet-beta.solana.com");
 const devnetConnection = new Connection("https://api.devnet.solana.com/");
-const SOL_TOKEN_INFO = SolanaTokenList.tokens.find(token => token.symbol === 'SOL');
-let currentTime;
+
+
+// Prevent importing directly from .json, causing slowdown on Intellisense
+const SOL_TOKEN_INFO = (
+  new StaticTokenListResolutionStrategy()
+  .resolve()
+  .find(token => token.symbol === 'SOL')
+) as TokenInfo; // Guaranteed to exist
+let currentTime = 0;
 
 beforeAll(async () => {
   await airDropSol(devnetConnection, mockWallet.publicKey);
@@ -34,6 +41,8 @@ describe('Get Mainnet vault state', () => {
   let lpSupply;
   beforeAll(async () => {
     await vault.getVaultStateByMint(SOL_MINT);
+    if (!vault.state) return;
+
     lpSupply = (await mainnetConnection.getTokenSupply(vault.state.lpMint)).value.amount;
   })
 
@@ -80,6 +89,8 @@ describe('Interact with Vault in devnet', () => {
 
   test("Vault Withdraw SOL from strategy", async () => {
     await vault.getVaultStateByMint(SOL_MINT);
+    if (!vault.state) return;
+    
     for (var strategy of vault.state.strategies) {
       if (!strategy.equals(PublicKey.default)) {
         console.log("Test with ", strategy.toString());

@@ -55,11 +55,12 @@ export default class MintToken implements VaultCoin {
     return { userToken, createUserTokenIx, userLpMint, createUserLpIx }
   }
 
-  async appendUserTokenInstruction(preInstruction: TransactionInstruction[], toAppend: TransactionInstruction[]) {
+  async appendUserTokenInstruction(preInstruction: TransactionInstruction[], toAppend: Array<TransactionInstruction | undefined>) {
     toAppend
-      .filter(Boolean)
       .forEach(instruction => {
-        preInstruction.push(instruction);
+        if (instruction) {
+          preInstruction.push(instruction);
+        }
       })
   }
 
@@ -92,7 +93,7 @@ export default class MintToken implements VaultCoin {
     return tx;
   };
 
-  withdraw = async (unmintAmount: number): Promise<string | undefined> => {
+  withdraw = async (unmintAmount: number): Promise<string> => {
     const { vaultPda, tokenVaultPda } = await this.getPDA();
     const vaultState = await this.program.account.vault.fetch(vaultPda);
     
@@ -122,7 +123,7 @@ export default class MintToken implements VaultCoin {
     strategy: Strategy,
     strategyHandler: StrategyHandler,
     unmintAmount: number
-  ): Promise<string | undefined> => {
+  ): Promise<string> => {
     const { vaultPda, tokenVaultPda } = await this.getPDA();
     const vaultState = await this.program.account.vault.fetch(vaultPda);
     const { lpMint } = vaultState;

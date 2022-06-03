@@ -20,7 +20,7 @@ export default class VaultHandler implements StrategyHandler {
     amount: number,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[],
-  ): Promise<string | undefined> {
+  ): Promise<string> {
     const tx = await program.methods
       .withdraw(new anchor.BN(amount), new anchor.BN(0))
       .accounts({

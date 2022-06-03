@@ -12,6 +12,7 @@ specifiers:
   '@solana/wallet-adapter-base': ^0.9.5
   '@solana/web3.js': ^1.42.0
   '@solendprotocol/solend-sdk': ^0.5.6
+  '@tsconfig/recommended': ^1.0.1
   '@types/chai': ^4.3.1
   '@types/jest': ^27.5.1
   '@types/mocha': ^9.1.1
@@ -36,6 +37,7 @@ dependencies:
   '@solendprotocol/solend-sdk': 0.5.6
 
 devDependencies:
+  '@tsconfig/recommended': 1.0.1
   '@types/chai': 4.3.1
   '@types/jest': 27.5.1
   '@types/mocha': 9.1.1
@@ -1049,6 +1051,10 @@ packages:
       - encoding
       - utf-8-validate
     dev: false
+
+  /@tsconfig/recommended/1.0.1:
+    resolution: {integrity: sha512-2xN+iGTbPBEzGSnVp/Hd64vKJCJWxsi9gfs88x4PPMyEjHJoA3o5BY9r5OLPHIZU2pAQxkSAsJFqn6itClP8mQ==}
+    dev: true
 
   /@types/babel__core/7.1.19:
     resolution: {integrity: sha512-WEOTgRsbYkvA/KCsDwVEGkd7WAr1e3g31VHQ8zy5gul/V1qKullU/BU5I68X5v7V3GnB9eotmom4v5a5gjxorw==}

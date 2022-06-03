@@ -46,7 +46,7 @@ export default class PortWithoutLMHandler implements StrategyHandler {
     amount: number,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[]
-  ): Promise<string | undefined> {
+  ): Promise<string> {
     const { state } = await this.getReserveState(
       program,
       strategy.state.reserve

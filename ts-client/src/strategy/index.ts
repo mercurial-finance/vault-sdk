@@ -58,7 +58,7 @@ export const getStrategyHandler = (
     solend: PublicKey;
     portFinance: PublicKey;
   } = STRATEGY_PROGRAM_ADDRESSES
-): VaultHandler | null => { 
+): StrategyHandler | null => { 
   switch (strategyType) {
     case "solendWithoutLm":
       return new SolendWithoutLMHandler(strategyProgramAddresses.solend);

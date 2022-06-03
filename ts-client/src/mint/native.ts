@@ -57,11 +57,12 @@ export default class NativeToken implements VaultCoin {
     return { userToken, createUserTokenIx, userLpMint, createUserLpIx }
   }
 
-  async appendUserTokenInstruction(preInstruction: TransactionInstruction[], toAppend: TransactionInstruction[]) {
+  async appendUserTokenInstruction(preInstruction: TransactionInstruction[], toAppend: Array<TransactionInstruction | undefined>) {
     toAppend
-      .filter(Boolean)
       .forEach(instruction => {
-        preInstruction.push(instruction);
+        if (instruction) {
+          preInstruction.push(instruction);
+        }
       })
   }
 
@@ -98,11 +99,11 @@ export default class NativeToken implements VaultCoin {
       return tx;
     } catch (error) {
       console.trace(error);
-      return undefined;
+      return '';
     }
   }
 
-  withdraw = async (unMintAmount: number): Promise<string | undefined> => {
+  withdraw = async (unMintAmount: number): Promise<string> => {
     const { vaultPda, tokenVaultPda } = await  this.getPDA();
     const vaultState = await this.program.account.vault.fetch(vaultPda);
 
@@ -130,7 +131,7 @@ export default class NativeToken implements VaultCoin {
       return tx;
     } catch (error) {
       console.trace(error);
-      return undefined;
+      return '';
     }
   };
 
@@ -138,7 +139,7 @@ export default class NativeToken implements VaultCoin {
     strategy: Strategy,
     strategyHandler: StrategyHandler,
     unMintAmount: number
-  ): Promise<string | undefined> => {
+  ): Promise<string> => {
     const tokenPubkey = this.nativeMint;
     const { vaultPda, tokenVaultPda } = await getVaultPdas(
       tokenPubkey,
@@ -151,7 +152,7 @@ export default class NativeToken implements VaultCoin {
     this.appendUserTokenInstruction(preInstructions, [createUserTokenIx, createUserLpIx]);
 
     if (!userToken || !userLpMint) {
-      return;
+      return '';
     }
 
     const postInstruction: Array<TransactionInstruction> = [];
