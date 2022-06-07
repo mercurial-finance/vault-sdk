@@ -1,6 +1,6 @@
 import { Connection, Keypair, PublicKey, SYSVAR_CLOCK_PUBKEY, ParsedAccountData } from "@solana/web3.js";
 import { StaticTokenListResolutionStrategy, TokenInfo } from "@solana/spl-token-registry";
-import { Wallet, Provider } from "@project-serum/anchor";
+import { Wallet, AnchorProvider } from "@project-serum/anchor";
 
 import Vault from "../src/vault";
 import { SOL_MINT } from "../src/constants";
@@ -33,10 +33,10 @@ beforeAll(async () => {
 })
 
 describe('Get Mainnet vault state', () => {
-  const provider = new Provider(mainnetConnection, mockWallet, {
+  const provider = new AnchorProvider(mainnetConnection, mockWallet, {
     commitment: "processed",
   });
-  const vault = new Vault(provider);
+  const vault = new Vault(provider, mockWallet.publicKey);
 
   let lpSupply;
   beforeAll(async () => {
@@ -75,10 +75,10 @@ describe('Get Mainnet vault state', () => {
 })
 
 describe('Interact with Vault in devnet', () => {
-  const provider = new Provider(devnetConnection, mockWallet, {
+  const provider = new AnchorProvider(devnetConnection, mockWallet, {
     commitment: "confirmed",
   });
-  const vault = new Vault(provider);
+  const vault = new Vault(provider, mockWallet.publicKey);
 
   test("Vault Withdraw SOL", async () => {
     const depositResult = await vault.deposit(SOL_TOKEN_INFO, 2000);

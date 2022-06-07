@@ -9,6 +9,7 @@ import { Strategy } from '../mint';
 
 export default class VaultHandler implements StrategyHandler {
   async withdraw(
+    walletPubKey: PublicKey,
     program: VaultProgram,
     _strategy: Strategy,
     vault: PublicKey,
@@ -29,7 +30,7 @@ export default class VaultHandler implements StrategyHandler {
         lpMint,
         userToken,
         userLp,
-        user: program.provider.wallet.publicKey,
+        user: walletPubKey,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .preInstructions(preInstructions)

@@ -39,6 +39,7 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
   }
 
   async withdraw(
+    walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,
     vault: PublicKey,
@@ -51,7 +52,6 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[]
   ): Promise<string> {
-    const walletPublicKey = program.provider.wallet.publicKey;
     const { collateral, state } = await this.getReserveState(
       program,
       strategy.state.reserve
@@ -107,7 +107,7 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
         lpMint,
         userToken,
         userLp,
-        user: walletPublicKey,
+        user: walletPubKey,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .remainingAccounts(remainingAccounts)

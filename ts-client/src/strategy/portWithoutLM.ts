@@ -35,6 +35,7 @@ export default class PortWithoutLMHandler implements StrategyHandler {
   }
 
   async withdraw(
+    walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,
     vault: PublicKey,
@@ -98,7 +99,7 @@ export default class PortWithoutLMHandler implements StrategyHandler {
         lpMint,
         userToken,
         userLp,
-        user: program.provider.wallet.publicKey,
+        user: walletPubKey,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .remainingAccounts(remainingAccounts)

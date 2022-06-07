@@ -23,11 +23,11 @@ export default class NativeToken implements VaultCoin {
   walletPubKey: PublicKey;
   connection: Connection;
 
-  constructor(vault: Vault) {
+  constructor(vault: Vault, walletPubKey: PublicKey) {
     this.vault = vault;
     this.program = vault.program;
     this.provider = vault.program.provider;
-    this.walletPubKey = vault.program.provider.wallet.publicKey;
+    this.walletPubKey = walletPubKey
     this.connection = vault.program.provider.connection;
   }
 
@@ -158,6 +158,7 @@ export default class NativeToken implements VaultCoin {
     const postInstruction: Array<TransactionInstruction> = [];
 
     const tx = await strategyHandler.withdraw(
+      this.walletPubKey,
       this.program,
       strategy,
       vaultPda,

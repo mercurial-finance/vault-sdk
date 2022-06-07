@@ -15,16 +15,18 @@ const LOCKED_PROFIT_DEGRATION_DENUMERATOR = 1_000_000_000_000;
 class Vault {
   public program: VaultProgram;
   public state: VaultState | null = null;
+  public walletPubKey: PublicKey | null = null;
 
-  constructor(provider: Provider) {
+  constructor(provider: Provider, walletPubKey: PublicKey) {
     this.program = new Program<VaultIdl>(IDL as VaultIdl, PROGRAM_ID, provider);
+    this.walletPubKey = walletPubKey;
   }
 
   getTokenProvider(tokenMint: TokenInfo) {
     const isNativeSOL = SOL_MINT.toBase58() === tokenMint.address;
     const provider = isNativeSOL
-      ? new NativeToken(this)
-      : new MintToken(tokenMint, this);
+      ? new NativeToken(this, this.walletPubKey || PublicKey.default)
+      : new MintToken(tokenMint, this, this.walletPubKey || PublicKey.default);
     return provider;
   }
 

@@ -17,14 +17,14 @@ export default class MintToken implements VaultCoin {
   walletPubKey: PublicKey;
   connection: Connection;
 
-  constructor(tokenInfo: TokenInfo, vault: Vault) {
+  constructor(tokenInfo: TokenInfo, vault: Vault, walletPubKey: PublicKey) {
     this.mint = new PublicKey(tokenInfo.address);
     this.tokenInfo = tokenInfo;
     
     this.vault = vault;
     this.program = vault.program;
     this.provider = vault.program.provider;
-    this.walletPubKey = vault.program.provider.wallet.publicKey;
+    this.walletPubKey = walletPubKey;
     this.connection = vault.program.provider.connection;
   }
 
@@ -137,6 +137,7 @@ export default class MintToken implements VaultCoin {
     }
 
     const tx = await strategyHandler.withdraw(
+      this.walletPubKey,
       this.program,
       strategy,
       vaultPda,
