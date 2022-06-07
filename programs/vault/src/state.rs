@@ -130,4 +130,5 @@ pub struct Strategy {
     pub strategy_type: StrategyType,
     pub current_liquidity: u64,
     pub bumps: [u8; MAX_BUMPS],
+    pub vault: Pubkey,
 }
