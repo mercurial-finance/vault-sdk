@@ -10,7 +10,7 @@ import { getStrategyHandler, getStrategyType, StrategyState } from "./strategy";
 import { getVaultPdas } from "./utils";
 
 export type VaultProgram = Program<VaultIdl>;
-const LOCKED_PROFIT_DEGRATION_DENUMERATOR = 1_000_000_000_000;
+const LOCKED_PROFIT_DEGRADATION_DENOMINATOR = 1_000_000_000_000;
 
 class Vault {
   public program: VaultProgram;
@@ -48,13 +48,14 @@ class Vault {
     const lockedProfitDegradation =
       this.state.lockedProfitTracker.lockedProfitDegradation;
     const lockedFundRatio = duration * lockedProfitDegradation;
-    if (lockedFundRatio > LOCKED_PROFIT_DEGRATION_DENUMERATOR) {
+    if (lockedFundRatio > LOCKED_PROFIT_DEGRADATION_DENOMINATOR) {
       return 0;
     }
     const lockedProfit = this.state.lockedProfitTracker.lastUpdatedLockedProfit;
     return Math.floor(
-      (lockedProfit * (LOCKED_PROFIT_DEGRATION_DENUMERATOR - lockedFundRatio)) /
-        LOCKED_PROFIT_DEGRATION_DENUMERATOR
+      (lockedProfit *
+        (LOCKED_PROFIT_DEGRADATION_DENOMINATOR - lockedFundRatio)) /
+        LOCKED_PROFIT_DEGRADATION_DENOMINATOR
     );
   }
 
@@ -113,7 +114,7 @@ class Vault {
       strategyProgramAddresses
     );
     if (!strategyType || !strategyHandler) {
-      throw new Error('Cannot find strategy handler');
+      throw new Error("Cannot find strategy handler");
     }
 
     return await tokenProvider.withdrawFromStrategy(
