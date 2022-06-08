@@ -1,7 +1,7 @@
 {
   "name": "@mercurial-finance/mercurial-sdk",
   "version": "0.0.3",
-  "description": "Mercurial SDK is a typescript library that allows you to interact with Mercurial v2's dynamic vault and AMM.",
+  "description": "Mercurial Vaults SDK is a typescript library that allows you to interact with Mercurial v2's vault.",
   "main": "dist/index.js",
   "types": "dist/types/index.d.ts",
   "exports": {
