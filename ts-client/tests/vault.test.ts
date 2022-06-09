@@ -40,7 +40,7 @@ describe('Get Mainnet vault state', () => {
 
   let lpSupply;
   beforeAll(async () => {
-    await vault.getVaultStateByMint(SOL_MINT);
+    await vault.init(SOL_MINT);
     if (!vault.state) return;
 
     lpSupply = (await mainnetConnection.getTokenSupply(vault.state.lpMint)).value.amount;
@@ -88,7 +88,7 @@ describe('Interact with Vault in devnet', () => {
   });
 
   test("Vault Withdraw SOL from strategy", async () => {
-    await vault.getVaultStateByMint(SOL_MINT);
+    await vault.init(SOL_MINT);
     if (!vault.state) return;
     
     for (var strategy of vault.state.strategies) {
