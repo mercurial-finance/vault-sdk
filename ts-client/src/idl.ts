@@ -3,479 +3,12 @@ export type Vault = {
   name: "vault";
   instructions: [
     {
-      name: "initialize";
-      accounts: [
-        {
-          name: "base";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "vault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "tokenVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "feeVault";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "lpMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "rent";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [
-        {
-          name: "bumps";
-          type: {
-            defined: "VaultBumps";
-          };
-        }
-      ];
-    },
-    {
-      name: "enableVault";
-      accounts: [
-        {
-          name: "vault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: false;
-          isSigner: true;
-        }
-      ];
-      args: [
-        {
-          name: "enabled";
-          type: "u8";
-        }
-      ];
-    },
-    {
-      name: "setOperator";
-      accounts: [
-        {
-          name: "vault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "operator";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: false;
-          isSigner: true;
-        }
-      ];
-      args: [];
-    },
-    {
-      name: "updateLockedProfitDegradation";
-      accounts: [
-        {
-          name: "vault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: false;
-          isSigner: true;
-        }
-      ];
-      args: [
-        {
-          name: "lockedProfitDegradation";
-          type: "u64";
-        }
-      ];
-    },
-    {
       name: "getUnlockedAmount";
       accounts: [
         {
           name: "vault";
           isMut: false;
           isSigner: false;
-        }
-      ];
-      args: [];
-    },
-    {
-      name: "transferAdmin";
-      accounts: [
-        {
-          name: "vault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "newAdmin";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [];
-    },
-    {
-      name: "transferFeeVault";
-      accounts: [
-        {
-          name: "vault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: false;
-          isSigner: true;
-        },
-        {
-          name: "newFeeVault";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [];
-    },
-    {
-      name: "setStrategy";
-      accounts: [
-        {
-          name: "vault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "strategyProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "strategy";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "reserve";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "collateralVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "collateralMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: true;
-          isSigner: true;
-        },
-        {
-          name: "systemProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "rent";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [
-        {
-          name: "bumps";
-          type: {
-            defined: "StrategyBumps";
-          };
-        },
-        {
-          name: "strategyType";
-          type: {
-            defined: "StrategyType";
-          };
-        }
-      ];
-    },
-    {
-      name: "disableStrategy";
-      accounts: [
-        {
-          name: "vault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "strategy";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "strategyProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "collateralVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "reserve";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "feeVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "lpMint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: true;
-          isSigner: true;
-        }
-      ];
-      args: [];
-    },
-    {
-      name: "enableStrategy";
-      accounts: [
-        {
-          name: "vault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "strategy";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "admin";
-          isMut: true;
-          isSigner: true;
-        }
-      ];
-      args: [];
-    },
-    {
-      name: "depositStrategy";
-      accounts: [
-        {
-          name: "vault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "strategy";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "feeVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "lpMint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "strategyProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "collateralVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "reserve";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "operator";
-          isMut: false;
-          isSigner: true;
-        }
-      ];
-      args: [
-        {
-          name: "amount";
-          type: "u64";
-        }
-      ];
-    },
-    {
-      name: "withdrawStrategy";
-      accounts: [
-        {
-          name: "vault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "strategy";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "feeVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "lpMint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "strategyProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "collateralVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "reserve";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "operator";
-          isMut: false;
-          isSigner: true;
-        }
-      ];
-      args: [
-        {
-          name: "amount";
-          type: "u64";
-        }
-      ];
-    },
-    {
-      name: "claimRewards";
-      accounts: [
-        {
-          name: "vault";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "strategy";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "tokenRewardAcc";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "operator";
-          isMut: false;
-          isSigner: true;
         }
       ];
       args: [];
@@ -747,6 +280,10 @@ export type Vault = {
             type: {
               array: ["u8", 10];
             };
+          },
+          {
+            name: "vault";
+            type: "publicKey";
           }
         ];
       };
@@ -776,14 +313,6 @@ export type Vault = {
         fields: [
           {
             name: "strategyIndex";
-            type: "u8";
-          },
-          {
-            name: "strategyBump";
-            type: "u8";
-          },
-          {
-            name: "collateralVaultBump";
             type: "u8";
           },
           {
@@ -910,7 +439,7 @@ export type Vault = {
       ];
     },
     {
-      name: "StakingReward";
+      name: "ClaimReward";
       fields: [
         {
           name: "strategyType";
@@ -1007,6 +536,31 @@ export type Vault = {
       code: 6007;
       name: "InvalidLockedProfitDegradation";
       msg: "lockedProfitDegradation is invalid";
+    },
+    {
+      code: 6008;
+      name: "MaxStrategyReached";
+      msg: "Maximum number of strategies have been reached";
+    },
+    {
+      code: 6009;
+      name: "StrategyExisted";
+      msg: "Strategy existed";
+    },
+    {
+      code: 6010;
+      name: "InvalidUnmintAmount";
+      msg: "Invalid unmint amount";
+    },
+    {
+      code: 6011;
+      name: "InvalidAccountsForStrategy";
+      msg: "Invalid accounts for strategy";
+    },
+    {
+      code: 6012;
+      name: "InvalidBump";
+      msg: "Invalid bump";
     }
   ];
 };
@@ -1016,479 +570,12 @@ export const IDL: Vault = {
   name: "vault",
   instructions: [
     {
-      name: "initialize",
-      accounts: [
-        {
-          name: "base",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "vault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "tokenVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "feeVault",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "lpMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "rent",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "bumps",
-          type: {
-            defined: "VaultBumps",
-          },
-        },
-      ],
-    },
-    {
-      name: "enableVault",
-      accounts: [
-        {
-          name: "vault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: true,
-        },
-      ],
-      args: [
-        {
-          name: "enabled",
-          type: "u8",
-        },
-      ],
-    },
-    {
-      name: "setOperator",
-      accounts: [
-        {
-          name: "vault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "operator",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: true,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "updateLockedProfitDegradation",
-      accounts: [
-        {
-          name: "vault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: true,
-        },
-      ],
-      args: [
-        {
-          name: "lockedProfitDegradation",
-          type: "u64",
-        },
-      ],
-    },
-    {
       name: "getUnlockedAmount",
       accounts: [
         {
           name: "vault",
           isMut: false,
           isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "transferAdmin",
-      accounts: [
-        {
-          name: "vault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "newAdmin",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "transferFeeVault",
-      accounts: [
-        {
-          name: "vault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: false,
-          isSigner: true,
-        },
-        {
-          name: "newFeeVault",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "setStrategy",
-      accounts: [
-        {
-          name: "vault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "strategyProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "strategy",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "reserve",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "collateralVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "collateralMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "rent",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "bumps",
-          type: {
-            defined: "StrategyBumps",
-          },
-        },
-        {
-          name: "strategyType",
-          type: {
-            defined: "StrategyType",
-          },
-        },
-      ],
-    },
-    {
-      name: "disableStrategy",
-      accounts: [
-        {
-          name: "vault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "strategy",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "strategyProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "collateralVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "reserve",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "feeVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "lpMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: true,
-          isSigner: true,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "enableStrategy",
-      accounts: [
-        {
-          name: "vault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "strategy",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "admin",
-          isMut: true,
-          isSigner: true,
-        },
-      ],
-      args: [],
-    },
-    {
-      name: "depositStrategy",
-      accounts: [
-        {
-          name: "vault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "strategy",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "feeVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "lpMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "strategyProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "collateralVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "reserve",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "operator",
-          isMut: false,
-          isSigner: true,
-        },
-      ],
-      args: [
-        {
-          name: "amount",
-          type: "u64",
-        },
-      ],
-    },
-    {
-      name: "withdrawStrategy",
-      accounts: [
-        {
-          name: "vault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "strategy",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "feeVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "lpMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "strategyProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "collateralVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "reserve",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "operator",
-          isMut: false,
-          isSigner: true,
-        },
-      ],
-      args: [
-        {
-          name: "amount",
-          type: "u64",
-        },
-      ],
-    },
-    {
-      name: "claimRewards",
-      accounts: [
-        {
-          name: "vault",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "strategy",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenRewardAcc",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "operator",
-          isMut: false,
-          isSigner: true,
         },
       ],
       args: [],
@@ -1761,6 +848,10 @@ export const IDL: Vault = {
               array: ["u8", 10],
             },
           },
+          {
+            name: "vault",
+            type: "publicKey",
+          },
         ],
       },
     },
@@ -1789,14 +880,6 @@ export const IDL: Vault = {
         fields: [
           {
             name: "strategyIndex",
-            type: "u8",
-          },
-          {
-            name: "strategyBump",
-            type: "u8",
-          },
-          {
-            name: "collateralVaultBump",
             type: "u8",
           },
           {
@@ -1923,7 +1006,7 @@ export const IDL: Vault = {
       ],
     },
     {
-      name: "StakingReward",
+      name: "ClaimReward",
       fields: [
         {
           name: "strategyType",
@@ -2020,6 +1103,31 @@ export const IDL: Vault = {
       code: 6007,
       name: "InvalidLockedProfitDegradation",
       msg: "lockedProfitDegradation is invalid",
+    },
+    {
+      code: 6008,
+      name: "MaxStrategyReached",
+      msg: "Maximum number of strategies have been reached",
+    },
+    {
+      code: 6009,
+      name: "StrategyExisted",
+      msg: "Strategy existed",
+    },
+    {
+      code: 6010,
+      name: "InvalidUnmintAmount",
+      msg: "Invalid unmint amount",
+    },
+    {
+      code: 6011,
+      name: "InvalidAccountsForStrategy",
+      msg: "Invalid accounts for strategy",
+    },
+    {
+      code: 6012,
+      name: "InvalidBump",
+      msg: "Invalid bump",
     },
   ],
 };
