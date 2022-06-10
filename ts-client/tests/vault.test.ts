@@ -1,6 +1,6 @@
 import { Connection, Keypair, PublicKey, SYSVAR_CLOCK_PUBKEY, ParsedAccountData } from "@solana/web3.js";
 import { StaticTokenListResolutionStrategy, TokenInfo } from "@solana/spl-token-registry";
-import { Wallet, AnchorProvider } from "@project-serum/anchor";
+import { Wallet, AnchorProvider, BN } from "@project-serum/anchor";
 
 import Vault from "../src/vault";
 import { SOL_MINT } from "../src/constants";
@@ -52,25 +52,25 @@ describe('Get Mainnet vault state', () => {
 
   test("get unlocked amount", async () => {
     const unlockedAmount = vault.getUnlockedAmount(currentTime);
-    expect(typeof unlockedAmount).toBe("number");
+    expect(unlockedAmount).toBeInstanceOf(BN);
   })
 
   test("get amount by share", async () => {
     const amountByShare = vault.getAmountByShare(
       currentTime,
-      100_000_000,
-      lpSupply
+      new BN(100_000_000),
+      new BN(lpSupply)
     );
-    expect(typeof amountByShare).toBe("number");
+    expect(amountByShare).toBeInstanceOf(BN);
   })
 
   test("get unmint amount", async () => {
     const unMintAmount = vault.getUnmintAmount(
       currentTime,
-      100_000_000,
-      lpSupply
+      new BN(100_000_000),
+      new BN(lpSupply)
     );
-    expect(typeof unMintAmount).toBe("number");
+    expect(unMintAmount).toBeInstanceOf(BN);
   })
 })
 

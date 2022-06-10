@@ -10,7 +10,7 @@ import { getStrategyHandler, getStrategyType, StrategyState } from "./strategy";
 import { IDL, Vault as VaultIdl } from "./idl";
 
 export type VaultProgram = Program<VaultIdl>;
-const LOCKED_PROFIT_DEGRADATION_DENOMINATOR = 1_000_000_000_000;
+const LOCKED_PROFIT_DEGRADATION_DENOMINATOR = new BN(1_000_000_000_000);
 
 class Vault {
   public program: VaultProgram;
@@ -38,38 +38,34 @@ class Vault {
   }
 
 
-  public getUnlockedAmount(currentTime: number) {
-    if (!this.state) return 0;
+  public getUnlockedAmount(currentTime: number): BN {
+    if (!this.state) return new BN(0);
 
-    return this.state.totalAmount - this.calculateLockedProfit(currentTime);
+    return this.state.totalAmount.sub(this.calculateLockedProfit(currentTime));
   }
 
-  private calculateLockedProfit(currentTime: number) {
-    if (!this.state) return 0;
-
-    const duration = currentTime - this.state.lockedProfitTracker.lastReport;
+  private calculateLockedProfit(currentTime: number): BN {
+    if (!this.state) return new BN(0);
+    let currentTimeBN = new BN(currentTime);
+    const duration = currentTimeBN.sub(this.state.lockedProfitTracker.lastReport);
     const lockedProfitDegradation =
       this.state.lockedProfitTracker.lockedProfitDegradation;
-    const lockedFundRatio = duration * lockedProfitDegradation;
-    if (lockedFundRatio > LOCKED_PROFIT_DEGRADATION_DENOMINATOR) {
-      return 0;
+    const lockedFundRatio = duration.mul(lockedProfitDegradation);
+    if (lockedFundRatio.gt(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)) {
+      return new BN(0);
     }
     const lockedProfit = this.state.lockedProfitTracker.lastUpdatedLockedProfit;
-    return Math.floor(
-      (lockedProfit *
-        (LOCKED_PROFIT_DEGRADATION_DENOMINATOR - lockedFundRatio)) /
-      LOCKED_PROFIT_DEGRADATION_DENOMINATOR
-    );
+    return lockedProfit.mul(LOCKED_PROFIT_DEGRADATION_DENOMINATOR.sub(lockedFundRatio)).div(LOCKED_PROFIT_DEGRADATION_DENOMINATOR);
   }
 
-  public getAmountByShare(currentTime: number, share: number, totalSupply: number) {
+  public getAmountByShare(currentTime: number, share: BN, totalSupply: BN): BN {
     const totalAmount = this.getUnlockedAmount(currentTime);
-    return Math.floor((share * totalAmount) / totalSupply);
+    return share.mul(totalAmount).div(totalSupply);
   }
 
-  public getUnmintAmount(currentTime: number, outToken: number, totalSupply: number) {
+  public getUnmintAmount(currentTime: number, outToken: BN, totalSupply: BN) {
     const totalAmount = this.getUnlockedAmount(currentTime);
-    return Math.floor((outToken * totalSupply) / totalAmount);
+    return outToken.mul(totalSupply).div(totalAmount);
   }
 
   public async deposit(tokenInfo: TokenInfo, amount: number) {
@@ -168,7 +164,7 @@ class Vault {
       vaultStrategyPubkey
     )) as unknown as StrategyState;
 
-    if (strategyState.currentLiquidity.eq(0)) {
+    if (strategyState.currentLiquidity.eq(new BN(0))) {
       // TODO, must compare currentLiquidity + vaulLiquidity > unmintAmount * virtualPrice
       return;
     }
