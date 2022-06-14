@@ -5,15 +5,18 @@ use anchor_client::solana_sdk::commitment_config::CommitmentConfig;
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_client::Client;
 use anchor_client::Cluster;
+use anchor_lang::solana_program::clock::Clock;
 use anyhow::Result;
+use bincode::deserialize;
 use clap::Parser;
 use mercurial_vault::get_base_key;
+use solana_program::sysvar;
 use solana_sdk::signature::{read_keypair_file, Keypair};
-use std::time::{SystemTime, UNIX_EPOCH};
 use strategy_handler::base::get_strategy_handler;
 
 use user::*;
 
+use std::convert::TryFrom;
 use std::rc::Rc;
 use std::str::FromStr;
 
@@ -150,11 +153,7 @@ fn show(program_client: &anchor_client::Program, vault: Pubkey) -> Result<()> {
     println!("VAULT DATA: {:#?}", vault_data);
     let token_mint: anchor_spl::token::Mint = program_client.account(vault_data.lp_mint)?;
 
-    let start = SystemTime::now();
-    let since_the_epoch = start
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
-    let current_timestamp = since_the_epoch.as_secs();
+    let current_timestamp = get_current_node_clock_time(program_client)?;
 
     println!(
         "TOTAL_AMOUNT: {}, TOTAL_UNLOCKED_AMOUNT: {}, lp_mint {}",
@@ -182,6 +181,14 @@ fn show(program_client: &anchor_client::Program, vault: Pubkey) -> Result<()> {
     assert_eq!(vault_data.total_amount, token_data.amount + strategy_amount);
     println!("Ok");
     Ok(())
+}
+
+pub fn get_current_node_clock_time(program_client: &anchor_client::Program) -> Result<u64> {
+    let rpc = program_client.rpc();
+    let clock_account = rpc.get_account(&sysvar::clock::id())?;
+    let clock = deserialize::<Clock>(&clock_account.data)?;
+    let current_time = u64::try_from(clock.unix_timestamp)?;
+    Ok(current_time)
 }
 
 fn get_unlocked_amount(

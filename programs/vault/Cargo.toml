@@ -21,7 +21,5 @@ no-capture = []
 serde = { version = "1.0.136"}
 anchor-lang = "0.24.2"
 anchor-spl = "0.24.2" 
-port-variable-rate-lending-instructions = "0.3.*"
-port-staking-instructions = "0.2.*"
 solana-program = "1.9.*"
 spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
