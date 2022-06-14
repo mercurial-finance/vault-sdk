@@ -65,6 +65,20 @@ pub mod vault {
 
         Ok(())
     }
+
+    pub fn deposit_strategy<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, RebalanceStrategy<'info>>,
+        amount: u64,
+    ) -> Result<()> {
+        Ok(())
+    }
+
+    pub fn withdraw_strategy<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, RebalanceStrategy<'info>>,
+        amount: u64,
+    ) -> Result<()> {
+        Ok(())
+    }
 }
 
 #[error_code]

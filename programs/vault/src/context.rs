@@ -84,3 +84,41 @@ pub struct WithdrawDirectlyFromStrategy<'info> {
 pub struct GetUnlockedAmount<'info> {
     pub vault: Box<Account<'info, Vault>>,
 }
+
+
+#[derive(Accounts)]
+pub struct RebalanceStrategy<'info> {
+    #[account(
+        mut,
+        has_one = token_vault,
+        has_one = lp_mint,
+        has_one = fee_vault,
+    )]
+    pub vault: Box<Account<'info, Vault>>,
+    #[account(mut)]
+    pub strategy: Box<Account<'info, Strategy>>,
+
+    #[account(mut)]
+    pub token_vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(mut)]
+    pub fee_vault: Box<Account<'info, TokenAccount>>,
+
+    #[account(mut)]
+    pub lp_mint: Box<Account<'info, Mint>>,
+
+    /// CHECK: Strategy program
+    pub strategy_program: AccountInfo<'info>,
+
+    #[account( mut, constraint = strategy.collateral_vault == collateral_vault.key())]
+    pub collateral_vault: Box<Account<'info, TokenAccount>>,
+
+    /// CHECK: Reserve account
+    #[account(mut, constraint = strategy.reserve == reserve.key())]
+    pub reserve: AccountInfo<'info>,
+
+    pub token_program: Program<'info, Token>,
+
+    #[account(constraint = vault.admin == operator.key() || vault.operator == operator.key())]
+    pub operator: Signer<'info>,
+}

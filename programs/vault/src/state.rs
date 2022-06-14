@@ -6,7 +6,7 @@ use std::fmt::Debug;
 
 pub const MAX_STRATEGY: usize = 30;
 pub const MAX_BUMPS: usize = 10;
-pub const LOCKED_PROFIT_DEGRATION_DENUMERATOR: u128 = 1_000_000_000_000;
+pub const LOCKED_PROFIT_DEGRADATION_DENOMINATOR: u128 = 1_000_000_000_000;
 
 #[account]
 #[derive(Default, Debug)]
@@ -38,12 +38,13 @@ pub struct LockedProfitTracker {
 
 impl Default for LockedProfitTracker {
     fn default() -> Self {
-        return LockedProfitTracker {
+        LockedProfitTracker {
             last_updated_locked_profit: 0,
             last_report: 0,
-            locked_profit_degradation: u64::try_from(LOCKED_PROFIT_DEGRATION_DENUMERATOR).unwrap()
-                / 3600, // locked profit is fully dripped in 1 hour
-        };
+            locked_profit_degradation: u64::try_from(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)
+                .unwrap()
+                / (6 * 3600), // locked profit is fully dripped in 6 hour
+        }
     }
 }
 impl LockedProfitTracker {
@@ -52,18 +53,18 @@ impl LockedProfitTracker {
     pub fn calculate_locked_profit(&self, current_time: u64) -> Option<u64> {
         let duration = u128::from(current_time.checked_sub(self.last_report)?);
         let locked_profit_degradation = u128::from(self.locked_profit_degradation);
-        let locked_fund_ratio = duration * locked_profit_degradation;
+        let locked_fund_ratio = duration.checked_mul(locked_profit_degradation)?;
 
-        if locked_fund_ratio > LOCKED_PROFIT_DEGRATION_DENUMERATOR {
+        if locked_fund_ratio > LOCKED_PROFIT_DEGRADATION_DENOMINATOR {
             return Some(0);
         }
         let locked_profit = u128::from(self.last_updated_locked_profit);
 
         let locked_profit = (locked_profit
-            .checked_mul(LOCKED_PROFIT_DEGRATION_DENUMERATOR - locked_fund_ratio)?)
-        .checked_div(LOCKED_PROFIT_DEGRATION_DENUMERATOR)?;
+            .checked_mul(LOCKED_PROFIT_DEGRADATION_DENOMINATOR - locked_fund_ratio)?)
+        .checked_div(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)?;
         let locked_profit = u64::try_from(locked_profit).ok()?;
-        return Some(locked_profit);
+        Some(locked_profit)
     }
 }
 
@@ -82,12 +83,12 @@ impl Vault {
         total_supply: u64,
     ) -> Option<u64> {
         let total_amount = self.get_unlocked_amount(current_time)?;
-        return u64::try_from(
+        u64::try_from(
             u128::from(share)
                 .checked_mul(u128::from(total_amount))?
                 .checked_div(u128::from(total_supply))?,
         )
-        .ok();
+        .ok()
     }
 
     pub fn get_unmint_amount(
@@ -97,12 +98,12 @@ impl Vault {
         total_supply: u64,
     ) -> Option<u64> {
         let total_amount = self.get_unlocked_amount(current_time)?;
-        return u64::try_from(
+        u64::try_from(
             u128::from(out_token)
                 .checked_mul(u128::from(total_supply))?
                 .checked_div(u128::from(total_amount))?,
         )
-        .ok();
+        .ok()
     }
 
     pub fn is_strategy_existed(&self, pubkey: Pubkey) -> bool {
@@ -111,13 +112,13 @@ impl Vault {
                 return true;
             }
         }
-        return false;
+        false
     }
 }
 
 impl Default for StrategyType {
     fn default() -> Self {
-        return StrategyType::PortFinanceWithoutLM;
+        StrategyType::PortFinanceWithoutLM
     }
 }
 
@@ -129,4 +130,5 @@ pub struct Strategy {
     pub strategy_type: StrategyType,
     pub current_liquidity: u64,
     pub bumps: [u8; MAX_BUMPS],
+    pub vault: Pubkey,
 }

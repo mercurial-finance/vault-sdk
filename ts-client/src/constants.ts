@@ -16,3 +16,22 @@ export const USDT_MINT = new PublicKey(
 export const VAULT_BASE_KEY = new PublicKey(
   "HWzXGcGHy4tcpYfaRDCyLNzXqBTv3E6BttpCH2vJxArv"
 );
+
+export const SEEDS = Object.freeze({
+  VAULT_PREFIX: "vault",
+  TOKEN_VAULT_PREFIX: "token_vault",
+  LP_MINT_PREFIX: "lp_mint",
+  COLLATERAL_VAULT_PREFIX: "collateral_vault",
+  OBLIGATION_PREFIX: "obligation",
+  OBLIGATION_OWNER_PREFIX: "obligation_owner",
+  STAKING_PREFIX: "staking",
+  MINER: "Miner",
+});
+
+export const STRATEGY_PROGRAM_ADDRESSES: {
+  solend: PublicKey;
+  portFinance: PublicKey;
+} = {
+  solend: new PublicKey("ALend7Ketfx5bxh6ghsCDXAoDrhvEmsXT3cynB6aPLgx"),
+  portFinance: new PublicKey("pdQ2rQQU5zH2rDgZ7xH2azMBJegUzUyunJ5Jd637hC4"),
+};

@@ -23,3 +23,4 @@ port-variable-rate-lending-instructions = "0.3.0"
 solend-program = { git="https://github.com/mercurial-finance/solana-program-library", rev="e1e3ce4f26c7840695788d4b38d657709acfde51", features = [ "no-entrypoint" ] }
 mango = {git="https://github.com/mercurial-finance/mango-v3", rev="5a23b6310fc4cfd5aaef6b9bdbcc6c6c0f3d2898", features = ["no-entrypoint"]}
 mango-common = {git="https://github.com/mercurial-finance/mango-v3", rev="5a23b6310fc4cfd5aaef6b9bdbcc6c6c0f3d2898"}
+bincode = "^1.3.1"
