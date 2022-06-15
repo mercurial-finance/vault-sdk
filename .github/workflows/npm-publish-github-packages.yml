@@ -7,6 +7,10 @@ on:
   release:
     types: [created]
 
+env:
+  NPM_TOKEN: //npm.pkg.github.com/:_authToken=${{ secrets.GH_PAT }}
+  NPM_REGISTRY: @juiced-fi:registry=https://npm.pkg.github.com
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,8 +29,13 @@ jobs:
           version: 7
           run_install: false
 
+      - name: private npm registry auth
+        run: |
+          printf '%s\n%s\n' "${{ env.NPM_TOKEN }}" "${{ env.NPM_REGISTRY }}" > ./ts-client/.npmrc
+
       - run: pnpm i
       - run: pnpm test
+      - run: rm ./ts-client/.npmrc
 
   publish-gpr:
     needs: build
@@ -49,7 +58,13 @@ jobs:
         with:
           version: 7
           run_install: false
+
+      - name: private npm registry auth
+        run: |
+          printf '%s\n%s\n' "${{ env.NPM_TOKEN }}" "${{ env.NPM_REGISTRY }}" > ./ts-client/.npmrc
+
       - run: pnpm i
+      - run: rm ./ts-client/.npmrc
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
