@@ -65,6 +65,8 @@ jobs:
 
       - run: pnpm i
       - run: rm ./.npmrc
+      - run: printf '%s\n' "${{ env.NPM_REGISTRY }}" > ./.npmrc
+
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}

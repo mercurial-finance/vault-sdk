@@ -1,4 +1,3 @@
-
 .anchor
 .DS_Store
 target
@@ -7,4 +6,3 @@ node_modules
 .pnpm-debug.log
 .idea/**
 **/lib
-ts-client/.npmrc
