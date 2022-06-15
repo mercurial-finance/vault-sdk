@@ -9,7 +9,7 @@ on:
 
 env:
   NPM_TOKEN: //npm.pkg.github.com/:_authToken=${{ secrets.GH_PAT }}
-  NPM_REGISTRY: @juiced-fi:registry=https://npm.pkg.github.com
+  NPM_REGISTRY: "@juiced-fi:registry=https://npm.pkg.github.com"
 
 jobs:
   build:
