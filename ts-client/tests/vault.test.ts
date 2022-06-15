@@ -1,10 +1,9 @@
 import { Connection, Keypair, PublicKey, SYSVAR_CLOCK_PUBKEY, ParsedAccountData } from "@solana/web3.js";
 import { StaticTokenListResolutionStrategy, TokenInfo } from "@solana/spl-token-registry";
 import { Wallet, AnchorProvider, BN } from "@project-serum/anchor";
-
-import Vault from "../src/vault";
+import { Vault } from "../src";
 import { SOL_MINT } from "../src/constants";
-import { ParsedClockState } from "../types/clock_state";
+import { ParsedClockState } from "../src/types/clockState";
 import { airDropSol } from './utils';
 
 const mockWallet = new Wallet(new Keypair());
@@ -38,7 +37,7 @@ describe('Get Mainnet vault state', () => {
   });
   const vault = new Vault(provider, mockWallet.publicKey);
 
-  let lpSupply;
+  let lpSupply: string | number | BN | Buffer | Uint8Array | number[];
   beforeAll(async () => {
     await vault.init(SOL_MINT);
     if (!vault.state) return;
@@ -91,7 +90,7 @@ describe('Interact with Vault in devnet', () => {
     await vault.init(SOL_MINT);
     if (!vault.state) return;
     
-    for (var strategy of vault.state.strategies) {
+    for (const strategy of vault.state.strategies) {
       if (!strategy.equals(PublicKey.default)) {
         console.log("Test with ", strategy.toString());
         const depositResult = await vault.deposit(SOL_TOKEN_INFO, 2000);

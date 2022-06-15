@@ -34,7 +34,7 @@ jobs:
           printf '%s\n%s\n' "${{ env.NPM_TOKEN }}" "${{ env.NPM_REGISTRY }}" > ./.npmrc
 
       - run: pnpm i
-      - run: pnpm test
+      - run: pnpm build
       - run: rm ./ts-client/.npmrc
 
   publish-gpr:

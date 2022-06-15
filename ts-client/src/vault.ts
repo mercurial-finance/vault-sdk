@@ -5,7 +5,7 @@ import { BN, Program, Provider } from "@project-serum/anchor";
 
 import { PROGRAM_ID, SOL_MINT, STRATEGY_PROGRAM_ADDRESSES } from "./constants";
 import { getOrCreateATAInstruction, getVaultPdas, wrapSOLInstruction } from "./utils";
-import { VaultState } from "./vault_state";
+import { VaultState } from "./types/vaultState";
 import { getStrategyHandler, getStrategyType, StrategyState } from "./strategy";
 import { IDL, Vault as VaultIdl } from "./idl";
 
