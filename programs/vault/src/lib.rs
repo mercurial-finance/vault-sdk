@@ -11,6 +11,10 @@ use std::str::FromStr;
 
 declare_id!("24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi");
 
+// Performance fee when rebalancing
+pub const PERFORMANCE_FEE_NUMERATOR: u128 = 500u128; // 5%
+pub const PERFORMANCE_FEE_DENOMINATOR: u128 = 10000u128;
+
 // get vault address from base key and token mint
 // let (vault, _vault_bump) = Pubkey::find_program_address(
 //     &[b"vault".as_ref(), token_mint.as_ref(), get_base_key().as_ref()],
