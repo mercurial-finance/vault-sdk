@@ -15,6 +15,7 @@ cpi = ["no-entrypoint"]
 default = []
 test-bpf = []
 devnet = []
+staging = []
 no-capture = []
 
 [dependencies]
