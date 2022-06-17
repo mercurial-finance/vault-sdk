@@ -9,6 +9,10 @@ use context::*;
 use std::convert::TryFrom;
 use std::str::FromStr;
 
+#[cfg(feature = "staging")]
+declare_id!("6YRZW57XsrT2DxSNLXHHQd4QmiqBode4d6btASkRqcFo");
+
+#[cfg(not(feature = "staging"))]
 declare_id!("24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi");
 
 // Performance fee when rebalancing
