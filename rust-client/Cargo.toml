@@ -20,6 +20,7 @@ shellexpand = "2.1.0"
 spl-associated-token-account = { version = "1.0.2", features = ["no-entrypoint"] }
 rust_decimal="1.20.0"
 port-variable-rate-lending-instructions = "0.3.0"
+apricot-client = {git="https://github.com/mercurial-finance/apricot-client", rev="ecc9f4b9bcc8ff5ddc03ab0525b7c2ae5fa8995b"}
 solend-program = { git="https://github.com/mercurial-finance/solana-program-library", rev="e1e3ce4f26c7840695788d4b38d657709acfde51", features = [ "no-entrypoint" ] }
 mango = {git="https://github.com/mercurial-finance/mango-v3", rev="5a23b6310fc4cfd5aaef6b9bdbcc6c6c0f3d2898", features = ["no-entrypoint"]}
 mango-common = {git="https://github.com/mercurial-finance/mango-v3", rev="5a23b6310fc4cfd5aaef6b9bdbcc6c6c0f3d2898"}
