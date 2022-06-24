@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import { SEEDS, VAULT_BASE_KEY } from "../constants/vault";
+import { SEEDS, BASE_KEY } from "../constants";
 
 export const getVaultPdas = async (
   tokenMint: PublicKey,
@@ -9,7 +9,7 @@ export const getVaultPdas = async (
     [
       Buffer.from(SEEDS.VAULT_PREFIX),
       tokenMint.toBuffer(),
-      VAULT_BASE_KEY.toBuffer(),
+      BASE_KEY.VAULT.toBuffer(),
     ],
     programId
   );

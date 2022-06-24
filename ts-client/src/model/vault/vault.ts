@@ -1,7 +1,8 @@
 import { Connection, PublicKey, TransactionInstruction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { TokenInfo } from "@solana/spl-token-registry";
-import { BN, Program, Provider } from "@project-serum/anchor";
+import { AnchorProvider, BN, Program, Wallet } from "@project-serum/anchor";
+import invariant from "invariant";
 
 import {
   PROGRAM_ID,
@@ -17,28 +18,38 @@ import { IDL, Vault as VaultIdl } from "../../idl/vault";
 const LOCKED_PROFIT_DEGRADATION_DENOMINATOR = new BN(1_000_000_000_000);
 
 class Vault {
-  public program: VaultProgram;
-  public state: VaultState | null = null;
-  public walletPubKey: PublicKey | null = null;
-  public connection: Connection;
+  constructor(
+    private program: VaultProgram,
+    private wallet: Wallet,
+    private vaultPubKey: PublicKey,
+    private vaultLpPubKey: PublicKey,
+    public state: VaultState
+  ) {}
 
-  constructor(provider: Provider, walletPubKey: PublicKey) {
-    this.program = new Program<VaultIdl>(IDL as VaultIdl, PROGRAM_ID, provider);
-    this.walletPubKey = walletPubKey;
-    this.connection = provider.connection;
-  }
-
-  public async init(tokenMint: PublicKey) {
-    const { vaultPda } = await getVaultPdas(tokenMint, this.program.programId);
-    const vaultState = (await this.program.account.vault.fetchNullable(
+  static async load(
+    wallet: Wallet,
+    connection: Connection,
+    tokenMint: PublicKey
+  ) {
+    const provider = new AnchorProvider(connection, wallet, {
+      commitment: "processed",
+    });
+    const program = new Program<VaultIdl>(
+      IDL as VaultIdl,
+      PROGRAM_ID,
+      provider
+    );
+    const { vaultPda, tokenVaultPda } = await getVaultPdas(
+      tokenMint,
+      program.programId
+    );
+    const vaultState = (await program.account.vault.fetchNullable(
       vaultPda
     )) as VaultState;
 
-    if (!vaultState) {
-      throw "Cannot get vault state";
-    }
+    invariant(vaultState, `Vault ${tokenMint.toBase58()} not found`);
 
-    this.state = vaultState;
+    return new Vault(program, wallet, vaultPda, tokenVaultPda, vaultState);
   }
 
   public getUnlockedAmount(currentTime: number): BN {
@@ -58,17 +69,13 @@ class Vault {
   }
 
   public async deposit(tokenInfo: TokenInfo, amount: number) {
-    if (!this.walletPubKey) throw new Error("No wallet PublicKey provided");
-
     // Get Vault state
     const tokenMint = new PublicKey(tokenInfo.address);
-    const { vaultPda, tokenVaultPda } = await this.getPDA(tokenMint);
-    const vaultState = await this.program.account.vault.fetch(vaultPda);
 
     // Add create ATA instructions
     let preInstructions: TransactionInstruction[] = [];
     const { userToken, createUserTokenIx, userLpMint, createUserLpIx } =
-      await this.getUserToken(tokenMint, vaultState.lpMint);
+      await this.getUserToken(tokenMint, this.state.lpMint);
     this.appendUserTokenInstruction(preInstructions, [
       createUserTokenIx,
       createUserLpIx,
@@ -77,7 +84,7 @@ class Vault {
     // Wrap desired SOL instructions
     if (tokenMint.equals(SOL_MINT)) {
       preInstructions = preInstructions.concat(
-        wrapSOLInstruction(this.walletPubKey, userToken, amount)
+        wrapSOLInstruction(this.wallet.publicKey, userToken, amount)
       );
     }
 
@@ -85,12 +92,12 @@ class Vault {
       const tx = await this.program.methods
         .deposit(new BN(amount), new BN(0)) // Vault does not have slippage, second parameter is ignored.
         .accounts({
-          vault: vaultPda,
-          tokenVault: tokenVaultPda,
-          lpMint: vaultState.lpMint,
+          vault: this.vaultPubKey,
+          tokenVault: this.vaultLpPubKey,
+          lpMint: this.state.lpMint,
           userToken,
           userLp: userLpMint,
-          user: this.walletPubKey,
+          user: this.wallet.publicKey,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
         .preInstructions(preInstructions)
@@ -106,17 +113,13 @@ class Vault {
   }
 
   public async withdraw(tokenInfo: TokenInfo, amount: number): Promise<string> {
-    if (!this.walletPubKey) throw new Error("No wallet PublicKey provided");
-
     // Add create ATA instructions
     const tokenMint = new PublicKey(tokenInfo.address);
-    const { vaultPda, tokenVaultPda } = await this.getPDA(tokenMint);
-    const vaultState = await this.program.account.vault.fetch(vaultPda);
 
     // Wrap desired SOL instructions
     let preInstructions: TransactionInstruction[] = [];
     const { userToken, createUserTokenIx, userLpMint, createUserLpIx } =
-      await this.getUserToken(tokenMint, vaultState.lpMint);
+      await this.getUserToken(tokenMint, this.state.lpMint);
     this.appendUserTokenInstruction(preInstructions, [
       createUserTokenIx,
       createUserLpIx,
@@ -126,12 +129,12 @@ class Vault {
       const tx = await this.program.methods
         .withdraw(new BN(amount), new BN(0)) // Vault does not have slippage, second parameter is ignored.
         .accounts({
-          vault: vaultPda,
-          tokenVault: tokenVaultPda,
-          lpMint: vaultState.lpMint,
+          vault: this.vaultPubKey,
+          tokenVault: this.vaultLpPubKey,
+          lpMint: this.state.lpMint,
           userToken,
           userLp: userLpMint,
-          user: this.walletPubKey,
+          user: this.wallet.publicKey,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
         .preInstructions(preInstructions)
@@ -155,8 +158,6 @@ class Vault {
       portFinance: PublicKey;
     } = STRATEGY_PROGRAM_ADDRESSES
   ) {
-    if (!this.walletPubKey) throw new Error("No wallet PublicKey provided");
-
     const strategyState = (await this.program.account.strategy.fetch(
       vaultStrategyPubkey
     )) as StrategyState;
@@ -178,28 +179,25 @@ class Vault {
       throw new Error("Cannot find strategy handler");
     }
 
-    // Get Vault state
     const tokenMint = new PublicKey(tokenInfo.address);
-    const { vaultPda, tokenVaultPda } = await this.getPDA(tokenMint);
-    const vaultState = await this.program.account.vault.fetch(vaultPda);
 
     // Add create ATA instructions
     let preInstructions: TransactionInstruction[] = [];
     const { userToken, createUserTokenIx, userLpMint, createUserLpIx } =
-      await this.getUserToken(tokenMint, vaultState.lpMint);
+      await this.getUserToken(tokenMint, this.state.lpMint);
     this.appendUserTokenInstruction(preInstructions, [
       createUserTokenIx,
       createUserLpIx,
     ]);
 
     const tx = await strategyHandler.withdraw(
-      this.walletPubKey,
+      this.wallet.publicKey,
       this.program,
       strategy,
-      vaultPda,
-      tokenVaultPda,
-      vaultState.feeVault,
-      vaultState.lpMint,
+      this.vaultPubKey,
+      this.vaultLpPubKey,
+      this.state.feeVault,
+      this.state.lpMint,
       userToken,
       userLpMint,
       amount,
@@ -211,14 +209,6 @@ class Vault {
   }
 
   /** ---Private function--- */
-  private async getPDA(mint: PublicKey) {
-    const { vaultPda, tokenVaultPda } = await getVaultPdas(
-      mint,
-      this.program.programId
-    );
-    return { vaultPda, tokenVaultPda };
-  }
-
   private async appendUserTokenInstruction(
     preInstruction: TransactionInstruction[],
     toAppend: Array<TransactionInstruction | undefined>
@@ -231,17 +221,16 @@ class Vault {
   }
 
   private async getUserToken(mint: PublicKey, lpMint: PublicKey) {
-    if (!this.walletPubKey) throw new Error("No wallet PublicKey provided");
-
+    const walletPubKey = this.wallet.publicKey;
     const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
       mint,
-      this.walletPubKey,
-      this.connection
+      walletPubKey,
+      this.program.provider.connection
     );
     const [userLpMint, createUserLpIx] = await getOrCreateATAInstruction(
       lpMint,
-      this.walletPubKey,
-      this.connection
+      walletPubKey,
+      this.program.provider.connection
     );
 
     return { userToken, createUserTokenIx, userLpMint, createUserLpIx };

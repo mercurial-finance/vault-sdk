@@ -2,30 +2,21 @@ import { PublicKey } from "@solana/web3.js";
 
 export const PROGRAM_ID = "24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi";
 
-// Mainnet addresses
 export const SOL_MINT = new PublicKey(
   "So11111111111111111111111111111111111111112"
 );
-export const USDC_MINT = new PublicKey(
-  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-);
-export const USDT_MINT = new PublicKey(
-  "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
-);
 
-export const VAULT_BASE_KEY = new PublicKey(
-  "HWzXGcGHy4tcpYfaRDCyLNzXqBTv3E6BttpCH2vJxArv"
-);
+// Mainnet addresses
+export const MAINNET_VAULT_MINTS = Object.freeze({
+  SOL_MINT,
+  USDC_MINT: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+  USDT_MINT: new PublicKey("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"),
+});
 
-export const SEEDS = Object.freeze({
-  VAULT_PREFIX: "vault",
-  TOKEN_VAULT_PREFIX: "token_vault",
-  LP_MINT_PREFIX: "lp_mint",
-  COLLATERAL_VAULT_PREFIX: "collateral_vault",
-  OBLIGATION_PREFIX: "obligation",
-  OBLIGATION_OWNER_PREFIX: "obligation_owner",
-  STAKING_PREFIX: "staking",
-  MINER: "Miner",
+export const DEVNET_VAULT_MINTS = Object.freeze({
+  SOL_MINT,
+  USDC_MINT: new PublicKey("zVzi5VAf4qMEwzv7NXECVx5v2pQ7xnqVVjCXZwS9XzA"),
+  USDT_MINT: new PublicKey("9NGDi2tZtNmCCp8SVLKNuGjuWAVwNF3Vap5tT8km5er9"),
 });
 
 export const STRATEGY_PROGRAM_ADDRESSES: {

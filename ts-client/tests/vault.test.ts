@@ -39,16 +39,11 @@ beforeAll(async () => {
 });
 
 describe("Get Mainnet vault state", () => {
-  const provider = new AnchorProvider(mainnetConnection, mockWallet, {
-    commitment: "processed",
-  });
-  const vault = new Vault(provider, mockWallet.publicKey);
+  let vault;
 
   let lpSupply;
   beforeAll(async () => {
-    await vault.init(SOL_MINT);
-    if (!vault.state) return;
-
+    vault = await Vault.load(mockWallet, mainnetConnection, SOL_MINT);
     lpSupply = (await mainnetConnection.getTokenSupply(vault.state.lpMint))
       .value.amount;
   });
@@ -82,10 +77,11 @@ describe("Get Mainnet vault state", () => {
 });
 
 describe("Interact with Vault in devnet", () => {
-  const provider = new AnchorProvider(devnetConnection, mockWallet, {
-    commitment: "confirmed",
+  let vault;
+
+  beforeAll(async () => {
+    vault = await Vault.load(mockWallet, devnetConnection, SOL_MINT);
   });
-  const vault = new Vault(provider, mockWallet.publicKey);
 
   test("Vault Withdraw SOL", async () => {
     const depositResult = await vault.deposit(SOL_TOKEN_INFO, 2000);
@@ -95,9 +91,6 @@ describe("Interact with Vault in devnet", () => {
   });
 
   test("Vault Withdraw SOL from strategy", async () => {
-    await vault.init(SOL_MINT);
-    if (!vault.state) return;
-
     for (var strategy of vault.state.strategies) {
       if (!strategy.equals(PublicKey.default)) {
         console.log("Test with ", strategy.toString());
