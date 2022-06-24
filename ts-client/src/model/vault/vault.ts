@@ -3,13 +3,17 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { TokenInfo } from "@solana/spl-token-registry";
 import { BN, Program, Provider } from "@project-serum/anchor";
 
-import { PROGRAM_ID, SOL_MINT, STRATEGY_PROGRAM_ADDRESSES } from "./constants";
-import { getOrCreateATAInstruction, getVaultPdas, wrapSOLInstruction } from "./utils";
-import { VaultState } from "../types/vault_state";
-import { getStrategyHandler, getStrategyType, StrategyState } from "./strategy";
-import { IDL, Vault as VaultIdl } from "./idl";
+import {
+  PROGRAM_ID,
+  SOL_MINT,
+  STRATEGY_PROGRAM_ADDRESSES,
+} from "../../constants/vault";
+import { getVaultPdas } from "../../utils/vault";
+import { getOrCreateATAInstruction, wrapSOLInstruction } from "../../utils";
+import { StrategyState, VaultProgram, VaultState } from "../../types/vault";
+import { getStrategyHandler, getStrategyType } from "./strategy";
+import { IDL, Vault as VaultIdl } from "../../idl/vault";
 
-export type VaultProgram = Program<VaultIdl>;
 const LOCKED_PROFIT_DEGRADATION_DENOMINATOR = new BN(1_000_000_000_000);
 
 class Vault {
@@ -37,25 +41,10 @@ class Vault {
     this.state = vaultState;
   }
 
-
   public getUnlockedAmount(currentTime: number): BN {
     if (!this.state) return new BN(0);
 
     return this.state.totalAmount.sub(this.calculateLockedProfit(currentTime));
-  }
-
-  private calculateLockedProfit(currentTime: number): BN {
-    if (!this.state) return new BN(0);
-    let currentTimeBN = new BN(currentTime);
-    const duration = currentTimeBN.sub(this.state.lockedProfitTracker.lastReport);
-    const lockedProfitDegradation =
-      this.state.lockedProfitTracker.lockedProfitDegradation;
-    const lockedFundRatio = duration.mul(lockedProfitDegradation);
-    if (lockedFundRatio.gt(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)) {
-      return new BN(0);
-    }
-    const lockedProfit = this.state.lockedProfitTracker.lastUpdatedLockedProfit;
-    return lockedProfit.mul(LOCKED_PROFIT_DEGRADATION_DENOMINATOR.sub(lockedFundRatio)).div(LOCKED_PROFIT_DEGRADATION_DENOMINATOR);
   }
 
   public getAmountByShare(currentTime: number, share: BN, totalSupply: BN): BN {
@@ -69,17 +58,21 @@ class Vault {
   }
 
   public async deposit(tokenInfo: TokenInfo, amount: number) {
-    if (!this.walletPubKey) throw new Error('No wallet PublicKey provided');
+    if (!this.walletPubKey) throw new Error("No wallet PublicKey provided");
 
     // Get Vault state
-    const tokenMint = new PublicKey(tokenInfo.address)
+    const tokenMint = new PublicKey(tokenInfo.address);
     const { vaultPda, tokenVaultPda } = await this.getPDA(tokenMint);
     const vaultState = await this.program.account.vault.fetch(vaultPda);
 
     // Add create ATA instructions
     let preInstructions: TransactionInstruction[] = [];
-    const { userToken, createUserTokenIx, userLpMint, createUserLpIx } = await this.getUserToken(tokenMint, vaultState.lpMint);
-    this.appendUserTokenInstruction(preInstructions, [createUserTokenIx, createUserLpIx]);
+    const { userToken, createUserTokenIx, userLpMint, createUserLpIx } =
+      await this.getUserToken(tokenMint, vaultState.lpMint);
+    this.appendUserTokenInstruction(preInstructions, [
+      createUserTokenIx,
+      createUserLpIx,
+    ]);
 
     // Wrap desired SOL instructions
     if (tokenMint.equals(SOL_MINT)) {
@@ -108,22 +101,26 @@ class Vault {
       return tx;
     } catch (error) {
       console.trace(error);
-      return '';
+      return "";
     }
   }
 
   public async withdraw(tokenInfo: TokenInfo, amount: number): Promise<string> {
-    if (!this.walletPubKey) throw new Error('No wallet PublicKey provided');
+    if (!this.walletPubKey) throw new Error("No wallet PublicKey provided");
 
     // Add create ATA instructions
-    const tokenMint = new PublicKey(tokenInfo.address)
+    const tokenMint = new PublicKey(tokenInfo.address);
     const { vaultPda, tokenVaultPda } = await this.getPDA(tokenMint);
     const vaultState = await this.program.account.vault.fetch(vaultPda);
 
     // Wrap desired SOL instructions
     let preInstructions: TransactionInstruction[] = [];
-    const { userToken, createUserTokenIx, userLpMint, createUserLpIx } = await this.getUserToken(tokenMint, vaultState.lpMint);
-    this.appendUserTokenInstruction(preInstructions, [createUserTokenIx, createUserLpIx]);
+    const { userToken, createUserTokenIx, userLpMint, createUserLpIx } =
+      await this.getUserToken(tokenMint, vaultState.lpMint);
+    this.appendUserTokenInstruction(preInstructions, [
+      createUserTokenIx,
+      createUserLpIx,
+    ]);
 
     try {
       const tx = await this.program.methods
@@ -145,7 +142,7 @@ class Vault {
       return tx;
     } catch (error) {
       console.trace(error);
-      return '';
+      return "";
     }
   }
 
@@ -158,11 +155,11 @@ class Vault {
       portFinance: PublicKey;
     } = STRATEGY_PROGRAM_ADDRESSES
   ) {
-    if (!this.walletPubKey) throw new Error('No wallet PublicKey provided');
+    if (!this.walletPubKey) throw new Error("No wallet PublicKey provided");
 
-    const strategyState = (await this.program.account.strategy.fetchNullable(
+    const strategyState = (await this.program.account.strategy.fetch(
       vaultStrategyPubkey
-    )) as unknown as StrategyState;
+    )) as StrategyState;
 
     if (strategyState.currentLiquidity.eq(new BN(0))) {
       // TODO, must compare currentLiquidity + vaulLiquidity > unmintAmount * virtualPrice
@@ -182,14 +179,18 @@ class Vault {
     }
 
     // Get Vault state
-    const tokenMint = new PublicKey(tokenInfo.address)
+    const tokenMint = new PublicKey(tokenInfo.address);
     const { vaultPda, tokenVaultPda } = await this.getPDA(tokenMint);
     const vaultState = await this.program.account.vault.fetch(vaultPda);
 
     // Add create ATA instructions
     let preInstructions: TransactionInstruction[] = [];
-    const { userToken, createUserTokenIx, userLpMint, createUserLpIx } = await this.getUserToken(tokenMint, vaultState.lpMint);
-    this.appendUserTokenInstruction(preInstructions, [createUserTokenIx, createUserLpIx]);
+    const { userToken, createUserTokenIx, userLpMint, createUserLpIx } =
+      await this.getUserToken(tokenMint, vaultState.lpMint);
+    this.appendUserTokenInstruction(preInstructions, [
+      createUserTokenIx,
+      createUserLpIx,
+    ]);
 
     const tx = await strategyHandler.withdraw(
       this.walletPubKey,
@@ -203,12 +204,13 @@ class Vault {
       userLpMint,
       amount,
       preInstructions,
-      [],
+      []
     );
 
     return tx;
   }
 
+  /** ---Private function--- */
   private async getPDA(mint: PublicKey) {
     const { vaultPda, tokenVaultPda } = await getVaultPdas(
       mint,
@@ -217,17 +219,19 @@ class Vault {
     return { vaultPda, tokenVaultPda };
   }
 
-  private async appendUserTokenInstruction(preInstruction: TransactionInstruction[], toAppend: Array<TransactionInstruction | undefined>) {
-    toAppend
-      .forEach(instruction => {
-        if (instruction) {
-          preInstruction.push(instruction);
-        }
-      })
+  private async appendUserTokenInstruction(
+    preInstruction: TransactionInstruction[],
+    toAppend: Array<TransactionInstruction | undefined>
+  ) {
+    toAppend.forEach((instruction) => {
+      if (instruction) {
+        preInstruction.push(instruction);
+      }
+    });
   }
 
   private async getUserToken(mint: PublicKey, lpMint: PublicKey) {
-    if (!this.walletPubKey) throw new Error('No wallet PublicKey provided');
+    if (!this.walletPubKey) throw new Error("No wallet PublicKey provided");
 
     const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
       mint,
@@ -240,7 +244,25 @@ class Vault {
       this.connection
     );
 
-    return { userToken, createUserTokenIx, userLpMint, createUserLpIx }
+    return { userToken, createUserTokenIx, userLpMint, createUserLpIx };
+  }
+
+  private calculateLockedProfit(currentTime: number): BN {
+    if (!this.state) return new BN(0);
+    let currentTimeBN = new BN(currentTime);
+    const duration = currentTimeBN.sub(
+      this.state.lockedProfitTracker.lastReport
+    );
+    const lockedProfitDegradation =
+      this.state.lockedProfitTracker.lockedProfitDegradation;
+    const lockedFundRatio = duration.mul(lockedProfitDegradation);
+    if (lockedFundRatio.gt(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)) {
+      return new BN(0);
+    }
+    const lockedProfit = this.state.lockedProfitTracker.lastUpdatedLockedProfit;
+    return lockedProfit
+      .mul(LOCKED_PROFIT_DEGRADATION_DENOMINATOR.sub(lockedFundRatio))
+      .div(LOCKED_PROFIT_DEGRADATION_DENOMINATOR);
   }
 }
 

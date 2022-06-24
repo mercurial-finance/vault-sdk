@@ -1,23 +1,29 @@
-import { Connection, Keypair, PublicKey, SYSVAR_CLOCK_PUBKEY, ParsedAccountData } from "@solana/web3.js";
-import { StaticTokenListResolutionStrategy, TokenInfo } from "@solana/spl-token-registry";
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  SYSVAR_CLOCK_PUBKEY,
+  ParsedAccountData,
+} from "@solana/web3.js";
+import {
+  StaticTokenListResolutionStrategy,
+  TokenInfo,
+} from "@solana/spl-token-registry";
 import { Wallet, AnchorProvider, BN } from "@project-serum/anchor";
 
-import Vault from "../src/vault";
-import { SOL_MINT } from "../src/constants";
-import { ParsedClockState } from "../types/clock_state";
-import { airDropSol } from './utils';
+import Vault from "../src/model/vault/vault";
+import { SOL_MINT } from "../src/constants/vault";
+import { ParsedClockState } from "../src/types/clock_state";
+import { airDropSol } from "./utils";
 
 const mockWallet = new Wallet(new Keypair());
 const mainnetConnection = new Connection("https://api.mainnet-beta.solana.com");
 const devnetConnection = new Connection("https://api.devnet.solana.com/");
 
-
 // Prevent importing directly from .json, causing slowdown on Intellisense
-const SOL_TOKEN_INFO = (
-  new StaticTokenListResolutionStrategy()
+const SOL_TOKEN_INFO = new StaticTokenListResolutionStrategy()
   .resolve()
-  .find(token => token.symbol === 'SOL')
-) as TokenInfo; // Guaranteed to exist
+  .find((token) => token.symbol === "SOL") as TokenInfo; // Guaranteed to exist
 let currentTime = 0;
 
 beforeAll(async () => {
@@ -30,9 +36,9 @@ beforeAll(async () => {
     .parsed as ParsedClockState;
   currentTime = parsedClockAccount.info.unixTimestamp; // use on-chain time instead of local time
   console.log("current time: ", currentTime);
-})
+});
 
-describe('Get Mainnet vault state', () => {
+describe("Get Mainnet vault state", () => {
   const provider = new AnchorProvider(mainnetConnection, mockWallet, {
     commitment: "processed",
   });
@@ -43,8 +49,9 @@ describe('Get Mainnet vault state', () => {
     await vault.init(SOL_MINT);
     if (!vault.state) return;
 
-    lpSupply = (await mainnetConnection.getTokenSupply(vault.state.lpMint)).value.amount;
-  })
+    lpSupply = (await mainnetConnection.getTokenSupply(vault.state.lpMint))
+      .value.amount;
+  });
 
   test("lp supply", async () => {
     expect(typeof lpSupply).toBe("string");
@@ -53,7 +60,7 @@ describe('Get Mainnet vault state', () => {
   test("get unlocked amount", async () => {
     const unlockedAmount = vault.getUnlockedAmount(currentTime);
     expect(unlockedAmount).toBeInstanceOf(BN);
-  })
+  });
 
   test("get amount by share", async () => {
     const amountByShare = vault.getAmountByShare(
@@ -62,7 +69,7 @@ describe('Get Mainnet vault state', () => {
       new BN(lpSupply)
     );
     expect(amountByShare).toBeInstanceOf(BN);
-  })
+  });
 
   test("get unmint amount", async () => {
     const unMintAmount = vault.getUnmintAmount(
@@ -71,10 +78,10 @@ describe('Get Mainnet vault state', () => {
       new BN(lpSupply)
     );
     expect(unMintAmount).toBeInstanceOf(BN);
-  })
-})
+  });
+});
 
-describe('Interact with Vault in devnet', () => {
+describe("Interact with Vault in devnet", () => {
   const provider = new AnchorProvider(devnetConnection, mockWallet, {
     commitment: "confirmed",
   });
@@ -90,15 +97,19 @@ describe('Interact with Vault in devnet', () => {
   test("Vault Withdraw SOL from strategy", async () => {
     await vault.init(SOL_MINT);
     if (!vault.state) return;
-    
+
     for (var strategy of vault.state.strategies) {
       if (!strategy.equals(PublicKey.default)) {
         console.log("Test with ", strategy.toString());
         const depositResult = await vault.deposit(SOL_TOKEN_INFO, 2000);
         expect(typeof depositResult).toBe("string");
-        const withdrawResult = await vault.withdrawFromStrategy(SOL_TOKEN_INFO, strategy, 1000);
+        const withdrawResult = await vault.withdrawFromStrategy(
+          SOL_TOKEN_INFO,
+          strategy,
+          1000
+        );
         expect(typeof withdrawResult).toBe("string");
       }
     }
   });
-})
+});

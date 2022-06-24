@@ -9,33 +9,14 @@ import {
   TOKEN_PROGRAM_ID,
   Token,
 } from "@solana/spl-token";
-import { SOL_MINT, VAULT_BASE_KEY } from "./constants";
+import { SOL_MINT } from "../constants/vault";
 
-export const getVaultPdas = async (
-  tokenMint: PublicKey,
-  programId: PublicKey
-) => {
-  const [vault, _vaultBump] = await PublicKey.findProgramAddress(
-    [Buffer.from("vault"), tokenMint.toBuffer(), VAULT_BASE_KEY.toBuffer()],
-    programId
-  );
+export const fromDecimal = (amount: number, decimal: number) => {
+  return amount / Math.pow(10, decimal);
+};
 
-  const [tokenVault, lpMint] = await Promise.all([
-    PublicKey.findProgramAddress(
-      [Buffer.from("token_vault"), vault.toBuffer()],
-      programId
-    ),
-    PublicKey.findProgramAddress(
-      [Buffer.from("lp_mint"), vault.toBuffer()],
-      programId
-    ),
-  ]);
-
-  return {
-    vaultPda: vault,
-    tokenVaultPda: tokenVault[0],
-    lpMintPda: lpMint[0],
-  };
+export const toDecimal = (amount: number, decimal: number) => {
+  return amount * Math.pow(10, decimal);
 };
 
 export const getOrCreateATAInstruction = async (
@@ -117,12 +98,4 @@ export const createCloseAccountTransaction = async (
     return closedWrappedSolInstruction;
   }
   return null;
-};
-
-export const fromDecimal = (amount: number, decimal: number) => {
-  return amount / Math.pow(10, decimal);
-};
-
-export const toDecimal = (amount: number, decimal: number) => {
-  return amount * Math.pow(10, decimal);
 };

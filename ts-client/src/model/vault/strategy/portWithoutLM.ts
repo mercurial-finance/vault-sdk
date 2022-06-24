@@ -1,38 +1,35 @@
 import {
-  AccountMeta,
   PublicKey,
+  AccountMeta,
   SYSVAR_CLOCK_PUBKEY,
+  Cluster,
   TransactionInstruction,
 } from "@solana/web3.js";
-import * as solend from "@solendprotocol/solend-sdk";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-
 import * as anchor from "@project-serum/anchor";
+import * as port from "@port.finance/port-sdk";
 
-import { VaultProgram } from "../vault";
-import { ReserveState, StrategyHandler } from ".";
-import { SEEDS } from "../constants";
-import { Strategy } from "../mint";
+import { SEEDS } from "../../../constants/vault";
+import {
+  ReserveState,
+  Strategy,
+  StrategyHandler,
+  VaultProgram,
+} from "../../../types/vault";
 
-export default class SolendWithoutLMHandler implements StrategyHandler {
+export default class PortWithoutLMHandler implements StrategyHandler {
   constructor(public strategyProgram: PublicKey) {}
-
   async getReserveState(
     program: VaultProgram,
     reserve: PublicKey
   ): Promise<ReserveState> {
-    const state = await (async () => {
-      const account = await program.provider.connection.getAccountInfo(reserve);
-
-      const solendParse = solend.parseReserve(account!.owner, account!);
-      return solendParse!.info;
-    })();
-
+    const account = await program.provider.connection.getAccountInfo(reserve);
+    const state = port.ReserveLayout.decode(account!.data) as port.ReserveData;
     return {
       collateral: {
         mintPubkey: state.collateral.mintPubkey,
-        mintTotalSupply: state.collateral.mintTotalSupply.toNumber(),
-        supplyPubkey: state.collateral.mintTotalSupply.toString(),
+        mintTotalSupply: Number(state.collateral.mintTotalSupply.toU64()),
+        supplyPubkey: state.collateral.supplyPubkey.toString(),
       },
       state,
     };
@@ -52,48 +49,44 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[]
   ): Promise<string> {
-    const { collateral, state } = await this.getReserveState(
+    const { state } = await this.getReserveState(
       program,
       strategy.state.reserve
     );
+    const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
 
     let [collateralVault] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX),
-        new PublicKey(strategy.pubkey).toBuffer(),
-      ],
+      [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId
     );
 
-    const { liquidity, lendingMarket } = state as solend.Reserve;
+    const {
+      collateral: portCollateral,
+      lendingMarket,
+      liquidity,
+    } = state as port.ReserveData;
 
     const [lendingMarketAuthority] = await PublicKey.findProgramAddress(
       [lendingMarket.toBuffer()],
       this.strategyProgram
     );
 
-    const accounts = [
-      { pubkey: liquidity.supplyPubkey, isWritable: true },
+    const accountData = [
+      { pubkey: portCollateral.supplyPubkey, isWritable: true },
       { pubkey: lendingMarket },
       { pubkey: lendingMarketAuthority },
-      { pubkey: collateral.mintPubkey, isWritable: true },
+      { pubkey: portCollateral.mintPubkey, isWritable: true },
       { pubkey: SYSVAR_CLOCK_PUBKEY },
     ];
     const remainingAccounts: Array<AccountMeta> = [];
-    for (const account of accounts) {
+    for (const account of accountData) {
       remainingAccounts.push({
         pubkey: account.pubkey,
         isWritable: !!account.isWritable,
         isSigner: false,
       });
     }
-    const { pythOracle, switchboardOracle } = liquidity as {
-      pythOracle?: PublicKey;
-      switchboardOracle?: PublicKey;
-    };
-    if (!pythOracle || !switchboardOracle) {
-      throw Error("Cannot get pythOracle or switchboardOracle from Solend");
-    }
+
     const tx = await program.methods
       .withdrawDirectlyFromStrategy(new anchor.BN(amount), new anchor.BN(0))
       .accounts({
@@ -113,16 +106,16 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
       .remainingAccounts(remainingAccounts)
       .preInstructions(
         preInstructions.concat([
-          solend.refreshReserveInstruction(
+          port.refreshReserveInstruction(
             strategy.state.reserve,
-            this.strategyProgram,
-            pythOracle,
-            switchboardOracle
+            liquidity.oraclePubkey,
+            this.strategyProgram
           ),
         ])
       )
       .postInstructions(postInstructions)
       .rpc();
+
     return tx;
   }
 }

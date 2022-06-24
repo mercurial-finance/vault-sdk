@@ -7,11 +7,13 @@ import {
 import * as solend from "@solendprotocol/solend-sdk";
 import * as anchor from "@project-serum/anchor";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-
-import { VaultProgram } from "../vault";
-import { ReserveState, StrategyHandler } from ".";
-import { SEEDS } from "../constants";
-import { Strategy } from "../mint";
+import { SEEDS } from "../../../constants/vault";
+import {
+  ReserveState,
+  Strategy,
+  StrategyHandler,
+  VaultProgram,
+} from "../../../types/vault";
 
 // not using now
 export default class SolendWithLMHandler implements StrategyHandler {
