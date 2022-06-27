@@ -3,11 +3,11 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { TokenInfo } from "@solana/spl-token-registry";
 import { BN, Program, Provider } from "@project-serum/anchor";
 
-import { PROGRAM_ID, SOL_MINT, STRATEGY_PROGRAM_ADDRESSES } from "./constants";
-import { getOrCreateATAInstruction, getVaultPdas, wrapSOLInstruction } from "./utils";
-import { VaultState } from "../types/vault_state";
-import { getStrategyHandler, getStrategyType, StrategyState } from "./strategy";
-import { IDL, Vault as VaultIdl } from "./idl";
+import { PROGRAM_ID, SOL_MINT, STRATEGY_PROGRAM_ADDRESSES } from "./vault/constants";
+import { getOrCreateATAInstruction, getVaultPdas, wrapSOLInstruction } from "./vault/utils";
+import { VaultState } from "./vault/types";
+import { getStrategyHandler, getStrategyType, StrategyState } from "./vault/strategy";
+import { IDL, Vault as VaultIdl } from "./vault/idl";
 
 export type VaultProgram = Program<VaultIdl>;
 const LOCKED_PROFIT_DEGRADATION_DENOMINATOR = new BN(1_000_000_000_000);
@@ -104,6 +104,16 @@ class Vault {
         .rpc({
           maxRetries: 40,
         });
+      console.log('## old', {
+        preInstructions,
+        vault: vaultPda,
+        tokenVault: tokenVaultPda,
+        lpMint: vaultState.lpMint,
+        userToken,
+        userLp: userLpMint,
+        user: this.walletPubKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
 
       return tx;
     } catch (error) {

@@ -7,8 +7,8 @@ import {
 
 import { StrategyHandler } from ".";
 import { SEEDS } from "../constants";
-import { Strategy } from "../mint";
-import { VaultProgram } from "../vault";
+import { Strategy } from "../../mint";
+import { VaultProgram } from "../../vault";
 
 export default class MangoHandler implements StrategyHandler {
   static MangoProgramId = new PublicKey(
@@ -31,7 +31,7 @@ export default class MangoHandler implements StrategyHandler {
     amount: number,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[]
-  ): Promise<string> {
+  ) {
     const [mangoAccountPK] = await PublicKey.findProgramAddress(
       [
         MangoHandler.MangoGrouPK.toBuffer(),
@@ -55,13 +55,13 @@ export default class MangoHandler implements StrategyHandler {
     );
 
     const rootBankState = mangoGroupState.rootBankAccounts[rootBankIdx];
-    if (!rootBankState) return '';
+    if (!rootBankState) return { error: 'Root bank state not found' };
     const nodeBankPK = rootBankState.nodeBanks[0];
 
     const nodeBankState = rootBankState.nodeBankAccounts.find(
       (t) => t.publicKey.toBase58() === nodeBankPK.toBase58()
     );
-    if (!nodeBankState) return '';
+    if (!nodeBankState) return { error: 'Node bank state not found' };
     const accountData = [
       { pubkey: MangoHandler.MangoGrouPK, isWritable: true },
       { pubkey: mangoAccountPK, isWritable: true },
@@ -108,9 +108,7 @@ export default class MangoHandler implements StrategyHandler {
         user: walletPubKey,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .rpc({
-        maxRetries: 40,
-      });
+      .transaction()
     return tx;
   }
 }

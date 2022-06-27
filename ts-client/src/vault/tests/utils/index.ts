@@ -1,11 +1,11 @@
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 
 const LAMPORTS_PER_SOL = 1e9;
-export const airDropSol = async (connection: Connection, publicKey: PublicKey) => {
+export const airDropSol = async (connection: Connection, publicKey: PublicKey, amount = 1 * LAMPORTS_PER_SOL) => {
     try {
         const airdropSignature = await connection.requestAirdrop(
             publicKey,
-            2 * LAMPORTS_PER_SOL
+            amount,
         );
         const latestBlockHash = await connection.getLatestBlockhash();
         await connection.confirmTransaction({

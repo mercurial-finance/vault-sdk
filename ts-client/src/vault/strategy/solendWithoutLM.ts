@@ -9,13 +9,13 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 import * as anchor from "@project-serum/anchor";
 
-import { VaultProgram } from "../vault";
+import { VaultProgram } from "../../vault";
 import { ReserveState, StrategyHandler } from ".";
 import { SEEDS } from "../constants";
-import { Strategy } from "../mint";
+import { Strategy } from "../../mint";
 
 export default class SolendWithoutLMHandler implements StrategyHandler {
-  constructor(public strategyProgram: PublicKey) {}
+  constructor(public strategyProgram: PublicKey) { }
 
   async getReserveState(
     program: VaultProgram,
@@ -51,7 +51,7 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
     amount: number,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[]
-  ): Promise<string> {
+  ) {
     const { collateral, state } = await this.getReserveState(
       program,
       strategy.state.reserve
@@ -122,7 +122,7 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
         ])
       )
       .postInstructions(postInstructions)
-      .rpc();
+      .transaction()
     return tx;
   }
 }

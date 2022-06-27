@@ -12,9 +12,9 @@ import * as anchor from "@project-serum/anchor";
 import * as port from "@port.finance/port-sdk";
 
 import { ReserveState, StrategyHandler } from ".";
-import { VaultProgram } from "../vault";
+import { VaultProgram } from "../../vault";
 import { SEEDS } from "../constants";
-import { Strategy } from "../mint";
+import { Strategy } from "../../mint";
 
 export default class PortWithoutLMHandler implements StrategyHandler {
   constructor(public strategyProgram: PublicKey) {}
@@ -47,7 +47,7 @@ export default class PortWithoutLMHandler implements StrategyHandler {
     amount: number,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[]
-  ): Promise<string> {
+  ) {
     const { state } = await this.getReserveState(
       program,
       strategy.state.reserve
@@ -113,7 +113,7 @@ export default class PortWithoutLMHandler implements StrategyHandler {
         ])
       )
       .postInstructions(postInstructions)
-      .rpc();
+      .transaction()
 
     return tx;
   }

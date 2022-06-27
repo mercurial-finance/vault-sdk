@@ -1,7 +1,7 @@
 import { BN } from "@project-serum/anchor";
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 import { STRATEGY_PROGRAM_ADDRESSES } from '../constants';
-import type { VaultProgram } from "../vault";
+import type { VaultProgram } from "../../vault";
 import MangoHandler from "./mango";
 import PortWithoutLMHandler from "./portWithoutLM";
 import SolendWithoutLMHandler from "./solendWithoutLM";
@@ -44,7 +44,7 @@ export interface StrategyHandler {
     amount: number,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[]
-  ): Promise<string>;
+  ): Promise<Transaction | { error: string }>;
 }
 
 export const getStrategyType = (strategyResponse: any) => {
