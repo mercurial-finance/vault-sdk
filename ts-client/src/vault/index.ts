@@ -10,7 +10,7 @@ import { IDL, Vault as VaultIdl } from "./idl";
 import { PROGRAM_ID, SOL_MINT, STRATEGY_PROGRAM_ADDRESSES } from "./constants";
 import { getStrategyHandler, getStrategyType, StrategyState } from "./strategy";
 
-const getOnchainTime = async (connection) => {
+const getOnchainTime = async (connection: Connection) => {
     const parsedClock = await connection.getParsedAccountInfo(
         SYSVAR_CLOCK_PUBKEY
     );
