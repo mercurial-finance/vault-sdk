@@ -6,8 +6,8 @@ import { IDL, Vault as VaultIdl } from "../idl";
 import { VaultImpl } from "../vaultImpl";
 import { airDropSol } from './utils';
 import Decimal from "decimal.js";
-import Vaults from "..";
 import { PROGRAM_ID } from "../constants";
+import Vaults from "..";
 
 const mockWallet = new Wallet(new Keypair());
 const mainnetConnection = new Connection("https://api.mainnet-beta.solana.com");
@@ -27,15 +27,30 @@ describe('Vaults', () => {
     vaultsInstance = await Vaults.create(mainnetConnection);
   })
 
-  test('Get all info and initialize all vaults', async () => {
+  test.only('Get all info and initialize all vaults', async () => {
     vaultsInstance.vaults.forEach(vault => {
+      expect(Object.keys(vault.data)).toEqual([
+        'token_address',
+        'total_amount_with_profit',
+        'token_amount',
+        'earned_amount',
+        'virtual_price',
+        'closest_apy',
+        'average_apy',
+        'long_apy',
+        'is_monitoring',
+        'usd_rate',
+        'strategies',
+        'apyState',
+      ])
+      expect(Object.keys(vault.data.apyState)).toEqual(["closest_apy","average_apy", "long_apy"])
       expect(vault.vault).toBeInstanceOf(VaultImpl);
     })
   })
 
   test('Refetch', async () => {
     const oldData = JSON.stringify(vaultsInstance.vaults.map(vault => vault.data), null, 2);
-    
+
     await vaultsInstance.refetch();
     // Purposely delay for 5s
     await new Promise(res => setTimeout(res, 5000));
@@ -112,9 +127,9 @@ describe('Interact with Vault in devnet', () => {
           const withdrawResult = await provider.sendAndConfirm(withdrawTx);
           console.log('Strategy withdraw result', withdrawResult)
           expect(typeof withdrawResult).toBe("string");
-          
+
         } catch (error) {
-            console.log('###', error)
+          console.log('###', error)
         }
       }
     }

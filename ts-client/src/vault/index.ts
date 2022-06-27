@@ -5,13 +5,16 @@ import got from 'got';
 import { IDL, Vault as VaultIdl } from "./idl";
 
 import { KEEPER_URL, PROGRAM_ID } from './constants';
-import { VaultInfo } from './types';
+import { VaultAPY, VaultInfo } from './types';
 import { VaultImpl } from './vaultImpl';
 
 const tokenResolver = new StaticTokenListResolutionStrategy()
     .resolve();
 
-type AllVaults = { data: VaultInfo, vault: VaultImpl }[];
+type AllVaults = Array<{
+    data: VaultInfo & { apyState: VaultAPY },
+    vault: VaultImpl
+}>
 export default class Vaults {
     private static URL = KEEPER_URL["mainnet-beta"];
 
@@ -29,10 +32,14 @@ export default class Vaults {
         const allVaultsInfo = await (got(`${this.URL}/vault_info`).json<VaultInfo[]>());
         const allVaultsPromises = allVaultsInfo.map(async (vault) => {
             const tokenInfo = tokenResolver.find(token => token.address === vault.token_address);
+            const apyState = await (got(`${this.URL}/apy_state/${vault.token_address}`).json<VaultAPY>());
 
-            if (tokenInfo) {
+            if (tokenInfo && apyState) {
                 return {
-                    data: vault,
+                    data: {
+                        ...vault,
+                        apyState,
+                    },
                     vault: await VaultImpl.create(
                         program,
                         { baseTokenMint: new PublicKey(tokenInfo.address), baseTokenDecimals: tokenInfo.decimals }

@@ -83,7 +83,22 @@ export enum StrategyType {
     SolendWithoutLM = 'SolendWithoutLM',
     Mango = 'Mango',
     Vault = 'Vault',
-  }
+}
+
+export type VaultAPY = {
+    "closest_apy": {
+        "strategy": string;
+        "apy": number;
+    }
+    "average_apy": {
+        "strategy": string;
+        "apy": number;
+    }
+    "long_apy": {
+        "strategy": string;
+        "apy": number;
+    }
+}
 
 /** Utils */
 export interface ParsedClockState {
