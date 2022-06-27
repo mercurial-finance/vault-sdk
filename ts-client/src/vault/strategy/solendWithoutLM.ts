@@ -6,16 +6,18 @@ import {
 } from "@solana/web3.js";
 import * as solend from "@solendprotocol/solend-sdk";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-
 import * as anchor from "@project-serum/anchor";
 
-import { ReserveState, StrategyHandler } from ".";
 import { SEEDS } from "../constants";
-import { Strategy } from "../../mint";
-import { VaultProgram } from "../types";
+import {
+  ReserveState,
+  Strategy,
+  StrategyHandler,
+  VaultProgram,
+} from "../types/vault";
 
 export default class SolendWithoutLMHandler implements StrategyHandler {
-  constructor(public strategyProgram: PublicKey) { }
+  constructor(public strategyProgram: PublicKey) {}
 
   async getReserveState(
     program: VaultProgram,
@@ -122,7 +124,7 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
         ])
       )
       .postInstructions(postInstructions)
-      .transaction()
+      .transaction();
     return tx;
   }
 }

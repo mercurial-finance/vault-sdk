@@ -2,13 +2,13 @@ import * as mango from "@blockworks-foundation/mango-client";
 import * as anchor from "@project-serum/anchor";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import {
-  AccountMeta, PublicKey, TransactionInstruction
+  AccountMeta,
+  PublicKey,
+  TransactionInstruction,
 } from "@solana/web3.js";
 
-import { StrategyHandler } from ".";
 import { SEEDS } from "../constants";
-import { Strategy } from "../../mint";
-import { VaultProgram } from "../types";
+import { Strategy, StrategyHandler, VaultProgram } from "../types/vault";
 
 export default class MangoHandler implements StrategyHandler {
   static MangoProgramId = new PublicKey(
@@ -55,13 +55,13 @@ export default class MangoHandler implements StrategyHandler {
     );
 
     const rootBankState = mangoGroupState.rootBankAccounts[rootBankIdx];
-    if (!rootBankState) return { error: 'Root bank state not found' };
+    if (!rootBankState) return { error: "Root bank state not found" };
     const nodeBankPK = rootBankState.nodeBanks[0];
 
     const nodeBankState = rootBankState.nodeBankAccounts.find(
       (t) => t.publicKey.toBase58() === nodeBankPK.toBase58()
     );
-    if (!nodeBankState) return { error: 'Node bank state not found' };
+    if (!nodeBankState) return { error: "Node bank state not found" };
     const accountData = [
       { pubkey: MangoHandler.MangoGrouPK, isWritable: true },
       { pubkey: mangoAccountPK, isWritable: true },
@@ -108,7 +108,7 @@ export default class MangoHandler implements StrategyHandler {
         user: walletPubKey,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      .transaction()
+      .transaction();
     return tx;
   }
 }

@@ -1,241 +1,353 @@
 import { Wallet } from "@project-serum/anchor";
-import { PublicKey, TransactionInstruction, Connection, SYSVAR_CLOCK_PUBKEY, ParsedAccountData, Transaction, Cluster, clusterApiUrl } from "@solana/web3.js";
+import {
+  TokenInfo,
+  StaticTokenListResolutionStrategy,
+} from "@solana/spl-token-registry";
+import {
+  PublicKey,
+  TransactionInstruction,
+  Connection,
+  SYSVAR_CLOCK_PUBKEY,
+  ParsedAccountData,
+  Transaction,
+  Cluster,
+} from "@solana/web3.js";
 import Decimal from "decimal.js";
 import { BN } from "bn.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
-import { ParsedClockState, VaultImplementation, VaultParams, VaultProgram, VaultState } from "./types";
-import { deserializeAccount, getAssociatedTokenAccount, getOrCreateATAInstruction, getVaultPdas, wrapSOLInstruction } from "./utils";
+import {
+  VaultImplementation,
+  VaultProgram,
+  VaultState,
+  StrategyState,
+  VaultInfo,
+  StrategyInfo,
+} from "./types/vault";
+import {
+  deserializeAccount,
+  getAssociatedTokenAccount,
+  getOrCreateATAInstruction,
+  getVaultPdas,
+  wrapSOLInstruction,
+} from "./utils";
 import { PROGRAM_ID, SOL_MINT } from "./constants";
-import { getStrategyHandler, getStrategyType, StrategyState } from "./strategy";
+import { getStrategyHandler, getStrategyType } from "./strategy";
+import { ParsedClockState } from "./types";
+
+const tokenResolver = new StaticTokenListResolutionStrategy().resolve();
 
 const getOnchainTime = async (connection: Connection) => {
-    const parsedClock = await connection.getParsedAccountInfo(
-        SYSVAR_CLOCK_PUBKEY
-    );
+  const parsedClock = await connection.getParsedAccountInfo(
+    SYSVAR_CLOCK_PUBKEY
+  );
 
-    const parsedClockAccount = (parsedClock.value!.data as ParsedAccountData)
-        .parsed as ParsedClockState;
+  const parsedClockAccount = (parsedClock.value!.data as ParsedAccountData)
+    .parsed as ParsedClockState;
 
-    const currentTime = parsedClockAccount.info.unixTimestamp;
-    return currentTime;
-}
+  const currentTime = parsedClockAccount.info.unixTimestamp;
+  return currentTime;
+};
 
-const getVaultState = async (vaultParams: VaultParams, program: VaultProgram): Promise<{ vaultPda: PublicKey, tokenVaultPda: PublicKey, vaultState: VaultState }> => {
-    const { vaultPda, tokenVaultPda } = await getVaultPdas(vaultParams.baseTokenMint, new PublicKey(PROGRAM_ID));
-    const vaultState = (await program.account.vault.fetchNullable(
-        vaultPda
-    )) as VaultState;
+const getVaultState = async (
+  tokenInfo: TokenInfo,
+  program: VaultProgram
+): Promise<{ vaultPda: PublicKey; vaultState: VaultState }> => {
+  const { vaultPda } = await getVaultPdas(
+    new PublicKey(tokenInfo.address),
+    new PublicKey(PROGRAM_ID)
+  );
+  const vaultState = (await program.account.vault.fetchNullable(
+    vaultPda
+  )) as VaultState;
 
-    if (!vaultState) {
-        throw "Cannot get vault state";
-    }
-    return { vaultPda, tokenVaultPda, vaultState };
-}
+  if (!vaultState) {
+    throw "Cannot get vault state";
+  }
+  return { vaultPda, vaultState };
+};
 
-type VaultDetails = {
-    vaultParams: VaultParams,
-    vaultPda: PublicKey,
-    tokenVaultPda: PublicKey,
-    vaultState: VaultState
-}
+type VaultDetails = VaultState & {
+  closestApy: number;
+  longApy: number;
+  averageApy: number;
+  usdRate: number;
+  strategies: Array<StrategyInfo>;
+};
 
 const LOCKED_PROFIT_DEGRADATION_DENOMINATOR = new Decimal(1_000_000_000_000);
 export class VaultImpl implements VaultImplementation {
-    private connection: Connection;
-    private cluster: Cluster = 'mainnet-beta';
+  private connection: Connection;
+  private cluster: Cluster = "mainnet-beta";
 
-    // Vault
-    private vaultParams: VaultParams;
-    private program: VaultProgram;
-    private vaultPda: PublicKey;
-    private tokenVaultPda: PublicKey;
-    public vaultState: VaultState;
+  // Vault
+  private program: VaultProgram;
+  private vaultPda: PublicKey;
+  public tokenInfo: TokenInfo;
+  public vaultState: VaultDetails;
 
-    private constructor(program: VaultProgram, vaultDetails: VaultDetails, opt?: { cluster?: Cluster }) {
-        this.connection = program.provider.connection;
-        this.cluster = opt?.cluster ?? 'mainnet-beta';
+  private constructor(
+    program: VaultProgram,
+    {
+      tokenInfo,
+      vaultPda,
+      vaultState,
+      vaultInfo: { closest_apy, average_apy, long_apy, usd_rate, strategies },
+    },
+    opt?: { cluster?: Cluster }
+  ) {
+    this.connection = program.provider.connection;
+    this.cluster = opt?.cluster ?? "mainnet-beta";
 
-        this.vaultParams = vaultDetails.vaultParams;
-        this.program = program;
-        this.vaultPda = vaultDetails.vaultPda;
-        this.tokenVaultPda = vaultDetails.tokenVaultPda;
-        this.vaultState = vaultDetails.vaultState;
+    this.program = program;
+    this.tokenInfo = tokenInfo;
+    this.vaultPda = vaultPda;
+    this.vaultState = {
+      ...vaultState,
+      closestApy: closest_apy,
+      longApy: long_apy,
+      averageApy: average_apy,
+      usdRate: usd_rate,
+      strategies,
+    };
+  }
+
+  public static async create(
+    program: VaultProgram,
+    vaultInfo: VaultInfo,
+    opt?: { cluster?: Cluster }
+  ): Promise<VaultImpl> {
+    const tokenInfo = tokenResolver.find(
+      (token) => token.symbol === vaultInfo.token_address
+    );
+    if (!tokenInfo) throw new Error("Invalid vault token address");
+
+    const { vaultPda, vaultState } = await getVaultState(tokenInfo, program);
+    return new VaultImpl(
+      program,
+      { tokenInfo, vaultPda, vaultState, vaultInfo },
+      opt
+    );
+  }
+
+  public async getUserBalance(owner: PublicKey): Promise<Decimal> {
+    const address = await getAssociatedTokenAccount(
+      this.vaultState.lpMint,
+      owner
+    );
+    const accountInfo = await this.connection.getAccountInfo(address);
+
+    if (!accountInfo) {
+      return new Decimal(0).toDP(this.tokenInfo.decimals);
     }
 
-    public static async create(program: VaultProgram, vaultParams: VaultParams, opt?: { cluster?: Cluster }): Promise<VaultImpl> {
-        const { vaultPda, tokenVaultPda, vaultState } = await getVaultState(vaultParams, program);
-        return new VaultImpl(program, { vaultParams, vaultPda, tokenVaultPda, vaultState }, opt);
+    const result = deserializeAccount(accountInfo.data);
+    if (result == undefined) {
+      throw new Error("Failed to parse user account for LP token.");
     }
 
-    public async getUserBalance(owner: PublicKey): Promise<Decimal> {
-        const address = await getAssociatedTokenAccount(this.vaultState.lpMint, owner);
-        const accountInfo = await this.connection.getAccountInfo(address);
+    return new Decimal(result.amount.toString()).toDP(this.tokenInfo.decimals);
+  }
 
-        if (!accountInfo) {
-            return new Decimal(0).toDP(this.vaultParams.baseTokenDecimals);
-        }
+  public async getVaultSupply(): Promise<Decimal> {
+    const context = await this.connection.getTokenSupply(
+      this.vaultState.lpMint
+    );
+    return new Decimal(context.value.amount).toDP(this.tokenInfo.decimals);
+  }
 
-        const result = deserializeAccount(accountInfo.data);
-        if (result == undefined) {
-            throw new Error("Failed to parse user account for LP token.");
-        }
+  public async getWithdrawableAmount(): Promise<Decimal> {
+    const currentTime = await getOnchainTime(this.connection);
+    const vaultTotalAmount = new Decimal(
+      this.vaultState.totalAmount.toString()
+    );
 
-        return new Decimal(result.amount.toString()).toDP(this.vaultParams.baseTokenDecimals);
-    };
+    const {
+      lockedProfitTracker: {
+        lastReport,
+        lockedProfitDegradation,
+        lastUpdatedLockedProfit,
+      },
+    } = this.vaultState;
 
-    public async getVaultSupply(): Promise<Decimal> {
-        const context = await this.connection.getTokenSupply(this.vaultState.lpMint);
-        return new Decimal(context.value.amount).toDP(this.vaultParams.baseTokenDecimals);
-    };
+    const duration = new Decimal(currentTime).sub(lastReport.toString());
 
-    public async getWithdrawableAmount(): Promise<Decimal> {
-        const currentTime = await getOnchainTime(this.connection);
-        const vaultTotalAmount = new Decimal(this.vaultState.totalAmount.toString());
-
-        const {
-            lockedProfitTracker: {
-                lastReport,
-                lockedProfitDegradation,
-                lastUpdatedLockedProfit
-            }
-        } = this.vaultState;
-
-        const duration = new Decimal(currentTime).sub(lastReport.toString());
-
-        const lockedFundRatio = duration.mul(lockedProfitDegradation.toString());
-        if (lockedFundRatio.gt(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)) {
-            return new Decimal(0);
-        }
-
-        const lockedProfit = new Decimal(lastUpdatedLockedProfit.toString())
-            .mul(LOCKED_PROFIT_DEGRADATION_DENOMINATOR.sub(lockedFundRatio))
-            .div(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)
-        return vaultTotalAmount.sub(lockedProfit);
-    };
-
-    private async refreshVaultState() {
-        const { vaultPda, tokenVaultPda, vaultState } = await getVaultState(this.vaultParams, this.program);
-        this.vaultPda = vaultPda;
-        this.tokenVaultPda = tokenVaultPda;
-        this.vaultState = vaultState;
+    const lockedFundRatio = duration.mul(lockedProfitDegradation.toString());
+    if (lockedFundRatio.gt(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)) {
+      return new Decimal(0);
     }
 
-    public async deposit(wallet: Wallet, baseTokenAmount: Decimal): Promise<Transaction> {
-        // Refresh vault state
-        await this.refreshVaultState();
+    const lockedProfit = new Decimal(lastUpdatedLockedProfit.toString())
+      .mul(LOCKED_PROFIT_DEGRADATION_DENOMINATOR.sub(lockedFundRatio))
+      .div(LOCKED_PROFIT_DEGRADATION_DENOMINATOR);
+    return vaultTotalAmount.sub(lockedProfit);
+  }
 
-        let preInstructions: TransactionInstruction[] = [];
-        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, wallet.publicKey, this.connection);
-        const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, wallet.publicKey, this.connection);
-        if (createUserTokenIx) {
-            preInstructions.push(createUserTokenIx);
-        }
-        if (createUserLpTokenIx) {
-            preInstructions.push(createUserLpTokenIx);
-        }
-        // If it's SOL vault, wrap desired amount of SOL
-        if (this.vaultParams.baseTokenMint.equals(SOL_MINT)) {
-            preInstructions = preInstructions.concat(
-                wrapSOLInstruction(wallet.publicKey, userToken, baseTokenAmount.toNumber())
-            );
-        }
-
-        const tx = await this.program.methods
-            .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
-            .accounts({
-                vault: this.vaultPda,
-                tokenVault: this.tokenVaultPda,
-                lpMint: this.vaultState.lpMint,
-                userToken,
-                userLp: userLpToken,
-                user: wallet.publicKey,
-                tokenProgram: TOKEN_PROGRAM_ID,
-            })
-            .preInstructions(preInstructions)
-            .transaction()
-        return tx;
+  private async refreshVaultState() {
+    const { vaultPda, vaultState } = await getVaultState(
+      this.tokenInfo,
+      this.program
+    );
+    this.vaultPda = vaultPda;
+    this.vaultState = {
+      ...vaultState,
+      ...this.vaultState,
     };
+  }
 
-    public async withdraw(wallet: Wallet, baseTokenAmount: Decimal): Promise<Transaction> {
-        // Refresh vault state
-        await this.refreshVaultState();
+  public async deposit(
+    wallet: Wallet,
+    baseTokenAmount: Decimal
+  ): Promise<Transaction> {
+    // Refresh vault state
+    await this.refreshVaultState();
 
-        let preInstructions: TransactionInstruction[] = [];
-        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, wallet.publicKey, this.connection);
-        const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, wallet.publicKey, this.connection);
-        if (createUserTokenIx) {
-            preInstructions.push(createUserTokenIx);
-        }
-        if (createUserLpTokenIx) {
-            preInstructions.push(createUserLpTokenIx);
-        }
-
-        const tx = await this.program.methods
-            .withdraw(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
-            .accounts({
-                vault: this.vaultPda,
-                tokenVault: this.tokenVaultPda,
-                lpMint: this.vaultState.lpMint,
-                userToken,
-                userLp: userLpToken,
-                user: wallet.publicKey,
-                tokenProgram: TOKEN_PROGRAM_ID,
-            })
-            .preInstructions(preInstructions)
-            .transaction()
-        return tx;
-    };
-
-    public async withdrawFromStrategy(wallet: Wallet, vaultStrategyPubkey: PublicKey, baseTokenAmount: Decimal): Promise<Transaction | { error: string }> {
-        // Refresh vault state
-        await this.refreshVaultState()
-
-        // TODO: Refactor this part, to use strategy class directly
-        const strategyState = (await this.program.account.strategy.fetchNullable(
-            vaultStrategyPubkey
-        )) as unknown as StrategyState;
-
-        if (strategyState.currentLiquidity.eq(new BN(0))) {
-            // TODO, must compare currentLiquidity + vaulLiquidity > unmintAmount * virtualPrice
-            return { error: 'Selected strategy does not have enough liquidity.' };
-        }
-
-        const strategy = {
-            pubkey: vaultStrategyPubkey,
-            state: strategyState,
-        };
-        const strategyType = getStrategyType(strategyState.strategyType);
-        const strategyHandler = getStrategyHandler(strategyType, this.cluster);
-
-        if (!strategyType || !strategyHandler) {
-            throw new Error("Cannot find strategy handler");
-        }
-
-        let preInstructions: TransactionInstruction[] = [];
-        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, wallet.publicKey, this.connection);
-        const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, wallet.publicKey, this.connection);
-        if (createUserTokenIx) {
-            preInstructions.push(createUserTokenIx);
-        }
-        if (createUserLpTokenIx) {
-            preInstructions.push(createUserLpTokenIx);
-        }
-
-        const tx = await strategyHandler.withdraw(
-            wallet.publicKey,
-            this.program,
-            strategy,
-            this.vaultPda,
-            this.tokenVaultPda,
-            this.vaultState.feeVault,
-            this.vaultState.lpMint,
-            userToken,
-            userLpToken,
-            baseTokenAmount.toNumber(),
-            preInstructions,
-            [],
-        );
-        return tx;
+    let preInstructions: TransactionInstruction[] = [];
+    const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
+      new PublicKey(this.tokenInfo.address),
+      wallet.publicKey,
+      this.connection
+    );
+    const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(
+      this.vaultState.lpMint,
+      wallet.publicKey,
+      this.connection
+    );
+    if (createUserTokenIx) {
+      preInstructions.push(createUserTokenIx);
     }
+    if (createUserLpTokenIx) {
+      preInstructions.push(createUserLpTokenIx);
+    }
+    // If it's SOL vault, wrap desired amount of SOL
+    if (new PublicKey(this.tokenInfo.address).equals(SOL_MINT)) {
+      preInstructions = preInstructions.concat(
+        wrapSOLInstruction(
+          wallet.publicKey,
+          userToken,
+          baseTokenAmount.toNumber()
+        )
+      );
+    }
+
+    const tx = await this.program.methods
+      .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
+      .accounts({
+        vault: this.vaultPda,
+        tokenVault: this.vaultState.tokenVault,
+        lpMint: this.vaultState.lpMint,
+        userToken,
+        userLp: userLpToken,
+        user: wallet.publicKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .preInstructions(preInstructions)
+      .transaction();
+    return tx;
+  }
+
+  public async withdraw(
+    wallet: Wallet,
+    baseTokenAmount: Decimal
+  ): Promise<Transaction> {
+    // Refresh vault state
+    await this.refreshVaultState();
+
+    let preInstructions: TransactionInstruction[] = [];
+    const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
+      new PublicKey(this.tokenInfo.address),
+      wallet.publicKey,
+      this.connection
+    );
+    const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(
+      this.vaultState.lpMint,
+      wallet.publicKey,
+      this.connection
+    );
+    if (createUserTokenIx) {
+      preInstructions.push(createUserTokenIx);
+    }
+    if (createUserLpTokenIx) {
+      preInstructions.push(createUserLpTokenIx);
+    }
+
+    const tx = await this.program.methods
+      .withdraw(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
+      .accounts({
+        vault: this.vaultPda,
+        tokenVault: this.vaultState.tokenVault,
+        lpMint: this.vaultState.lpMint,
+        userToken,
+        userLp: userLpToken,
+        user: wallet.publicKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .preInstructions(preInstructions)
+      .transaction();
+    return tx;
+  }
+
+  public async withdrawFromStrategy(
+    wallet: Wallet,
+    vaultStrategyPubkey: PublicKey,
+    baseTokenAmount: Decimal
+  ): Promise<Transaction | { error: string }> {
+    // Refresh vault state
+    await this.refreshVaultState();
+
+    // TODO: Refactor this part, to use strategy class directly
+    const strategyState = (await this.program.account.strategy.fetchNullable(
+      vaultStrategyPubkey
+    )) as unknown as StrategyState;
+
+    if (strategyState.currentLiquidity.eq(new BN(0))) {
+      // TODO, must compare currentLiquidity + vaulLiquidity > unmintAmount * virtualPrice
+      return { error: "Selected strategy does not have enough liquidity." };
+    }
+
+    const strategy = {
+      pubkey: vaultStrategyPubkey,
+      state: strategyState,
+    };
+    const strategyType = getStrategyType(strategyState.strategyType);
+    const strategyHandler = getStrategyHandler(strategyType, this.cluster);
+
+    if (!strategyType || !strategyHandler) {
+      throw new Error("Cannot find strategy handler");
+    }
+
+    let preInstructions: TransactionInstruction[] = [];
+    const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
+      new PublicKey(this.tokenInfo.address),
+      wallet.publicKey,
+      this.connection
+    );
+    const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(
+      this.vaultState.lpMint,
+      wallet.publicKey,
+      this.connection
+    );
+    if (createUserTokenIx) {
+      preInstructions.push(createUserTokenIx);
+    }
+    if (createUserLpTokenIx) {
+      preInstructions.push(createUserLpTokenIx);
+    }
+
+    const tx = await strategyHandler.withdraw(
+      wallet.publicKey,
+      this.program,
+      strategy,
+      this.vaultPda,
+      this.vaultState.tokenVault,
+      this.vaultState.feeVault,
+      this.vaultState.lpMint,
+      userToken,
+      userLpToken,
+      baseTokenAmount.toNumber(),
+      preInstructions,
+      []
+    );
+    return tx;
+  }
 }

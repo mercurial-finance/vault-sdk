@@ -8,10 +8,13 @@ import * as solend from "@solendprotocol/solend-sdk";
 import * as anchor from "@project-serum/anchor";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
-import { VaultProgram } from "../types";
-import { ReserveState, StrategyHandler } from ".";
 import { SEEDS } from "../constants";
-import { Strategy } from "../../mint";
+import {
+  ReserveState,
+  Strategy,
+  StrategyHandler,
+  VaultProgram,
+} from "../types/vault";
 
 // not using now
 export default class SolendWithLMHandler implements StrategyHandler {
@@ -93,7 +96,7 @@ export default class SolendWithLMHandler implements StrategyHandler {
     };
 
     if (!pythOracle || !switchboardOracle) {
-      return { error: "Incorrect pythOracle or switchboardOracle pubkey" }
+      return { error: "Incorrect pythOracle or switchboardOracle pubkey" };
     }
 
     const tx = await program.methods
@@ -124,7 +127,7 @@ export default class SolendWithLMHandler implements StrategyHandler {
         ])
       )
       .postInstructions(postInstructions)
-      .transaction()
+      .transaction();
 
     return tx;
   }

@@ -2,19 +2,19 @@ import {
   PublicKey,
   AccountMeta,
   SYSVAR_CLOCK_PUBKEY,
-  Cluster,
   TransactionInstruction,
 } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-
 import * as anchor from "@project-serum/anchor";
-
 import * as port from "@port.finance/port-sdk";
 
-import { ReserveState, StrategyHandler } from ".";
-import { VaultProgram } from "../types";
 import { SEEDS } from "../constants";
-import { Strategy } from "../../mint";
+import {
+  ReserveState,
+  Strategy,
+  StrategyHandler,
+  VaultProgram,
+} from "../types/vault";
 
 export default class PortWithoutLMHandler implements StrategyHandler {
   constructor(public strategyProgram: PublicKey) {}
@@ -113,7 +113,7 @@ export default class PortWithoutLMHandler implements StrategyHandler {
         ])
       )
       .postInstructions(postInstructions)
-      .transaction()
+      .transaction();
 
     return tx;
   }
