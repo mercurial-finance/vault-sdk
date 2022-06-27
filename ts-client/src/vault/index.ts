@@ -1,7 +1,7 @@
 import { AnchorProvider, Program } from '@project-serum/anchor';
 import { StaticTokenListResolutionStrategy } from '@solana/spl-token-registry';
 import { Connection, PublicKey } from '@solana/web3.js';
-import got from 'got';
+import fetch from 'cross-fetch';
 import { IDL, Vault as VaultIdl } from "./idl";
 
 import { KEEPER_URL, PROGRAM_ID } from './constants';
@@ -29,10 +29,12 @@ export default class Vaults {
         const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
         const program = new Program<VaultIdl>(IDL as VaultIdl, PROGRAM_ID, provider);
 
-        const allVaultsInfo = await (got(`${this.URL}/vault_info`).json<VaultInfo[]>());
+        const allVaultsInfoResponse = await fetch(`${this.URL}/vault_info`);
+        const allVaultsInfo = await allVaultsInfoResponse.json() as VaultInfo[];
         const allVaultsPromises = allVaultsInfo.map(async (vault) => {
             const tokenInfo = tokenResolver.find(token => token.address === vault.token_address);
-            const apyState = await (got(`${this.URL}/apy_state/${vault.token_address}`).json<VaultAPY>());
+            const apyStateResponse = await fetch(`${this.URL}/apy_state/${vault.token_address}`);
+            const apyState = await apyStateResponse.json() as VaultAPY;
 
             if (tokenInfo && apyState) {
                 return {
