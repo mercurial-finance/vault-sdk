@@ -3,9 +3,9 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 import * as anchor from '@project-serum/anchor';
 
-import { VaultProgram } from '../../vault';
 import { StrategyHandler } from '.';
 import { Strategy } from '../../mint';
+import { VaultProgram } from '../types';
 
 export default class VaultHandler implements StrategyHandler {
   async withdraw(

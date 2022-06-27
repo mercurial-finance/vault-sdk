@@ -12,7 +12,7 @@ import * as anchor from "@project-serum/anchor";
 import * as port from "@port.finance/port-sdk";
 
 import { ReserveState, StrategyHandler } from ".";
-import { VaultProgram } from "../../vault";
+import { VaultProgram } from "../types";
 import { SEEDS } from "../constants";
 import { Strategy } from "../../mint";
 

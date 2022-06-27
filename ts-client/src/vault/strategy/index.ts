@@ -1,7 +1,7 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 import { STRATEGY_PROGRAM_ADDRESSES } from '../constants';
-import type { VaultProgram } from "../../vault";
+import type { VaultProgram } from "../types";
 import MangoHandler from "./mango";
 import PortWithoutLMHandler from "./portWithoutLM";
 import SolendWithoutLMHandler from "./solendWithoutLM";

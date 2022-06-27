@@ -8,7 +8,7 @@ import * as solend from "@solendprotocol/solend-sdk";
 import * as anchor from "@project-serum/anchor";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
-import { VaultProgram } from "../../vault";
+import { VaultProgram } from "../types";
 import { ReserveState, StrategyHandler } from ".";
 import { SEEDS } from "../constants";
 import { Strategy } from "../../mint";

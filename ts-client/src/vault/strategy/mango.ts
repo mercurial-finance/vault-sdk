@@ -8,7 +8,7 @@ import {
 import { StrategyHandler } from ".";
 import { SEEDS } from "../constants";
 import { Strategy } from "../../mint";
-import { VaultProgram } from "../../vault";
+import { VaultProgram } from "../types";
 
 export default class MangoHandler implements StrategyHandler {
   static MangoProgramId = new PublicKey(

@@ -9,10 +9,10 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 import * as anchor from "@project-serum/anchor";
 
-import { VaultProgram } from "../../vault";
 import { ReserveState, StrategyHandler } from ".";
 import { SEEDS } from "../constants";
 import { Strategy } from "../../mint";
+import { VaultProgram } from "../types";
 
 export default class SolendWithoutLMHandler implements StrategyHandler {
   constructor(public strategyProgram: PublicKey) { }
