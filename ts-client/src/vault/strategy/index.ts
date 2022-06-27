@@ -1,6 +1,6 @@
 import { BN } from "@project-serum/anchor";
-import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
-import { STRATEGY_PROGRAM_ADDRESSES } from '../constants';
+import { Cluster, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { StrategyProgram } from '../constants';
 import type { VaultProgram } from "../types";
 import MangoHandler from "./mango";
 import PortWithoutLMHandler from "./portWithoutLM";
@@ -51,13 +51,9 @@ export const getStrategyType = (strategyResponse: any) => {
   return Object.keys(strategyResponse)[0] as StrategyType;
 };
 
-export const getStrategyHandler = (
-  strategyType: StrategyType,
-  strategyProgramAddresses: {
-    solend: PublicKey;
-    portFinance: PublicKey;
-  } = STRATEGY_PROGRAM_ADDRESSES
-): StrategyHandler | null => { 
+export const getStrategyHandler = (strategyType: StrategyType, cluster?: Cluster): StrategyHandler | null => { 
+  const strategyProgramAddresses = StrategyProgram[cluster ?? 'mainnet-beta']
+
   switch (strategyType) {
     case "solendWithoutLm":
       return new SolendWithoutLMHandler(strategyProgramAddresses.solend);

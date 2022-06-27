@@ -52,6 +52,38 @@ export interface VaultState {
     totalAmount: BN;
 }
 
+// API
+export type VaultInfo = {
+    total_amount: number;
+    total_amount_with_profit: number;
+    is_monitoring: boolean;
+    token_address: string;
+    token_amount: number;
+    earned_amount: number;
+    virtual_price: string;
+    closest_apy: number;
+    average_apy: number;
+    usd_rate: number;
+    strategies: Array<StrategyInfo>;
+};
+
+export type StrategyInfo = {
+    pubkey: string;
+    reserve: string;
+    strategy_type: StrategyType;
+    strategy_name: string;
+    liquidity: number;
+    reward: number;
+    apy: number;
+};
+
+export enum StrategyType {
+    PortFinanceWithoutLM = 'PortFinanceWithoutLM',
+    PortFinanceWithLM = 'PortFinanceWithLM',
+    SolendWithoutLM = 'SolendWithoutLM',
+    Mango = 'Mango',
+    Vault = 'Vault',
+  }
 
 /** Utils */
 export interface ParsedClockState {

@@ -1,10 +1,13 @@
-import { Connection, Keypair, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { StaticTokenListResolutionStrategy, TokenInfo } from "@solana/spl-token-registry";
-import { Wallet, AnchorProvider } from "@project-serum/anchor";
+import { Wallet, AnchorProvider, Program } from "@project-serum/anchor";
+import { IDL, Vault as VaultIdl } from "../idl";
 
-import { VaultImpl } from "../index";
+import { VaultImpl } from "../vaultImpl";
 import { airDropSol } from './utils';
 import Decimal from "decimal.js";
+import Vaults from "..";
+import { PROGRAM_ID } from "../constants";
 
 const mockWallet = new Wallet(new Keypair());
 const mainnetConnection = new Connection("https://api.mainnet-beta.solana.com");
@@ -18,11 +21,38 @@ const SOL_TOKEN_INFO = (
     .find(token => token.symbol === 'SOL')
 ) as TokenInfo; // Guaranteed to exist
 
+describe('Vaults', () => {
+  let vaultsInstance: Vaults;
+  beforeAll(async () => {
+    vaultsInstance = await Vaults.create(mainnetConnection);
+  })
+
+  test('Get all info and initialize all vaults', async () => {
+    vaultsInstance.vaults.forEach(vault => {
+      expect(vault.vault).toBeInstanceOf(VaultImpl);
+    })
+  })
+
+  test('Refetch', async () => {
+    const oldData = JSON.stringify(vaultsInstance.vaults.map(vault => vault.data), null, 2);
+    
+    await vaultsInstance.refetch();
+    // Purposely delay for 5s
+    await new Promise(res => setTimeout(res, 5000));
+
+    const newData = JSON.stringify(vaultsInstance.vaults.map(vault => vault.data), null, 2);
+    expect(JSON.parse(newData).length).toBe(JSON.parse(oldData).length);
+  })
+})
+
 describe('Get Mainnet vault state', () => {
+  const provider = new AnchorProvider(mainnetConnection, {} as any, AnchorProvider.defaultOptions());
+  const program = new Program<VaultIdl>(IDL as VaultIdl, PROGRAM_ID, provider);
+
   let vault: VaultImpl;
   let lpSupply: number;
   beforeAll(async () => {
-    vault = await VaultImpl.create(mainnetConnection, { baseTokenMint: new PublicKey(SOL_TOKEN_INFO.address), baseTokenDecimals: SOL_TOKEN_INFO.decimals });
+    vault = await VaultImpl.create(program, { baseTokenMint: new PublicKey(SOL_TOKEN_INFO.address), baseTokenDecimals: SOL_TOKEN_INFO.decimals });
     lpSupply = (await vault.getVaultSupply()).toNumber()
   })
 
@@ -40,11 +70,12 @@ describe('Interact with Vault in devnet', () => {
   const provider = new AnchorProvider(devnetConnection, mockWallet, {
     commitment: "confirmed",
   });
+  const program = new Program<VaultIdl>(IDL as VaultIdl, PROGRAM_ID, provider);
 
   let vault: VaultImpl;
   beforeAll(async () => {
     await airDropSol(devnetConnection, mockWallet.publicKey);
-    vault = await VaultImpl.create(devnetConnection, { baseTokenMint: new PublicKey(SOL_TOKEN_INFO.address), baseTokenDecimals: SOL_TOKEN_INFO.decimals });
+    vault = await VaultImpl.create(program, { baseTokenMint: new PublicKey(SOL_TOKEN_INFO.address), baseTokenDecimals: SOL_TOKEN_INFO.decimals }, { cluster: 'devnet' });
   })
 
   test("Vault Withdraw SOL", async () => {
@@ -77,9 +108,14 @@ describe('Interact with Vault in devnet', () => {
           throw new Error(`Error creating withdrawFromStrategy instruction: ${withdrawTx.error}`);
         }
 
-        const withdrawResult = await provider.sendAndConfirm(withdrawTx);
-        console.log('Strategy withdraw result', withdrawResult)
-        expect(typeof withdrawResult).toBe("string");
+        try {
+          const withdrawResult = await provider.sendAndConfirm(withdrawTx);
+          console.log('Strategy withdraw result', withdrawResult)
+          expect(typeof withdrawResult).toBe("string");
+          
+        } catch (error) {
+            console.log('###', error)
+        }
       }
     }
   });

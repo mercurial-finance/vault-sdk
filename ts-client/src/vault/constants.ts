@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Cluster, PublicKey } from "@solana/web3.js";
 
 export const PROGRAM_ID = "24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi";
 
@@ -28,10 +28,32 @@ export const SEEDS = Object.freeze({
   MINER: "Miner",
 });
 
-export const STRATEGY_PROGRAM_ADDRESSES: {
-  solend: PublicKey;
-  portFinance: PublicKey;
-} = {
-  solend: new PublicKey("ALend7Ketfx5bxh6ghsCDXAoDrhvEmsXT3cynB6aPLgx"),
-  portFinance: new PublicKey("pdQ2rQQU5zH2rDgZ7xH2azMBJegUzUyunJ5Jd637hC4"),
+export const StrategyProgram: Record<
+  Cluster,
+  {
+    solend: PublicKey;
+    portFinance: PublicKey;
+  }
+> = {
+  testnet: {
+    solend: new PublicKey('ALend7Ketfx5bxh6ghsCDXAoDrhvEmsXT3cynB6aPLgx'),
+    portFinance: new PublicKey('pdQ2rQQU5zH2rDgZ7xH2azMBJegUzUyunJ5Jd637hC4'),
+  },
+  devnet: {
+    solend: new PublicKey('ALend7Ketfx5bxh6ghsCDXAoDrhvEmsXT3cynB6aPLgx'),
+    portFinance: new PublicKey('pdQ2rQQU5zH2rDgZ7xH2azMBJegUzUyunJ5Jd637hC4'),
+  },
+  'mainnet-beta': {
+    solend: new PublicKey('So1endDq2YkqhipRh3WViPa8hdiSpxWy6z3Z6tMCpAo'),
+    portFinance: new PublicKey('Port7uDYB3wk6GJAw4KT1WpTeMtSu9bTcChBHkX2LfR'),
+  },
 };
+
+export const KEEPER_URL: Record<
+  Cluster,
+  string
+> = {
+  testnet: 'https://staging-keeper.raccoons.dev',
+  devnet: 'https://dev-keeper.raccoons.dev',
+  'mainnet-beta': 'https://merv2-api.mercurial.finance'
+}
