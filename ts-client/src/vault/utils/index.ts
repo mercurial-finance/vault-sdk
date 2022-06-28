@@ -1,7 +1,7 @@
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, PublicKey, SystemProgram, TransactionInstruction } from "@solana/web3.js";
 import { AccountInfo, AccountLayout, u64 } from '@solana/spl-token';
-import { VAULT_BASE_KEY } from "../constants";
+import { SOL_MINT, VAULT_BASE_KEY } from "../constants";
 
 export const getAssociatedTokenAccount = async (tokenMint: PublicKey, owner: PublicKey) => {
   return await Token.getAssociatedTokenAddress(
@@ -133,4 +133,25 @@ export const wrapSOLInstruction = (
       programId: TOKEN_PROGRAM_ID,
     }),
   ];
+};
+
+export const unwrapSOLInstruction = async (walletPublicKey: PublicKey) => {
+  const wSolATAAccount = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    SOL_MINT,
+    walletPublicKey,
+  );
+
+  if (wSolATAAccount) {
+    const closedWrappedSolInstruction = Token.createCloseAccountInstruction(
+      TOKEN_PROGRAM_ID,
+      wSolATAAccount,
+      walletPublicKey,
+      walletPublicKey,
+      [],
+    );
+    return closedWrappedSolInstruction;
+  }
+  return null;
 };

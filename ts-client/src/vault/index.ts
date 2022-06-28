@@ -174,8 +174,17 @@ export default class VaultImpl implements VaultImplementation {
             preInstructions.push(createUserLpTokenIx);
         }
 
+        // Unwrap SOL
+        const postInstruction: Array<TransactionInstruction> = [];
+        if (this.vaultParams.baseTokenMint.equals(SOL_MINT)) {
+            const closeWrappedSOLIx = await unwrapSOLInstruction(wallet.publicKey);
+            if (closeWrappedSOLIx) {
+                postInstruction.push(closeWrappedSOLIx);
+            }
+        }
+
         const tx = await this.program.methods
-            .withdraw(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
+            .withdraw(new BN(baseTokenAmount), new BN(0)) // Vault does not have slippage, second parameter is ignored.
             .accounts({
                 vault: this.vaultPda,
                 tokenVault: this.tokenVaultPda,
@@ -186,6 +195,7 @@ export default class VaultImpl implements VaultImplementation {
                 tokenProgram: TOKEN_PROGRAM_ID,
             })
             .preInstructions(preInstructions)
+            .postInstructions(postInstruction)
             .transaction()
         return tx;
     };
@@ -225,6 +235,15 @@ export default class VaultImpl implements VaultImplementation {
             preInstructions.push(createUserLpTokenIx);
         }
 
+        // Unwrap SOL
+        const postInstruction: Array<TransactionInstruction> = [];
+        if (this.vaultParams.baseTokenMint.equals(SOL_MINT)) {
+            const closeWrappedSOLIx = await unwrapSOLInstruction(wallet.publicKey);
+            if (closeWrappedSOLIx) {
+                postInstruction.push(closeWrappedSOLIx);
+            }
+        }
+
         const tx = await strategyHandler.withdraw(
             wallet.publicKey,
             this.program,
@@ -235,9 +254,9 @@ export default class VaultImpl implements VaultImplementation {
             this.vaultState.lpMint,
             userToken,
             userLpToken,
-            baseTokenAmount.toNumber(),
+            baseTokenAmount,
             preInstructions,
-            [],
+            postInstruction,
         );
         return tx;
     }
