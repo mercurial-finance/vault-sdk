@@ -49,13 +49,13 @@ describe('Interact with Vault in devnet', () => {
 
   test("Vault Withdraw SOL", async () => {
     // Deposit
-    const depositTx = await vault.deposit(mockWallet, 2000);
+    const depositTx = await vault.deposit(mockWallet.publicKey, 2000);
     const depositResult = await provider.sendAndConfirm(depositTx);
     console.log('Deposit result', depositResult);
     expect(typeof depositResult).toBe("string");
 
     // Withdraw
-    const withdrawTx = await vault.withdraw(mockWallet, 1000);
+    const withdrawTx = await vault.withdraw(mockWallet.publicKey, 1000);
     const withdrawResult = await provider.sendAndConfirm(withdrawTx);
     console.log('Withdraw result', withdrawResult);
     expect(typeof withdrawResult).toBe("string");
@@ -67,12 +67,12 @@ describe('Interact with Vault in devnet', () => {
         console.log("Test with ", strategy.toString());
 
         // Deposit
-        const depositTx = await vault.deposit(mockWallet, 1_000_000);
+        const depositTx = await vault.deposit(mockWallet.publicKey, 1_000_000);
         const depositResult = await provider.sendAndConfirm(depositTx);
         expect(typeof depositResult).toBe("string");
 
         // Withdraw
-        const withdrawTx = await vault.withdrawFromStrategy(mockWallet, strategy, 1000);
+        const withdrawTx = await vault.withdrawFromStrategy(mockWallet.publicKey, strategy, 1000);
         if (!(withdrawTx instanceof Transaction)) {
           throw new Error(`Error creating withdrawFromStrategy instruction: ${withdrawTx.error}`);
         }
