@@ -1,12 +1,10 @@
 import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { StaticTokenListResolutionStrategy, TokenInfo } from "@solana/spl-token-registry";
-import { Wallet, AnchorProvider, Program } from "@project-serum/anchor";
+import { Wallet, AnchorProvider } from "@project-serum/anchor";
 import Decimal from "decimal.js";
 
 import VaultImpl from "..";
 import { airDropSol } from './utils';
-import { PROGRAM_ID } from "../constants";
-import { IDL, Vault as VaultIdl } from "../idl";
 
 const mockWallet = new Wallet(new Keypair());
 const mainnetConnection = new Connection("https://api.mainnet-beta.solana.com");
@@ -21,13 +19,10 @@ const SOL_TOKEN_INFO = (
 ) as TokenInfo; // Guaranteed to exist
 
 describe('Get Mainnet vault state', () => {
-  const provider = new AnchorProvider(mainnetConnection, {} as any, AnchorProvider.defaultOptions());
-  const program = new Program<VaultIdl>(IDL as VaultIdl, PROGRAM_ID, provider);
-
   let vault: VaultImpl;
   let lpSupply: number;
   beforeAll(async () => {
-    vault = await VaultImpl.create(program, { baseTokenMint: new PublicKey(SOL_TOKEN_INFO.address), baseTokenDecimals: SOL_TOKEN_INFO.decimals });
+    vault = await VaultImpl.create(mainnetConnection, { baseTokenMint: new PublicKey(SOL_TOKEN_INFO.address), baseTokenDecimals: SOL_TOKEN_INFO.decimals });
     lpSupply = (await vault.getVaultSupply()).toNumber()
   })
 
@@ -45,12 +40,11 @@ describe('Interact with Vault in devnet', () => {
   const provider = new AnchorProvider(devnetConnection, mockWallet, {
     commitment: "confirmed",
   });
-  const program = new Program<VaultIdl>(IDL as VaultIdl, PROGRAM_ID, provider);
 
   let vault: VaultImpl;
   beforeAll(async () => {
     await airDropSol(devnetConnection, mockWallet.publicKey);
-    vault = await VaultImpl.create(program, { baseTokenMint: new PublicKey(SOL_TOKEN_INFO.address), baseTokenDecimals: SOL_TOKEN_INFO.decimals }, { cluster: 'devnet' });
+    vault = await VaultImpl.create(devnetConnection, { baseTokenMint: new PublicKey(SOL_TOKEN_INFO.address), baseTokenDecimals: SOL_TOKEN_INFO.decimals }, { cluster: 'devnet' });
   })
 
   test("Vault Withdraw SOL", async () => {

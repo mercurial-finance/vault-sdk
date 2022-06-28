@@ -1,4 +1,4 @@
-import { Wallet } from "@project-serum/anchor";
+import { AnchorProvider, Program, Wallet } from "@project-serum/anchor";
 import { PublicKey, TransactionInstruction, Connection, SYSVAR_CLOCK_PUBKEY, ParsedAccountData, Transaction, Cluster, clusterApiUrl } from "@solana/web3.js";
 import Decimal from "decimal.js";
 import { BN } from "bn.js";
@@ -8,6 +8,7 @@ import { ParsedClockState, VaultImplementation, VaultParams, VaultProgram, Vault
 import { deserializeAccount, getAssociatedTokenAccount, getOrCreateATAInstruction, getVaultPdas, wrapSOLInstruction } from "./utils";
 import { PROGRAM_ID, SOL_MINT } from "./constants";
 import { getStrategyHandler, getStrategyType, StrategyState } from "./strategy";
+import { IDL, Vault as VaultIdl } from "./idl";
 
 const getOnchainTime = async (connection: Connection) => {
     const parsedClock = await connection.getParsedAccountInfo(
@@ -63,7 +64,9 @@ export default class VaultImpl implements VaultImplementation {
         this.vaultState = vaultDetails.vaultState;
     }
 
-    public static async create(program: VaultProgram, vaultParams: VaultParams, opt?: { cluster?: Cluster }): Promise<VaultImpl> {
+    public static async create(connection: Connection, vaultParams: VaultParams, opt?: { cluster?: Cluster }): Promise<VaultImpl> {
+        const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
+        const program = new Program<VaultIdl>(IDL as VaultIdl, PROGRAM_ID, provider);
         const { vaultPda, tokenVaultPda, vaultState } = await getVaultState(vaultParams, program);
         return new VaultImpl(program, { vaultParams, vaultPda, tokenVaultPda, vaultState }, opt);
     }
