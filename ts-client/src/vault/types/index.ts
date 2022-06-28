@@ -1,6 +1,5 @@
-import { BN, Program, Wallet } from "@project-serum/anchor";
+import { BN, Program } from "@project-serum/anchor";
 import { PublicKey, Transaction } from "@solana/web3.js";
-import Decimal from "decimal.js";
 
 import { Vault as VaultIdl } from "../idl";
 
@@ -11,15 +10,15 @@ export type VaultImplementation = {
     getVaultSupply: () => Promise<string>;
     getWithdrawableAmount: (ownerPublicKey: PublicKey) => Promise<string>;
     deposit: (
-        wallet: Wallet,
+        owner: PublicKey,
         baseTokenAmount: number
     ) => Promise<Transaction>;
     withdraw: (
-        wallet: Wallet,
+        owner: PublicKey,
         baseTokenAmount: number
     ) => Promise<Transaction>;
     withdrawFromStrategy: (
-        wallet: Wallet,
+        owner: PublicKey,
         vaultStrategyPubkey: PublicKey,
         baseTokenAmount: number
     ) => Promise<Transaction | { error: string }>

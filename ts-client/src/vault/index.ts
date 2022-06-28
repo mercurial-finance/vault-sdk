@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, Wallet } from "@project-serum/anchor";
+import { AnchorProvider, Program } from "@project-serum/anchor";
 import { PublicKey, TransactionInstruction, Connection, SYSVAR_CLOCK_PUBKEY, ParsedAccountData, Transaction, Cluster, clusterApiUrl } from "@solana/web3.js";
 import Decimal from "decimal.js";
 import { BN } from "bn.js";
@@ -124,13 +124,13 @@ export default class VaultImpl implements VaultImplementation {
         this.vaultState = vaultState;
     }
 
-    public async deposit(wallet: Wallet, baseTokenAmount: number): Promise<Transaction> {
+    public async deposit(owner: PublicKey, baseTokenAmount: number): Promise<Transaction> {
         // Refresh vault state
         await this.refreshVaultState();
 
         let preInstructions: TransactionInstruction[] = [];
-        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, wallet.publicKey, this.connection);
-        const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, wallet.publicKey, this.connection);
+        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, owner, this.connection);
+        const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, owner, this.connection);
         if (createUserTokenIx) {
             preInstructions.push(createUserTokenIx);
         }
@@ -140,7 +140,7 @@ export default class VaultImpl implements VaultImplementation {
         // If it's SOL vault, wrap desired amount of SOL
         if (this.vaultParams.baseTokenMint.equals(SOL_MINT)) {
             preInstructions = preInstructions.concat(
-                wrapSOLInstruction(wallet.publicKey, userToken, baseTokenAmount)
+                wrapSOLInstruction(owner, userToken, baseTokenAmount)
             );
         }
 
@@ -152,7 +152,7 @@ export default class VaultImpl implements VaultImplementation {
                 lpMint: this.vaultState.lpMint,
                 userToken,
                 userLp: userLpToken,
-                user: wallet.publicKey,
+                user: owner,
                 tokenProgram: TOKEN_PROGRAM_ID,
             })
             .preInstructions(preInstructions)
@@ -160,13 +160,13 @@ export default class VaultImpl implements VaultImplementation {
         return tx;
     };
 
-    public async withdraw(wallet: Wallet, baseTokenAmount: number): Promise<Transaction> {
+    public async withdraw(owner: PublicKey, baseTokenAmount: number): Promise<Transaction> {
         // Refresh vault state
         await this.refreshVaultState();
 
         let preInstructions: TransactionInstruction[] = [];
-        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, wallet.publicKey, this.connection);
-        const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, wallet.publicKey, this.connection);
+        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, owner, this.connection);
+        const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, owner, this.connection);
         if (createUserTokenIx) {
             preInstructions.push(createUserTokenIx);
         }
@@ -177,7 +177,7 @@ export default class VaultImpl implements VaultImplementation {
         // Unwrap SOL
         const postInstruction: Array<TransactionInstruction> = [];
         if (this.vaultParams.baseTokenMint.equals(SOL_MINT)) {
-            const closeWrappedSOLIx = await unwrapSOLInstruction(wallet.publicKey);
+            const closeWrappedSOLIx = await unwrapSOLInstruction(owner);
             if (closeWrappedSOLIx) {
                 postInstruction.push(closeWrappedSOLIx);
             }
@@ -191,7 +191,7 @@ export default class VaultImpl implements VaultImplementation {
                 lpMint: this.vaultState.lpMint,
                 userToken,
                 userLp: userLpToken,
-                user: wallet.publicKey,
+                user: owner,
                 tokenProgram: TOKEN_PROGRAM_ID,
             })
             .preInstructions(preInstructions)
@@ -200,7 +200,7 @@ export default class VaultImpl implements VaultImplementation {
         return tx;
     };
 
-    public async withdrawFromStrategy(wallet: Wallet, vaultStrategyPubkey: PublicKey, baseTokenAmount: number): Promise<Transaction | { error: string }> {
+    public async withdrawFromStrategy(owner: PublicKey, vaultStrategyPubkey: PublicKey, baseTokenAmount: number): Promise<Transaction | { error: string }> {
         // Refresh vault state
         await this.refreshVaultState()
 
@@ -226,8 +226,8 @@ export default class VaultImpl implements VaultImplementation {
         }
 
         let preInstructions: TransactionInstruction[] = [];
-        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, wallet.publicKey, this.connection);
-        const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, wallet.publicKey, this.connection);
+        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, owner, this.connection);
+        const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, owner, this.connection);
         if (createUserTokenIx) {
             preInstructions.push(createUserTokenIx);
         }
@@ -238,14 +238,14 @@ export default class VaultImpl implements VaultImplementation {
         // Unwrap SOL
         const postInstruction: Array<TransactionInstruction> = [];
         if (this.vaultParams.baseTokenMint.equals(SOL_MINT)) {
-            const closeWrappedSOLIx = await unwrapSOLInstruction(wallet.publicKey);
+            const closeWrappedSOLIx = await unwrapSOLInstruction(owner);
             if (closeWrappedSOLIx) {
                 postInstruction.push(closeWrappedSOLIx);
             }
         }
 
         const tx = await strategyHandler.withdraw(
-            wallet.publicKey,
+            owner,
             this.program,
             strategy,
             this.vaultPda,
