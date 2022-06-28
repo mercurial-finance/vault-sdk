@@ -20,14 +20,14 @@ const SOL_TOKEN_INFO = (
 
 describe('Get Mainnet vault state', () => {
   let vault: VaultImpl;
-  let lpSupply: number;
+  let lpSupply: string;
   beforeAll(async () => {
     vault = await VaultImpl.create(mainnetConnection, { baseTokenMint: new PublicKey(SOL_TOKEN_INFO.address), baseTokenDecimals: SOL_TOKEN_INFO.decimals });
-    lpSupply = (await vault.getVaultSupply()).toNumber()
+    lpSupply = (await vault.getVaultSupply())
   })
 
   test("lp supply", async () => {
-    expect(typeof lpSupply).toBe('number');
+    expect(typeof lpSupply).toBe('string');
   });
 
   test("get unlocked amount", async () => {
@@ -49,13 +49,13 @@ describe('Interact with Vault in devnet', () => {
 
   test("Vault Withdraw SOL", async () => {
     // Deposit
-    const depositTx = await vault.deposit(mockWallet, new Decimal(2000));
+    const depositTx = await vault.deposit(mockWallet, 2000);
     const depositResult = await provider.sendAndConfirm(depositTx);
     console.log('Deposit result', depositResult);
     expect(typeof depositResult).toBe("string");
 
     // Withdraw
-    const withdrawTx = await vault.withdraw(mockWallet, new Decimal(1000));
+    const withdrawTx = await vault.withdraw(mockWallet, 1000);
     const withdrawResult = await provider.sendAndConfirm(withdrawTx);
     console.log('Withdraw result', withdrawResult);
     expect(typeof withdrawResult).toBe("string");
@@ -67,12 +67,12 @@ describe('Interact with Vault in devnet', () => {
         console.log("Test with ", strategy.toString());
 
         // Deposit
-        const depositTx = await vault.deposit(mockWallet, new Decimal(1_000_000));
+        const depositTx = await vault.deposit(mockWallet, 1_000_000);
         const depositResult = await provider.sendAndConfirm(depositTx);
         expect(typeof depositResult).toBe("string");
 
         // Withdraw
-        const withdrawTx = await vault.withdrawFromStrategy(mockWallet, strategy, new Decimal(1000));
+        const withdrawTx = await vault.withdrawFromStrategy(mockWallet, strategy, 1000);
         if (!(withdrawTx instanceof Transaction)) {
           throw new Error(`Error creating withdrawFromStrategy instruction: ${withdrawTx.error}`);
         }

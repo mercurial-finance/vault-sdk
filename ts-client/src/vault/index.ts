@@ -5,7 +5,7 @@ import { BN } from "bn.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 import { ParsedClockState, VaultImplementation, VaultParams, VaultProgram, VaultState } from "./types";
-import { deserializeAccount, getAssociatedTokenAccount, getOrCreateATAInstruction, getVaultPdas, wrapSOLInstruction } from "./utils";
+import { deserializeAccount, getAssociatedTokenAccount, getOrCreateATAInstruction, getVaultPdas, unwrapSOLInstruction, wrapSOLInstruction } from "./utils";
 import { PROGRAM_ID, SOL_MINT } from "./constants";
 import { getStrategyHandler, getStrategyType, StrategyState } from "./strategy";
 import { IDL, Vault as VaultIdl } from "./idl";
@@ -71,12 +71,12 @@ export default class VaultImpl implements VaultImplementation {
         return new VaultImpl(program, { vaultParams, vaultPda, tokenVaultPda, vaultState }, opt);
     }
 
-    public async getUserBalance(owner: PublicKey): Promise<Decimal> {
+    public async getUserBalance(owner: PublicKey): Promise<string> {
         const address = await getAssociatedTokenAccount(this.vaultState.lpMint, owner);
         const accountInfo = await this.connection.getAccountInfo(address);
 
         if (!accountInfo) {
-            return new Decimal(0).toDP(this.vaultParams.baseTokenDecimals);
+            return new Decimal(0).toDP(this.vaultParams.baseTokenDecimals).toString();
         }
 
         const result = deserializeAccount(accountInfo.data);
@@ -84,15 +84,15 @@ export default class VaultImpl implements VaultImplementation {
             throw new Error("Failed to parse user account for LP token.");
         }
 
-        return new Decimal(result.amount.toString()).toDP(this.vaultParams.baseTokenDecimals);
+        return new Decimal(result.amount.toString()).toDP(this.vaultParams.baseTokenDecimals).toString();
     };
 
-    public async getVaultSupply(): Promise<Decimal> {
+    public async getVaultSupply(): Promise<string> {
         const context = await this.connection.getTokenSupply(this.vaultState.lpMint);
-        return new Decimal(context.value.amount).toDP(this.vaultParams.baseTokenDecimals);
+        return new Decimal(context.value.amount).toDP(this.vaultParams.baseTokenDecimals).toString();
     };
 
-    public async getWithdrawableAmount(): Promise<Decimal> {
+    public async getWithdrawableAmount(): Promise<string> {
         const currentTime = await getOnchainTime(this.connection);
         const vaultTotalAmount = new Decimal(this.vaultState.totalAmount.toString());
 
@@ -108,13 +108,13 @@ export default class VaultImpl implements VaultImplementation {
 
         const lockedFundRatio = duration.mul(lockedProfitDegradation.toString());
         if (lockedFundRatio.gt(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)) {
-            return new Decimal(0);
+            return new Decimal(0).toString();
         }
 
         const lockedProfit = new Decimal(lastUpdatedLockedProfit.toString())
             .mul(LOCKED_PROFIT_DEGRADATION_DENOMINATOR.sub(lockedFundRatio))
             .div(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)
-        return vaultTotalAmount.sub(lockedProfit);
+        return vaultTotalAmount.sub(lockedProfit).toString();
     };
 
     private async refreshVaultState() {
@@ -124,7 +124,7 @@ export default class VaultImpl implements VaultImplementation {
         this.vaultState = vaultState;
     }
 
-    public async deposit(wallet: Wallet, baseTokenAmount: Decimal): Promise<Transaction> {
+    public async deposit(wallet: Wallet, baseTokenAmount: number): Promise<Transaction> {
         // Refresh vault state
         await this.refreshVaultState();
 
@@ -140,7 +140,7 @@ export default class VaultImpl implements VaultImplementation {
         // If it's SOL vault, wrap desired amount of SOL
         if (this.vaultParams.baseTokenMint.equals(SOL_MINT)) {
             preInstructions = preInstructions.concat(
-                wrapSOLInstruction(wallet.publicKey, userToken, baseTokenAmount.toNumber())
+                wrapSOLInstruction(wallet.publicKey, userToken, baseTokenAmount)
             );
         }
 
@@ -160,7 +160,7 @@ export default class VaultImpl implements VaultImplementation {
         return tx;
     };
 
-    public async withdraw(wallet: Wallet, baseTokenAmount: Decimal): Promise<Transaction> {
+    public async withdraw(wallet: Wallet, baseTokenAmount: number): Promise<Transaction> {
         // Refresh vault state
         await this.refreshVaultState();
 
@@ -200,7 +200,7 @@ export default class VaultImpl implements VaultImplementation {
         return tx;
     };
 
-    public async withdrawFromStrategy(wallet: Wallet, vaultStrategyPubkey: PublicKey, baseTokenAmount: Decimal): Promise<Transaction | { error: string }> {
+    public async withdrawFromStrategy(wallet: Wallet, vaultStrategyPubkey: PublicKey, baseTokenAmount: number): Promise<Transaction | { error: string }> {
         // Refresh vault state
         await this.refreshVaultState()
 

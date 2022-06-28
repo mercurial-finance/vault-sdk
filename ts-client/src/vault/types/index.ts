@@ -7,21 +7,21 @@ import { Vault as VaultIdl } from "../idl";
 export type VaultProgram = Program<VaultIdl>;
 
 export type VaultImplementation = {
-    getUserBalance: (owner: PublicKey) => Promise<Decimal>;
-    getVaultSupply: () => Promise<Decimal>;
-    getWithdrawableAmount: (ownerPublicKey: PublicKey) => Promise<Decimal>;
+    getUserBalance: (owner: PublicKey) => Promise<string>;
+    getVaultSupply: () => Promise<string>;
+    getWithdrawableAmount: (ownerPublicKey: PublicKey) => Promise<string>;
     deposit: (
         wallet: Wallet,
-        baseTokenAmount: Decimal
+        baseTokenAmount: number
     ) => Promise<Transaction>;
     withdraw: (
         wallet: Wallet,
-        baseTokenAmount: Decimal
+        baseTokenAmount: number
     ) => Promise<Transaction>;
     withdrawFromStrategy: (
         wallet: Wallet,
         vaultStrategyPubkey: PublicKey,
-        baseTokenAmount: Decimal
+        baseTokenAmount: number
     ) => Promise<Transaction | { error: string }>
 }
 
