@@ -1,13 +1,12 @@
 import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import { StaticTokenListResolutionStrategy, TokenInfo } from "@solana/spl-token-registry";
 import { Wallet, AnchorProvider, Program } from "@project-serum/anchor";
-import { IDL, Vault as VaultIdl } from "../idl";
-
-import { VaultImpl } from "../vaultImpl";
-import { airDropSol } from './utils';
 import Decimal from "decimal.js";
+
+import VaultImpl from "..";
+import { airDropSol } from './utils';
 import { PROGRAM_ID } from "../constants";
-import Vaults from "..";
+import { IDL, Vault as VaultIdl } from "../idl";
 
 const mockWallet = new Wallet(new Keypair());
 const mainnetConnection = new Connection("https://api.mainnet-beta.solana.com");
@@ -20,45 +19,6 @@ const SOL_TOKEN_INFO = (
     .resolve()
     .find(token => token.symbol === 'SOL')
 ) as TokenInfo; // Guaranteed to exist
-
-describe('Vaults', () => {
-  let vaultsInstance: Vaults;
-  beforeAll(async () => {
-    vaultsInstance = await Vaults.create(mainnetConnection);
-  })
-
-  test.only('Get all info and initialize all vaults', async () => {
-    vaultsInstance.vaults.forEach(vault => {
-      expect(Object.keys(vault.data)).toEqual([
-        'token_address',
-        'total_amount_with_profit',
-        'token_amount',
-        'earned_amount',
-        'virtual_price',
-        'closest_apy',
-        'average_apy',
-        'long_apy',
-        'is_monitoring',
-        'usd_rate',
-        'strategies',
-        'apyState',
-      ])
-      expect(Object.keys(vault.data.apyState)).toEqual(["closest_apy","average_apy", "long_apy"])
-      expect(vault.vault).toBeInstanceOf(VaultImpl);
-    })
-  })
-
-  test('Refetch', async () => {
-    const oldData = JSON.stringify(vaultsInstance.vaults.map(vault => vault.data), null, 2);
-
-    await vaultsInstance.refetch();
-    // Purposely delay for 5s
-    await new Promise(res => setTimeout(res, 5000));
-
-    const newData = JSON.stringify(vaultsInstance.vaults.map(vault => vault.data), null, 2);
-    expect(JSON.parse(newData).length).toBe(JSON.parse(oldData).length);
-  })
-})
 
 describe('Get Mainnet vault state', () => {
   const provider = new AnchorProvider(mainnetConnection, {} as any, AnchorProvider.defaultOptions());
