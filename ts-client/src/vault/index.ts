@@ -144,7 +144,7 @@ export default class VaultImpl implements VaultImplementation {
             );
         }
 
-        const tx = await this.program.methods
+        const depositTx = await this.program.methods
             .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
             .accounts({
                 vault: this.vaultPda,
@@ -157,7 +157,9 @@ export default class VaultImpl implements VaultImplementation {
             })
             .preInstructions(preInstructions)
             .transaction()
-        return tx;
+
+        return new Transaction({ feePayer: owner, ...await this.connection.getLatestBlockhash() })
+            .add(depositTx);
     };
 
     public async withdraw(owner: PublicKey, baseTokenAmount: number): Promise<Transaction> {
@@ -183,7 +185,7 @@ export default class VaultImpl implements VaultImplementation {
             }
         }
 
-        const tx = await this.program.methods
+        const withdrawTx = await this.program.methods
             .withdraw(new BN(baseTokenAmount), new BN(0)) // Vault does not have slippage, second parameter is ignored.
             .accounts({
                 vault: this.vaultPda,
@@ -197,7 +199,9 @@ export default class VaultImpl implements VaultImplementation {
             .preInstructions(preInstructions)
             .postInstructions(postInstruction)
             .transaction()
-        return tx;
+
+        return new Transaction({ feePayer: owner, ...await this.connection.getLatestBlockhash() })
+            .add(withdrawTx);
     };
 
     public async withdrawFromStrategy(owner: PublicKey, vaultStrategyPubkey: PublicKey, baseTokenAmount: number): Promise<Transaction | { error: string }> {
@@ -244,7 +248,7 @@ export default class VaultImpl implements VaultImplementation {
             }
         }
 
-        const tx = await strategyHandler.withdraw(
+        const withdrawFromStrategyTx = await strategyHandler.withdraw(
             owner,
             this.program,
             strategy,
@@ -258,6 +262,13 @@ export default class VaultImpl implements VaultImplementation {
             preInstructions,
             postInstruction,
         );
-        return tx;
+
+        if (withdrawFromStrategyTx instanceof Transaction) {
+            return new Transaction({ feePayer: owner, ...await this.connection.getLatestBlockhash() })
+                .add(withdrawFromStrategyTx);
+        }
+
+        // Return error
+        return withdrawFromStrategyTx
     }
 }
