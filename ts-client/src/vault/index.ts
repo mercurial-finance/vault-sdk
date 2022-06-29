@@ -22,23 +22,31 @@ const getOnchainTime = async (connection: Connection) => {
     return currentTime;
 }
 
-const getVaultState = async (vaultParams: VaultParams, program: VaultProgram): Promise<{ vaultPda: PublicKey, tokenVaultPda: PublicKey, vaultState: VaultState }> => {
+const getLpSupply = async (connection: Connection, tokenMint: PublicKey): Promise<string> => {
+    const context = await connection.getTokenSupply(tokenMint);
+    const result = new Decimal(context.value.amount).toDP(context.value.decimals).toString();
+    return result;
+}
+
+const getVaultState = async (vaultParams: VaultParams, program: VaultProgram): Promise<{ vaultPda: PublicKey, tokenVaultPda: PublicKey, vaultState: VaultState, lpSupply: string }> => {
     const { vaultPda, tokenVaultPda } = await getVaultPdas(vaultParams.baseTokenMint, new PublicKey(PROGRAM_ID));
     const vaultState = (await program.account.vault.fetchNullable(
         vaultPda
     )) as VaultState;
+    const lpSupply = await getLpSupply(program.provider.connection, vaultState.lpMint);
 
     if (!vaultState) {
         throw "Cannot get vault state";
     }
-    return { vaultPda, tokenVaultPda, vaultState };
+    return { vaultPda, tokenVaultPda, vaultState, lpSupply };
 }
 
 type VaultDetails = {
     vaultParams: VaultParams,
     vaultPda: PublicKey,
     tokenVaultPda: PublicKey,
-    vaultState: VaultState
+    vaultState: VaultState,
+    lpSupply: string,
 }
 
 const LOCKED_PROFIT_DEGRADATION_DENOMINATOR = new Decimal(1_000_000_000_000);
@@ -49,9 +57,11 @@ export default class VaultImpl implements VaultImplementation {
     // Vault
     private vaultParams: VaultParams;
     private program: VaultProgram;
-    private vaultPda: PublicKey;
-    private tokenVaultPda: PublicKey;
+
+    public vaultPda: PublicKey;
+    public tokenVaultPda: PublicKey;
     public vaultState: VaultState;
+    public lpSupply: string = '';
 
     private constructor(program: VaultProgram, vaultDetails: VaultDetails, opt?: { cluster?: Cluster }) {
         this.connection = program.provider.connection;
@@ -62,13 +72,14 @@ export default class VaultImpl implements VaultImplementation {
         this.vaultPda = vaultDetails.vaultPda;
         this.tokenVaultPda = vaultDetails.tokenVaultPda;
         this.vaultState = vaultDetails.vaultState;
+        this.lpSupply = vaultDetails.lpSupply;
     }
 
     public static async create(connection: Connection, vaultParams: VaultParams, opt?: { cluster?: Cluster }): Promise<VaultImpl> {
         const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
         const program = new Program<VaultIdl>(IDL as VaultIdl, PROGRAM_ID, provider);
-        const { vaultPda, tokenVaultPda, vaultState } = await getVaultState(vaultParams, program);
-        return new VaultImpl(program, { vaultParams, vaultPda, tokenVaultPda, vaultState }, opt);
+        const { vaultPda, tokenVaultPda, vaultState, lpSupply } = await getVaultState(vaultParams, program);
+        return new VaultImpl(program, { vaultParams, vaultPda, tokenVaultPda, vaultState, lpSupply }, opt);
     }
 
     public async getUserBalance(owner: PublicKey): Promise<string> {
@@ -87,9 +98,12 @@ export default class VaultImpl implements VaultImplementation {
         return new Decimal(result.amount.toString()).toDP(this.vaultParams.baseTokenDecimals).toString();
     };
 
+    /** To refetch the latest lpSupply */
+    /** Use vaultImpl.lpSupply to use cached result */
     public async getVaultSupply(): Promise<string> {
-        const context = await this.connection.getTokenSupply(this.vaultState.lpMint);
-        return new Decimal(context.value.amount).toDP(this.vaultParams.baseTokenDecimals).toString();
+        const lpSupply = await getLpSupply(this.connection, this.vaultState.lpMint);
+        this.lpSupply = lpSupply;
+        return lpSupply;
     };
 
     public async getWithdrawableAmount(): Promise<string> {
