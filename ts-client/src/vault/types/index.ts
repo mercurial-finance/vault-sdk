@@ -16,12 +16,7 @@ export type VaultImplementation = {
     withdraw: (
         owner: PublicKey,
         baseTokenAmount: number
-    ) => Promise<Transaction>;
-    withdrawFromStrategy: (
-        owner: PublicKey,
-        vaultStrategyPubkey: PublicKey,
-        baseTokenAmount: number
-    ) => Promise<Transaction | { error: string }>
+    ) => Promise<Transaction | { error: string }>;
 }
 
 export type VaultParams = {

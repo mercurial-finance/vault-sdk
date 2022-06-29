@@ -1,6 +1,6 @@
 {
   "name": "@mercurial-finance/vault-sdk",
-  "version": "0.2.10-develop",
+  "version": "0.2.12-develop",
   "description": "Mercurial Vault SDK is a typescript library that allows you to interact with Mercurial v2's vault.",
   "main": "dist/index.js",
   "types": "dist/types/index.d.ts",
@@ -26,17 +26,18 @@
     "@solana/wallet-adapter-base": "^0.9.5",
     "@solana/web3.js": "^1.42.0",
     "@solendprotocol/solend-sdk": "^0.5.6",
-    "jsbi": "4.3.0",
-    "decimal.js": "10.3.1"
+    "cross-fetch": "^3.1.5",
+    "decimal.js": "10.3.1",
+    "jsbi": "4.3.0"
   },
   "devDependencies": {
     "@saberhq/solana-contrib": "1.13.6",
     "@saberhq/token-utils": "1.13.6",
     "@tsconfig/recommended": "^1.0.1",
+    "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.1",
     "@types/jest": "^27.5.1",
     "@types/mocha": "^9.1.1",
-    "@types/bn.js": "^5.1.0",
     "chai": "^4.3.6",
     "jest": "^28.1.0",
     "mocha": "^10.0.0",

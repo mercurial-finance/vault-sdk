@@ -1,5 +1,5 @@
 import { AnchorProvider, Program } from "@project-serum/anchor";
-import { PublicKey, TransactionInstruction, Connection, SYSVAR_CLOCK_PUBKEY, ParsedAccountData, Transaction, Cluster, clusterApiUrl } from "@solana/web3.js";
+import { PublicKey, TransactionInstruction, Connection, SYSVAR_CLOCK_PUBKEY, ParsedAccountData, Transaction, Cluster } from "@solana/web3.js";
 import Decimal from "decimal.js";
 import { BN } from "bn.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -41,6 +41,14 @@ const getVaultState = async (vaultParams: VaultParams, program: VaultProgram): P
     return { vaultPda, tokenVaultPda, vaultState, lpSupply };
 }
 
+const getVaultLiquidity = async(connection: Connection, tokenVaultPda: PublicKey): Promise<string | null>  => {
+    const vaultLiquidityResponse = await connection.getAccountInfo(tokenVaultPda)
+    if (!vaultLiquidityResponse) return null;
+
+    const vaultLiquidtySerialize = deserializeAccount(vaultLiquidityResponse.data)
+    return vaultLiquidtySerialize?.amount.toString() || null;
+}
+
 type VaultDetails = {
     vaultParams: VaultParams,
     vaultPda: PublicKey,
@@ -49,6 +57,39 @@ type VaultDetails = {
     lpSupply: string,
 }
 
+type VaultInfo = {
+    total_amount: number;
+    total_amount_with_profit: number;
+    is_monitoring: boolean;
+    token_address: string;
+    token_amount: number;
+    earned_amount: number;
+    virtual_price: string;
+    closest_apy: number;
+    average_apy: number;
+    usd_rate: number;
+    strategies: Array<StrategyInfo>;
+};
+
+export enum StrategyType {
+    PortFinanceWithoutLM = 'PortFinanceWithoutLM',
+    PortFinanceWithLM = 'PortFinanceWithLM',
+    SolendWithoutLM = 'SolendWithoutLM',
+    Mango = 'Mango',
+    Vault = 'Vault',
+}
+
+export type StrategyInfo = {
+    pubkey: string;
+    reserve: string;
+    strategy_type: StrategyType;
+    strategy_name: string;
+    liquidity: number;
+    reward: number;
+    apy: number;
+};
+
+const VAULT_STRATEGY_ADDRESS = '11111111111111111111111111111111';
 const LOCKED_PROFIT_DEGRADATION_DENOMINATOR = new Decimal(1_000_000_000_000);
 export default class VaultImpl implements VaultImplementation {
     private connection: Connection;
@@ -128,7 +169,7 @@ export default class VaultImpl implements VaultImplementation {
         const lockedProfit = new Decimal(lastUpdatedLockedProfit.toString())
             .mul(LOCKED_PROFIT_DEGRADATION_DENOMINATOR.sub(lockedFundRatio))
             .div(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)
-        return vaultTotalAmount.sub(lockedProfit).toString();
+        return vaultTotalAmount.sub(lockedProfit).toDP(0).toString();
     };
 
     private async refreshVaultState() {
@@ -176,10 +217,115 @@ export default class VaultImpl implements VaultImplementation {
             .add(depositTx);
     };
 
-    public async withdraw(owner: PublicKey, baseTokenAmount: number): Promise<Transaction> {
-        // Refresh vault state
-        await this.refreshVaultState();
+    private async getStrategyWithHighestLiquidity(strategy?: PublicKey) {
+        // Reserved for testing
+        if (strategy) {
+            const strategyState = (await this.program.account.strategy.fetchNullable(
+                strategy
+            )) as unknown as StrategyState;
+            return { publicKey: strategy, strategyState };
+        }
 
+        const vaultStrategiesStatePromise = this.vaultState.strategies
+            .filter(address => address.toString() !== VAULT_STRATEGY_ADDRESS)
+            .map(async strat => {
+                const strategyState = (await this.program.account.strategy.fetchNullable(
+                    strat
+                )) as unknown as StrategyState;
+                return { publicKey: strat, strategyState };
+            })
+        const vaultStrategiesState = await Promise.all(vaultStrategiesStatePromise);
+        const highestLiquidity = vaultStrategiesState.sort((a, b) => b.strategyState.currentLiquidity.sub(a.strategyState.currentLiquidity).toNumber())[0];
+        return highestLiquidity
+            ? highestLiquidity
+            : {
+                publicKey: new PublicKey(VAULT_STRATEGY_ADDRESS),
+                strategyState: null
+            };
+    }
+
+    public async withdraw(owner: PublicKey, baseTokenAmount: number, opt?: { strategy?: PublicKey }): Promise<Transaction> {
+        // Refresh vault state
+        await this.refreshVaultState()
+
+        // Get strategy with highest liquidity
+        // opt.strategy reserved for testing
+        const selectedStrategy = await this.getStrategyWithHighestLiquidity(opt?.strategy);
+        if (
+            !selectedStrategy // If there's no strategy deployed to the vault, use Vault Reserves instead
+            || selectedStrategy.publicKey.toString() === VAULT_STRATEGY_ADDRESS // If opt.strategy specified Vault Reserves
+            || !selectedStrategy.strategyState // If opt.strategy specified Vault Reserves
+        ) {
+            return this.withdrawFromVaultReserve(owner, baseTokenAmount);
+        }
+
+        const currentLiquidity = new BN(selectedStrategy.strategyState.currentLiquidity)
+        const vaultLiquidty = new BN(await getVaultLiquidity(this.connection, this.tokenVaultPda) || 0)
+        const unlockedAmount = await this.getWithdrawableAmount();
+        const virtualPrice = new BN(unlockedAmount).div(new BN(this.lpSupply))
+
+        const availableAmount = currentLiquidity.add(vaultLiquidty);
+        const amountToUnmint = new BN(baseTokenAmount).mul(virtualPrice)
+        if (amountToUnmint.gt(availableAmount)) {
+            throw new Error('Selected strategy does not have enough liquidity.');
+        }
+
+        const strategyType = getStrategyType(selectedStrategy.strategyState.strategyType);
+        const strategyHandler = getStrategyHandler(strategyType, this.cluster);
+
+        if (!strategyType || !strategyHandler) {
+            throw new Error("Cannot find strategy handler");
+        }
+
+        let preInstructions: TransactionInstruction[] = [];
+        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, owner, this.connection);
+        const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, owner, this.connection);
+        if (createUserTokenIx) {
+            preInstructions.push(createUserTokenIx);
+        }
+        if (createUserLpTokenIx) {
+            preInstructions.push(createUserLpTokenIx);
+        }
+
+        // Unwrap SOL
+        const postInstruction: Array<TransactionInstruction> = [];
+        if (this.vaultParams.baseTokenMint.equals(SOL_MINT)) {
+            const closeWrappedSOLIx = await unwrapSOLInstruction(owner);
+            if (closeWrappedSOLIx) {
+                postInstruction.push(closeWrappedSOLIx);
+            }
+        }
+
+        const withdrawFromStrategyTx = await strategyHandler.withdraw(
+            owner,
+            this.program,
+            {
+                pubkey: selectedStrategy.publicKey,
+                state: selectedStrategy.strategyState,
+            },
+            this.vaultPda,
+            this.tokenVaultPda,
+            this.vaultState.feeVault,
+            this.vaultState.lpMint,
+            userToken,
+            userLpToken,
+            baseTokenAmount,
+            preInstructions,
+            postInstruction,
+        );
+
+        if (withdrawFromStrategyTx instanceof Transaction) {
+            return new Transaction({ feePayer: owner, ...await this.connection.getLatestBlockhash() })
+                .add(withdrawFromStrategyTx);
+        }
+
+        // Return error
+        throw new Error(withdrawFromStrategyTx.error)
+    }
+
+    // Reserved code to withdraw from Vault Reserves directly.
+    // The only situation this piece of code will be required, is when a single Vault have no other strategy, and only have its own reserve.
+    private async withdrawFromVaultReserve(owner: PublicKey, baseTokenAmount: number): Promise<Transaction> {
         let preInstructions: TransactionInstruction[] = [];
         const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, owner, this.connection);
         const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, owner, this.connection);
@@ -217,72 +363,4 @@ export default class VaultImpl implements VaultImplementation {
         return new Transaction({ feePayer: owner, ...await this.connection.getLatestBlockhash() })
             .add(withdrawTx);
     };
-
-    public async withdrawFromStrategy(owner: PublicKey, vaultStrategyPubkey: PublicKey, baseTokenAmount: number): Promise<Transaction | { error: string }> {
-        // Refresh vault state
-        await this.refreshVaultState()
-
-        // TODO: Refactor this part, to use strategy class directly
-        const strategyState = (await this.program.account.strategy.fetchNullable(
-            vaultStrategyPubkey
-        )) as unknown as StrategyState;
-
-        if (strategyState.currentLiquidity.eq(new BN(0))) {
-            // TODO, must compare currentLiquidity + vaulLiquidity > unmintAmount * virtualPrice
-            return { error: 'Selected strategy does not have enough liquidity.' };
-        }
-
-        const strategy = {
-            pubkey: vaultStrategyPubkey,
-            state: strategyState,
-        };
-        const strategyType = getStrategyType(strategyState.strategyType);
-        const strategyHandler = getStrategyHandler(strategyType, this.cluster);
-
-        if (!strategyType || !strategyHandler) {
-            throw new Error("Cannot find strategy handler");
-        }
-
-        let preInstructions: TransactionInstruction[] = [];
-        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, owner, this.connection);
-        const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, owner, this.connection);
-        if (createUserTokenIx) {
-            preInstructions.push(createUserTokenIx);
-        }
-        if (createUserLpTokenIx) {
-            preInstructions.push(createUserLpTokenIx);
-        }
-
-        // Unwrap SOL
-        const postInstruction: Array<TransactionInstruction> = [];
-        if (this.vaultParams.baseTokenMint.equals(SOL_MINT)) {
-            const closeWrappedSOLIx = await unwrapSOLInstruction(owner);
-            if (closeWrappedSOLIx) {
-                postInstruction.push(closeWrappedSOLIx);
-            }
-        }
-
-        const withdrawFromStrategyTx = await strategyHandler.withdraw(
-            owner,
-            this.program,
-            strategy,
-            this.vaultPda,
-            this.tokenVaultPda,
-            this.vaultState.feeVault,
-            this.vaultState.lpMint,
-            userToken,
-            userLpToken,
-            baseTokenAmount,
-            preInstructions,
-            postInstruction,
-        );
-
-        if (withdrawFromStrategyTx instanceof Transaction) {
-            return new Transaction({ feePayer: owner, ...await this.connection.getLatestBlockhash() })
-                .add(withdrawFromStrategyTx);
-        }
-
-        // Return error
-        return withdrawFromStrategyTx
-    }
 }
