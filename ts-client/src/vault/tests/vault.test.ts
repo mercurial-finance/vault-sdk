@@ -69,7 +69,7 @@ describe('Interact with Vault in devnet', () => {
 
   test('Deposit, check balance, withdraw', async () => {
     // Deposit
-    const depositTx = await vault.deposit(mockWallet.publicKey, 2000);
+    const depositTx = await vault.deposit(mockWallet.publicKey, 100_000_000);
     const depositResult = await provider.sendAndConfirm(depositTx);
     console.log('Deposit result', depositResult);
     expect(typeof depositResult).toBe('string');
