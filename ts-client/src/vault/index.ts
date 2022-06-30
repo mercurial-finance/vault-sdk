@@ -28,8 +28,11 @@ const getLpSupply = async (connection: Connection, tokenMint: PublicKey): Promis
     return result;
 }
 
-const getVaultState = async (vaultParams: VaultParams, program: VaultProgram): Promise<{ vaultPda: PublicKey, tokenVaultPda: PublicKey, vaultState: VaultState, lpSupply: string }> => {
-    const { vaultPda, tokenVaultPda } = await getVaultPdas(vaultParams.baseTokenMint, new PublicKey(PROGRAM_ID));
+const getVaultState = async (
+    vaultParams: VaultParams,
+    program: VaultProgram
+): Promise<{ vaultPda: PublicKey, tokenVaultPda: PublicKey, vaultState: VaultState, lpSupply: string }> => {
+    const { vaultPda, tokenVaultPda } = await getVaultPdas(vaultParams.baseTokenMint, new PublicKey(program.programId));
     const vaultState = (await program.account.vault.fetchNullable(
         vaultPda
     )) as VaultState;
@@ -41,7 +44,7 @@ const getVaultState = async (vaultParams: VaultParams, program: VaultProgram): P
     return { vaultPda, tokenVaultPda, vaultState, lpSupply };
 }
 
-const getVaultLiquidity = async(connection: Connection, tokenVaultPda: PublicKey): Promise<string | null>  => {
+const getVaultLiquidity = async (connection: Connection, tokenVaultPda: PublicKey): Promise<string | null> => {
     const vaultLiquidityResponse = await connection.getAccountInfo(tokenVaultPda)
     if (!vaultLiquidityResponse) return null;
 
@@ -116,9 +119,21 @@ export default class VaultImpl implements VaultImplementation {
         this.lpSupply = vaultDetails.lpSupply;
     }
 
-    public static async create(connection: Connection, vaultParams: VaultParams, opt?: { cluster?: Cluster }): Promise<VaultImpl> {
+    public static async create(
+        connection: Connection,
+        vaultParams: VaultParams,
+        opt?: {
+            cluster?: Cluster,
+            programId?: string,
+        }
+    ): Promise<VaultImpl> {
         const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
-        const program = new Program<VaultIdl>(IDL as VaultIdl, PROGRAM_ID, provider);
+        const program = new Program<VaultIdl>(
+            IDL as VaultIdl,
+            opt?.programId || PROGRAM_ID,
+            provider
+        );
+
         const { vaultPda, tokenVaultPda, vaultState, lpSupply } = await getVaultState(vaultParams, program);
         return new VaultImpl(program, { vaultParams, vaultPda, tokenVaultPda, vaultState, lpSupply }, opt);
     }
