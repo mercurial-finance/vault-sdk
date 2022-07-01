@@ -249,8 +249,16 @@ export default class VaultImpl implements VaultImplementation {
                 )) as unknown as StrategyState;
                 return { publicKey: strat, strategyState };
             })
-        const vaultStrategiesState = await Promise.all(vaultStrategiesStatePromise);
-        const highestLiquidity = vaultStrategiesState.sort((a, b) => b.strategyState.currentLiquidity.sub(a.strategyState.currentLiquidity).toNumber())[0];
+        const vaultStrategiesState = (await Promise.allSettled(vaultStrategiesStatePromise))
+
+        const highestLiquidity = vaultStrategiesState
+            .map(item => item.status === "fulfilled" ? item.value : undefined)
+            .sort((a, b) => {
+                if (a && b) {
+                    return b.strategyState.currentLiquidity.sub(a.strategyState.currentLiquidity).toNumber()
+                }
+                return 0
+            })[0];
         return highestLiquidity
             ? highestLiquidity
             : {
