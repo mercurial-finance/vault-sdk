@@ -22,6 +22,7 @@ export const SEEDS = Object.freeze({
   STAKING_PREFIX: 'staking',
   MINER: 'Miner',
   QUARRY: 'Quarry',
+  APRICOT_USER_INFO_SIGNER_PREFIX: 'apricot_user_info_signer',
 });
 
 export const StrategyProgram: Record<

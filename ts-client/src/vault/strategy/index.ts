@@ -1,10 +1,13 @@
 import { BN } from '@project-serum/anchor';
-import { Cluster, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { Cluster, Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { StrategyProgram } from '../constants';
 import type { VaultProgram } from '../types';
+import ApricotWithoutLMHandler from './apricotWithoutLM';
+import FranciumHandler from './francium';
 import MangoHandler from './mango';
 import PortWithLMHandler from './portWithLM';
 import PortWithoutLMHandler from './portWithoutLM';
+import SolendWithLMHandler from './solendWithLM';
 import SolendWithoutLMHandler from './solendWithoutLM';
 import VaultHandler from './vault';
 
@@ -13,6 +16,8 @@ export type StrategyType =
   | 'portFinanceWithLm'
   | 'solendWithoutLm'
   | 'solendWithLm'
+  | 'fancium'
+  | 'apricotWithoutLM'
   | 'mango'
   | 'vault';
 
@@ -54,16 +59,26 @@ export const getStrategyType = (strategyResponse: any) => {
   return Object.keys(strategyResponse)[0] as StrategyType;
 };
 
-export const getStrategyHandler = (strategyType: StrategyType, cluster?: Cluster): StrategyHandler | null => {
+export const getStrategyHandler = (
+  strategyType: StrategyType,
+  cluster: Cluster,
+  connection: Connection,
+): StrategyHandler | null => {
   const strategyProgramAddresses = StrategyProgram[cluster ?? 'mainnet-beta'];
 
   switch (strategyType) {
     case 'solendWithoutLm':
       return new SolendWithoutLMHandler(strategyProgramAddresses.solend);
+    case 'solendWithLm':
+      return new SolendWithLMHandler(strategyProgramAddresses.solend);
     case 'portFinanceWithoutLm':
       return new PortWithoutLMHandler(strategyProgramAddresses.portFinance);
     case 'portFinanceWithLm':
       return new PortWithLMHandler(strategyProgramAddresses.portFinance);
+    case 'fancium':
+      return new FranciumHandler(connection);
+    case 'apricotWithoutLM':
+      return new ApricotWithoutLMHandler();
     case 'mango':
       return new MangoHandler();
     case 'vault':
