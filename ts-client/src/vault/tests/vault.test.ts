@@ -1,4 +1,4 @@
-import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { StaticTokenListResolutionStrategy, TokenInfo } from '@solana/spl-token-registry';
 import { Wallet, AnchorProvider } from '@project-serum/anchor';
 
@@ -22,18 +22,9 @@ describe('Get Mainnet vault state', () => {
   // Make sure all vaults can be initialized
   beforeAll(async () => {
     const allVaults = await Promise.all([
-      await VaultImpl.create(mainnetConnection, {
-        baseTokenMint: new PublicKey(SOL_TOKEN_INFO.address),
-        baseTokenDecimals: SOL_TOKEN_INFO.decimals,
-      }),
-      await VaultImpl.create(mainnetConnection, {
-        baseTokenMint: new PublicKey(USDC_TOKEN_INFO.address),
-        baseTokenDecimals: USDC_TOKEN_INFO.decimals,
-      }),
-      await VaultImpl.create(mainnetConnection, {
-        baseTokenMint: new PublicKey(USDT_TOKEN_INFO.address),
-        baseTokenDecimals: USDT_TOKEN_INFO.decimals,
-      }),
+      await VaultImpl.create(mainnetConnection, SOL_TOKEN_INFO),
+      await VaultImpl.create(mainnetConnection, USDC_TOKEN_INFO),
+      await VaultImpl.create(mainnetConnection, USDT_TOKEN_INFO),
     ]);
     vaults = vaults.concat(allVaults);
   });
@@ -62,7 +53,7 @@ describe('Interact with Vault in devnet', () => {
     await airDropSol(devnetConnection, mockWallet.publicKey);
     vault = await VaultImpl.create(
       devnetConnection,
-      { baseTokenMint: new PublicKey(SOL_TOKEN_INFO.address), baseTokenDecimals: SOL_TOKEN_INFO.decimals },
+      SOL_TOKEN_INFO,
       { cluster: 'devnet' },
     );
   });

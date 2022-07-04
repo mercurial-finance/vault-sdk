@@ -1,4 +1,5 @@
 import { BN, Program } from "@project-serum/anchor";
+import { TokenInfo } from "@solana/spl-token-registry";
 import { PublicKey, Transaction } from "@solana/web3.js";
 
 import { Vault as VaultIdl } from "../idl";
@@ -18,11 +19,6 @@ export type VaultImplementation = {
         baseTokenAmount: number
     ) => Promise<Transaction | { error: string }>;
 }
-
-export type VaultParams = {
-    baseTokenMint: PublicKey;
-    baseTokenDecimals: number;
-};
 
 export interface VaultState {
     admin: PublicKey;
@@ -47,7 +43,7 @@ export interface VaultState {
 }
 
 export type VaultDetails = {
-    vaultParams: VaultParams,
+    vaultParams: TokenInfo,
     vaultPda: PublicKey,
     tokenVaultPda: PublicKey,
     vaultState: VaultState,

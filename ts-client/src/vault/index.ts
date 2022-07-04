@@ -3,18 +3,19 @@ import { PublicKey, TransactionInstruction, Connection, Transaction, Cluster } f
 import Decimal from "decimal.js";
 import { BN } from "bn.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { TokenInfo } from "@solana/spl-token-registry";
 
-import { VaultDetails, VaultImplementation, VaultParams, VaultProgram, VaultState } from "./types";
+import { VaultDetails, VaultImplementation, VaultProgram, VaultState } from "./types";
 import { deserializeAccount, getAssociatedTokenAccount, getLpSupply, getOnchainTime, getOrCreateATAInstruction, getVaultPdas, unwrapSOLInstruction, wrapSOLInstruction } from "./utils";
 import { LOCKED_PROFIT_DEGRADATION_DENOMINATOR, PROGRAM_ID, SOL_MINT, VAULT_STRATEGY_ADDRESS } from "./constants";
 import { getStrategyHandler, getStrategyType, StrategyState } from "./strategy";
 import { IDL, Vault as VaultIdl } from "./idl";
 
 const getVaultState = async (
-    vaultParams: VaultParams,
+    vaultParams: TokenInfo,
     program: VaultProgram
 ): Promise<{ vaultPda: PublicKey, tokenVaultPda: PublicKey, vaultState: VaultState, lpSupply: string }> => {
-    const { vaultPda, tokenVaultPda } = await getVaultPdas(vaultParams.baseTokenMint, new PublicKey(program.programId));
+    const { vaultPda, tokenVaultPda } = await getVaultPdas(new PublicKey(vaultParams.address), new PublicKey(program.programId));
     const vaultState = (await program.account.vault.fetchNullable(
         vaultPda
     )) as VaultState;
@@ -39,7 +40,7 @@ export default class VaultImpl implements VaultImplementation {
     private cluster: Cluster = 'mainnet-beta';
 
     // Vault
-    private vaultParams: VaultParams;
+    private tokenInfo: TokenInfo;
     private program: VaultProgram;
 
     public vaultPda: PublicKey;
@@ -51,7 +52,7 @@ export default class VaultImpl implements VaultImplementation {
         this.connection = program.provider.connection;
         this.cluster = opt?.cluster ?? 'mainnet-beta';
 
-        this.vaultParams = vaultDetails.vaultParams;
+        this.tokenInfo = vaultDetails.vaultParams;
         this.program = program;
         this.vaultPda = vaultDetails.vaultPda;
         this.tokenVaultPda = vaultDetails.tokenVaultPda;
@@ -61,7 +62,7 @@ export default class VaultImpl implements VaultImplementation {
 
     public static async create(
         connection: Connection,
-        vaultParams: VaultParams,
+        vaultParams: TokenInfo,
         opt?: {
             cluster?: Cluster,
             programId?: string,
@@ -83,7 +84,7 @@ export default class VaultImpl implements VaultImplementation {
         const accountInfo = await this.connection.getAccountInfo(address);
 
         if (!accountInfo) {
-            return new Decimal(0).toDP(this.vaultParams.baseTokenDecimals).toString();
+            return new Decimal(0).toDP(this.tokenInfo.decimals).toString();
         }
 
         const result = deserializeAccount(accountInfo.data);
@@ -91,7 +92,7 @@ export default class VaultImpl implements VaultImplementation {
             throw new Error("Failed to parse user account for LP token.");
         }
 
-        return new Decimal(result.amount.toString()).toDP(this.vaultParams.baseTokenDecimals).toString();
+        return new Decimal(result.amount.toString()).toDP(this.tokenInfo.decimals).toString();
     };
 
     /** To refetch the latest lpSupply */
@@ -128,7 +129,7 @@ export default class VaultImpl implements VaultImplementation {
     };
 
     private async refreshVaultState() {
-        const { vaultPda, tokenVaultPda, vaultState } = await getVaultState(this.vaultParams, this.program);
+        const { vaultPda, tokenVaultPda, vaultState } = await getVaultState(this.tokenInfo, this.program);
         this.vaultPda = vaultPda;
         this.tokenVaultPda = tokenVaultPda;
         this.vaultState = vaultState;
@@ -139,7 +140,7 @@ export default class VaultImpl implements VaultImplementation {
         await this.refreshVaultState();
 
         let preInstructions: TransactionInstruction[] = [];
-        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, owner, this.connection);
+        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(new PublicKey(this.tokenInfo.address), owner, this.connection);
         const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, owner, this.connection);
         if (createUserTokenIx) {
             preInstructions.push(createUserTokenIx);
@@ -148,7 +149,7 @@ export default class VaultImpl implements VaultImplementation {
             preInstructions.push(createUserLpTokenIx);
         }
         // If it's SOL vault, wrap desired amount of SOL
-        if (this.vaultParams.baseTokenMint.equals(SOL_MINT)) {
+        if (this.tokenInfo.address === SOL_MINT.toString()) {
             preInstructions = preInstructions.concat(
                 wrapSOLInstruction(owner, userToken, baseTokenAmount)
             );
@@ -241,7 +242,7 @@ export default class VaultImpl implements VaultImplementation {
         }
 
         let preInstructions: TransactionInstruction[] = [];
-        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, owner, this.connection);
+        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(new PublicKey(this.tokenInfo.address), owner, this.connection);
         const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, owner, this.connection);
         if (createUserTokenIx) {
             preInstructions.push(createUserTokenIx);
@@ -252,7 +253,7 @@ export default class VaultImpl implements VaultImplementation {
 
         // Unwrap SOL
         const postInstruction: Array<TransactionInstruction> = [];
-        if (this.vaultParams.baseTokenMint.equals(SOL_MINT)) {
+        if (this.tokenInfo.address === SOL_MINT.toString()) {
             const closeWrappedSOLIx = await unwrapSOLInstruction(owner);
             if (closeWrappedSOLIx) {
                 postInstruction.push(closeWrappedSOLIx);
@@ -290,7 +291,7 @@ export default class VaultImpl implements VaultImplementation {
     // The only situation this piece of code will be required, is when a single Vault have no other strategy, and only have its own reserve.
     private async withdrawFromVaultReserve(owner: PublicKey, baseTokenAmount: number): Promise<Transaction> {
         let preInstructions: TransactionInstruction[] = [];
-        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(this.vaultParams.baseTokenMint, owner, this.connection);
+        const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(new PublicKey(this.tokenInfo.address), owner, this.connection);
         const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, owner, this.connection);
         if (createUserTokenIx) {
             preInstructions.push(createUserTokenIx);
@@ -301,7 +302,7 @@ export default class VaultImpl implements VaultImplementation {
 
         // Unwrap SOL
         const postInstruction: Array<TransactionInstruction> = [];
-        if (this.vaultParams.baseTokenMint.equals(SOL_MINT)) {
+        if (this.tokenInfo.address === SOL_MINT.toString()) {
             const closeWrappedSOLIx = await unwrapSOLInstruction(owner);
             if (closeWrappedSOLIx) {
                 postInstruction.push(closeWrappedSOLIx);
