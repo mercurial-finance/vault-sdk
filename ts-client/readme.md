@@ -41,20 +41,24 @@ npm i @mercurial-finance/vault-sdk @project-serum/anchor @solana/web3.js @solana
 import VaultImpl from '@mercurial-finance/vault-sdk';
 import { PublicKey } from '@solana/web3.js';
 import { StaticTokenListResolutionStrategy, TokenInfo } from "@solana/spl-token-registry";
+import { Wallet, AnchorProvider } from '@project-serum/anchor';
+
+// Connection, Wallet, and AnchorProvider to interact with the network
+const mainnetConnection = new Connection('https://api.mainnet-beta.solana.com');
+const mockWallet = new Wallet(new Keypair());
+const provider = new AnchorProvider(mainnetConnection, mockWallet, {
+    commitment: 'confirmed',
+});
+// Alternatively, to use Solana Wallet Adapter, refer to `Demo Repo`
 
 const tokenMap = new StaticTokenListResolutionStrategy().resolve();
 // Find the token info you want to use.
 const SOL_TOKEN_INFO = tokenMap.find(token => token.symbol === 'SOL') as TokenInfo;
-const vaultImpl = await VaultImpl.create(connection, {
-  baseTokenMint: new PublicKey(SOL_TOKEN_INFO.address),
-  baseTokenDecimals: SOL_TOKEN_INFO.decimals,
-});
+const vaultImpl = await VaultImpl.create(connection, SOL_TOKEN_INFO);
 ```
 
 3. To interact with the VaultImpl
 ```ts
-const mockWallet = new Wallet(new Keypair());
-
 // Get the user's ATA LP balance
 const userBalance = await vaultImpl.getUserBalance();
 
