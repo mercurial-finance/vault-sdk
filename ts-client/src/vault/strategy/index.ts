@@ -41,7 +41,7 @@ export interface StrategyHandler {
     lpMint: PublicKey,
     userToken: PublicKey,
     userLp: PublicKey,
-    amount: number,
+    amount: BN,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[]
   ): Promise<Transaction | { error: string }>;

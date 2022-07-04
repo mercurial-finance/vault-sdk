@@ -28,7 +28,7 @@ export default class MangoHandler implements StrategyHandler {
     lpMint: PublicKey,
     userToken: PublicKey,
     userLp: PublicKey,
-    amount: number,
+    amount: anchor.BN,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[]
   ) {
@@ -90,7 +90,7 @@ export default class MangoHandler implements StrategyHandler {
     );
 
     const tx = await program.methods
-      .withdrawDirectlyFromStrategy(new anchor.BN(amount), new anchor.BN(0))
+      .withdrawDirectlyFromStrategy(amount, new anchor.BN(0))
       .preInstructions(preInstructions)
       .postInstructions(postInstructions)
       .remainingAccounts(remainingAccounts)

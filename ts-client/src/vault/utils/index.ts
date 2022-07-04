@@ -1,7 +1,7 @@
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, ParsedAccountData, PublicKey, SystemProgram, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from "@solana/web3.js";
 import { AccountInfo, AccountLayout, u64 } from '@solana/spl-token';
-import Decimal from "decimal.js";
+import { BN } from '@project-serum/anchor'
 
 import { SOL_MINT, VAULT_BASE_KEY } from "../constants";
 import { ParsedClockState } from "../types";
@@ -116,13 +116,13 @@ export const getVaultPdas = async (
 export const wrapSOLInstruction = (
   from: PublicKey,
   to: PublicKey,
-  amount: number
+  amount: BN
 ): TransactionInstruction[] => {
   return [
     SystemProgram.transfer({
       fromPubkey: from,
       toPubkey: to,
-      lamports: amount,
+      lamports: amount.toNumber(),
     }),
     new TransactionInstruction({
       keys: [
@@ -171,8 +171,7 @@ export const getOnchainTime = async (connection: Connection) => {
   return currentTime;
 }
 
-export const getLpSupply = async (connection: Connection, tokenMint: PublicKey): Promise<string> => {
+export const getLpSupply = async (connection: Connection, tokenMint: PublicKey): Promise<BN> => {
   const context = await connection.getTokenSupply(tokenMint);
-  const result = new Decimal(context.value.amount).toDP(context.value.decimals).toString();
-  return result;
+  return new BN(context.value.amount)
 }

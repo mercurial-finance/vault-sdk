@@ -1,6 +1,6 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { StaticTokenListResolutionStrategy, TokenInfo } from '@solana/spl-token-registry';
-import { Wallet, AnchorProvider } from '@project-serum/anchor';
+import { Wallet, AnchorProvider, BN } from '@project-serum/anchor';
 
 import VaultImpl from '..';
 import { airDropSol } from './utils';
@@ -60,7 +60,7 @@ describe('Interact with Vault in devnet', () => {
 
   test('Deposit, check balance, withdraw', async () => {
     // Deposit
-    const depositTx = await vault.deposit(mockWallet.publicKey, 100_000_000);
+    const depositTx = await vault.deposit(mockWallet.publicKey, new BN(100_000_000));
     const depositResult = await provider.sendAndConfirm(depositTx);
     console.log('Deposit result', depositResult);
     expect(typeof depositResult).toBe('string');
@@ -70,7 +70,7 @@ describe('Interact with Vault in devnet', () => {
     expect(Number(userBalanceDeposit)).toBeGreaterThan(0);
 
     // Withdraw all lp
-    const withdrawTx = await vault.withdraw(mockWallet.publicKey, Number(userBalanceDeposit));
+    const withdrawTx = await vault.withdraw(mockWallet.publicKey, new BN(userBalanceDeposit));
     const withdrawResult = await provider.sendAndConfirm(withdrawTx);
     console.log('Withdraw result', withdrawResult);
     expect(typeof withdrawResult).toBe('string');
@@ -86,12 +86,12 @@ describe('Interact with Vault in devnet', () => {
         console.log("Test with ", strategy.toString());
 
         // Deposit
-        const depositTx = await vault.deposit(mockWallet.publicKey, 1_000_000);
+        const depositTx = await vault.deposit(mockWallet.publicKey, new BN(1_000_000));
         const depositResult = await provider.sendAndConfirm(depositTx);
         expect(typeof depositResult).toBe("string");
 
         // Withdraw from specific strategy
-        const withdrawTx = await vault.withdraw(mockWallet.publicKey, 1000, { strategy });
+        const withdrawTx = await vault.withdraw(mockWallet.publicKey, new BN(1000), { strategy });
 
         try {
           const withdrawResult = await provider.sendAndConfirm(withdrawTx);

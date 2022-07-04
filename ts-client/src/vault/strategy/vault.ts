@@ -18,12 +18,12 @@ export default class VaultHandler implements StrategyHandler {
     lpMint: PublicKey,
     userToken: PublicKey,
     userLp: PublicKey,
-    amount: number,
+    amount: anchor.BN,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[],
   ) {
     const tx = await program.methods
-      .withdraw(new anchor.BN(amount), new anchor.BN(0))
+      .withdraw(amount, new anchor.BN(0))
       .accounts({
         vault,
         tokenVault,

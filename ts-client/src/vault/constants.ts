@@ -1,5 +1,5 @@
 import { Cluster, PublicKey } from "@solana/web3.js";
-import Decimal from "decimal.js";
+import { BN } from '@project-serum/anchor';
 
 export const PROGRAM_ID = "24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi";
 
@@ -60,4 +60,4 @@ export const KEEPER_URL: Record<
 }
 
 export const VAULT_STRATEGY_ADDRESS = '11111111111111111111111111111111';
-export const LOCKED_PROFIT_DEGRADATION_DENOMINATOR = new Decimal(1_000_000_000_000);
+export const LOCKED_PROFIT_DEGRADATION_DENOMINATOR = new BN(1_000_000_000_000);

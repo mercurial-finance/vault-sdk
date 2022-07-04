@@ -1,7 +1,5 @@
-import { AnchorProvider, Program } from "@project-serum/anchor";
+import { AnchorProvider, Program, BN } from "@project-serum/anchor";
 import { PublicKey, TransactionInstruction, Connection, Transaction, Cluster } from "@solana/web3.js";
-import Decimal from "decimal.js";
-import { BN } from "bn.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { TokenInfo } from "@solana/spl-token-registry";
 
@@ -14,7 +12,7 @@ import { IDL, Vault as VaultIdl } from "./idl";
 const getVaultState = async (
     vaultParams: TokenInfo,
     program: VaultProgram
-): Promise<{ vaultPda: PublicKey, tokenVaultPda: PublicKey, vaultState: VaultState, lpSupply: string }> => {
+): Promise<{ vaultPda: PublicKey, tokenVaultPda: PublicKey, vaultState: VaultState, lpSupply: BN }> => {
     const { vaultPda, tokenVaultPda } = await getVaultPdas(new PublicKey(vaultParams.address), new PublicKey(program.programId));
     const vaultState = (await program.account.vault.fetchNullable(
         vaultPda
@@ -46,7 +44,7 @@ export default class VaultImpl implements VaultImplementation {
     public vaultPda: PublicKey;
     public tokenVaultPda: PublicKey;
     public vaultState: VaultState;
-    public lpSupply: string = '';
+    public lpSupply: BN = new BN(0);
 
     private constructor(program: VaultProgram, vaultDetails: VaultDetails, opt?: { cluster?: Cluster }) {
         this.connection = program.provider.connection;
@@ -79,12 +77,12 @@ export default class VaultImpl implements VaultImplementation {
         return new VaultImpl(program, { vaultParams, vaultPda, tokenVaultPda, vaultState, lpSupply }, opt);
     }
 
-    public async getUserBalance(owner: PublicKey): Promise<string> {
+    public async getUserBalance(owner: PublicKey): Promise<BN> {
         const address = await getAssociatedTokenAccount(this.vaultState.lpMint, owner);
         const accountInfo = await this.connection.getAccountInfo(address);
 
         if (!accountInfo) {
-            return new Decimal(0).toDP(this.tokenInfo.decimals).toString();
+            return new BN(0);
         }
 
         const result = deserializeAccount(accountInfo.data);
@@ -92,20 +90,20 @@ export default class VaultImpl implements VaultImplementation {
             throw new Error("Failed to parse user account for LP token.");
         }
 
-        return new Decimal(result.amount.toString()).toDP(this.tokenInfo.decimals).toString();
+        return new BN(result.amount);
     };
 
     /** To refetch the latest lpSupply */
     /** Use vaultImpl.lpSupply to use cached result */
-    public async getVaultSupply(): Promise<string> {
+    public async getVaultSupply(): Promise<BN> {
         const lpSupply = await getLpSupply(this.connection, this.vaultState.lpMint);
         this.lpSupply = lpSupply;
         return lpSupply;
     };
 
-    public async getWithdrawableAmount(): Promise<string> {
+    public async getWithdrawableAmount(): Promise<BN> {
         const currentTime = await getOnchainTime(this.connection);
-        const vaultTotalAmount = new Decimal(this.vaultState.totalAmount.toString());
+        const vaultTotalAmount = this.vaultState.totalAmount;
 
         const {
             lockedProfitTracker: {
@@ -115,17 +113,18 @@ export default class VaultImpl implements VaultImplementation {
             }
         } = this.vaultState;
 
-        const duration = new Decimal(currentTime).sub(lastReport.toString());
+        const duration = new BN(currentTime).sub(lastReport);
 
-        const lockedFundRatio = duration.mul(lockedProfitDegradation.toString());
+        const lockedFundRatio = duration.mul(lockedProfitDegradation);
         if (lockedFundRatio.gt(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)) {
-            return new Decimal(0).toString();
+            return new BN(0);
         }
 
-        const lockedProfit = new Decimal(lastUpdatedLockedProfit.toString())
+        const lockedProfit = lastUpdatedLockedProfit
             .mul(LOCKED_PROFIT_DEGRADATION_DENOMINATOR.sub(lockedFundRatio))
             .div(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)
-        return vaultTotalAmount.sub(lockedProfit).toDP(0).toString();
+
+        return vaultTotalAmount.sub(lockedProfit)
     };
 
     private async refreshVaultState() {
@@ -135,7 +134,7 @@ export default class VaultImpl implements VaultImplementation {
         this.vaultState = vaultState;
     }
 
-    public async deposit(owner: PublicKey, baseTokenAmount: number): Promise<Transaction> {
+    public async deposit(owner: PublicKey, baseTokenAmount: BN): Promise<Transaction> {
         // Refresh vault state
         await this.refreshVaultState();
 
@@ -208,7 +207,7 @@ export default class VaultImpl implements VaultImplementation {
             };
     }
 
-    public async withdraw(owner: PublicKey, baseTokenAmount: number, opt?: { strategy?: PublicKey }): Promise<Transaction> {
+    public async withdraw(owner: PublicKey, baseTokenAmount: BN, opt?: { strategy?: PublicKey }): Promise<Transaction> {
         // Refresh vault state
         await this.refreshVaultState()
 
@@ -289,7 +288,7 @@ export default class VaultImpl implements VaultImplementation {
 
     // Reserved code to withdraw from Vault Reserves directly.
     // The only situation this piece of code will be required, is when a single Vault have no other strategy, and only have its own reserve.
-    private async withdrawFromVaultReserve(owner: PublicKey, baseTokenAmount: number): Promise<Transaction> {
+    private async withdrawFromVaultReserve(owner: PublicKey, baseTokenAmount: BN): Promise<Transaction> {
         let preInstructions: TransactionInstruction[] = [];
         const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(new PublicKey(this.tokenInfo.address), owner, this.connection);
         const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(this.vaultState.lpMint, owner, this.connection);
@@ -310,7 +309,7 @@ export default class VaultImpl implements VaultImplementation {
         }
 
         const withdrawTx = await this.program.methods
-            .withdraw(new BN(baseTokenAmount), new BN(0)) // Vault does not have slippage, second parameter is ignored.
+            .withdraw(baseTokenAmount, new BN(0)) // Vault does not have slippage, second parameter is ignored.
             .accounts({
                 vault: this.vaultPda,
                 tokenVault: this.tokenVaultPda,
