@@ -81,6 +81,22 @@ const withdrawTx = await vaultImpl.withdraw(mockWallet.publicKey, amountInLampor
 const withdrawResult = await provider.sendAndConfirm(withdrawTx); // Transaction hash
 ```
 
+4. Helper function
+```ts
+import { helper } from '@mercurial-finance/vault-sdk';
+
+const userShare = await vaultImpl.getUserBalance(mockWallet.publicKey);
+const unlockedAmount = await vaultImpl.getWithdrawableAmount()
+const lpSupply = await vaultImpl.getVaultSupply();
+
+// To convert user's LP balance into underlying token amount
+const underlyingShare = helper.getAmountByShare(userShare, unlockedAmount, lpSupply)
+
+// To convert underlying token amount into user's LP balance
+const amountInLamports = 1 * 10 ** SOL_TOKEN_INFO.decimals; // 1.0 SOL
+const lpToUnmint = helper.getUnmintAmount(amountInLamports, unlockedAmount, lpSupply) // To withdraw 1.0 SOL
+```
+
 <br>
 <br>
 <hr />
