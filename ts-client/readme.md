@@ -13,6 +13,8 @@
 <br>
 
 ## Getting started
+NPM: https://www.npmjs.com/package/@mercurial-finance/vault-sdk
+
 SDK: https://github.com/mercurial-finance/vault-sdk
 
 Demo: https://vault-sdk-demo.vercel.app/
