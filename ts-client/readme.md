@@ -59,25 +59,24 @@ const vaultImpl = await VaultImpl.create(connection, SOL_TOKEN_INFO);
 
 3. To interact with the VaultImpl
 ```ts
-// Get the user's ATA LP balance
-const userBalance = await vaultImpl.getUserBalance();
-
 // To refetch the vault's latest supply
 // Alternatively, use `vaultImpl.lpSupply`
 const lpSupply = await vaultImpl.getVaultSupply();
 
 // Rewards are not instantly redeemable, and are subject to a lock.
 // This function returns the amount of LP that are redeemable.
-const unlockedAmount = await getWithdrawableAmount()
+const unlockedAmount = await vaultImpl.getWithdrawableAmount()
 
 // To deposit into the vault
 const amountInLamports = 1 * 10 ** SOL_TOKEN_INFO.decimals; // 1.0 SOL
-const depositTx = await vaultImpl.deposit(mockWallet.publicKey, amountInLamports); // Web3 Transaction Object
+const depositTx = await vaultImpl.deposit(mockWallet.publicKey, new BN(amountInLamports)); // Web3 Transaction Object
 const depositResult = await provider.sendAndConfirm(depositTx); // Transaction hash
 
+// Get the user's ATA LP balance
+const userLpBalance = await vaultImpl.getUserBalance(mockWallet.publicKey);
+
 // To withdraw from the vault
-const amountInLamports = 1 * 10 ** SOL_TOKEN_INFO.decimals; // 1.0 SOL
-const withdrawTx = await vaultImpl.withdraw(mockWallet.publicKey, amountInLamports); // Web3 Transaction Object
+const withdrawTx = await vaultImpl.withdraw(mockWallet.publicKey, new BN(userLpBalance)); // Web3 Transaction Object
 const withdrawResult = await provider.sendAndConfirm(withdrawTx); // Transaction hash
 ```
 
@@ -94,7 +93,7 @@ const underlyingShare = helper.getAmountByShare(userShare, unlockedAmount, lpSup
 
 // To convert underlying token amount into user's LP balance
 const amountInLamports = 1 * 10 ** SOL_TOKEN_INFO.decimals; // 1.0 SOL
-const lpToUnmint = helper.getUnmintAmount(amountInLamports, unlockedAmount, lpSupply) // To withdraw 1.0 SOL
+const lpToUnmint = helper.getUnmintAmount(new BN(amountInLamports), unlockedAmount, lpSupply) // To withdraw 1.0 SOL
 ```
 
 <br>
