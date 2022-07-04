@@ -1,7 +1,26 @@
 # Mercurial Vault SDK
 
+<p align="center">
+<img align="center" src="https://vaults.mercurial.finance/icons/logo.svg" width="180" height="180" />
+</p>
+<br>
+
+
 ### *Major revamp of the SDK has been made. Refer to ~v0.1.0 for the old SDK.
 
+<br>
+<hr>
+<br>
+
+## Getting started
+SDK: https://github.com/mercurial-finance/vault-sdk
+
+Demo: https://vault-sdk-demo.vercel.app/
+
+Demo repo: https://github.com/mercurial-finance/vault-sdk-demo
+- Easiest way to get started with our Typescript SDK, the example demo include all functionality and information we display on our own site.
+
+<hr>
 
 ## Install (~v0.2)
 
