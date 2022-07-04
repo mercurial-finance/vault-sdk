@@ -18,7 +18,9 @@ SDK: https://github.com/mercurial-finance/vault-sdk
 Demo: https://vault-sdk-demo.vercel.app/
 
 Demo repo: https://github.com/mercurial-finance/vault-sdk-demo
-- Easiest way to get started with our Typescript SDK, the example demo include all functionality and information we display on our own site.
+- Easiest way to get started with our Typescript SDK, the example demo includes all functionality and information we display on our own site.
+
+Discord: https://discord.com/channels/841152225564950528/864859354335412224
 
 <hr>
 
