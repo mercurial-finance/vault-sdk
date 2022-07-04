@@ -1,7 +1,10 @@
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Connection, PublicKey, SystemProgram, TransactionInstruction } from "@solana/web3.js";
+import { Connection, ParsedAccountData, PublicKey, SystemProgram, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from "@solana/web3.js";
 import { AccountInfo, AccountLayout, u64 } from '@solana/spl-token';
+import Decimal from "decimal.js";
+
 import { SOL_MINT, VAULT_BASE_KEY } from "../constants";
+import { ParsedClockState } from "../types";
 
 export const getAssociatedTokenAccount = async (tokenMint: PublicKey, owner: PublicKey) => {
   return await Token.getAssociatedTokenAddress(
@@ -155,3 +158,21 @@ export const unwrapSOLInstruction = async (walletPublicKey: PublicKey) => {
   }
   return null;
 };
+
+export const getOnchainTime = async (connection: Connection) => {
+  const parsedClock = await connection.getParsedAccountInfo(
+    SYSVAR_CLOCK_PUBKEY
+  );
+
+  const parsedClockAccount = (parsedClock.value!.data as ParsedAccountData)
+    .parsed as ParsedClockState;
+
+  const currentTime = parsedClockAccount.info.unixTimestamp;
+  return currentTime;
+}
+
+export const getLpSupply = async (connection: Connection, tokenMint: PublicKey): Promise<string> => {
+  const context = await connection.getTokenSupply(tokenMint);
+  const result = new Decimal(context.value.amount).toDP(context.value.decimals).toString();
+  return result;
+}

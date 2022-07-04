@@ -8,7 +8,7 @@
 1. Install deps
 
 ```
-npm i @mercurial-finance/vault-sdk @project-serum/anchor @solana/web3.js
+npm i @mercurial-finance/vault-sdk @project-serum/anchor @solana/web3.js @solana/spl-token @solana/spl-token-registry
 ```
 
 2. Initialize VaultImpl instance

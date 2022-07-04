@@ -1,32 +1,14 @@
 import { AnchorProvider, Program } from "@project-serum/anchor";
-import { PublicKey, TransactionInstruction, Connection, SYSVAR_CLOCK_PUBKEY, ParsedAccountData, Transaction, Cluster } from "@solana/web3.js";
+import { PublicKey, TransactionInstruction, Connection, Transaction, Cluster } from "@solana/web3.js";
 import Decimal from "decimal.js";
 import { BN } from "bn.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
-import { ParsedClockState, VaultImplementation, VaultParams, VaultProgram, VaultState } from "./types";
-import { deserializeAccount, getAssociatedTokenAccount, getOrCreateATAInstruction, getVaultPdas, unwrapSOLInstruction, wrapSOLInstruction } from "./utils";
-import { PROGRAM_ID, SOL_MINT } from "./constants";
+import { VaultDetails, VaultImplementation, VaultParams, VaultProgram, VaultState } from "./types";
+import { deserializeAccount, getAssociatedTokenAccount, getLpSupply, getOnchainTime, getOrCreateATAInstruction, getVaultPdas, unwrapSOLInstruction, wrapSOLInstruction } from "./utils";
+import { LOCKED_PROFIT_DEGRADATION_DENOMINATOR, PROGRAM_ID, SOL_MINT, VAULT_STRATEGY_ADDRESS } from "./constants";
 import { getStrategyHandler, getStrategyType, StrategyState } from "./strategy";
 import { IDL, Vault as VaultIdl } from "./idl";
-
-const getOnchainTime = async (connection: Connection) => {
-    const parsedClock = await connection.getParsedAccountInfo(
-        SYSVAR_CLOCK_PUBKEY
-    );
-
-    const parsedClockAccount = (parsedClock.value!.data as ParsedAccountData)
-        .parsed as ParsedClockState;
-
-    const currentTime = parsedClockAccount.info.unixTimestamp;
-    return currentTime;
-}
-
-const getLpSupply = async (connection: Connection, tokenMint: PublicKey): Promise<string> => {
-    const context = await connection.getTokenSupply(tokenMint);
-    const result = new Decimal(context.value.amount).toDP(context.value.decimals).toString();
-    return result;
-}
 
 const getVaultState = async (
     vaultParams: VaultParams,
@@ -52,48 +34,6 @@ const getVaultLiquidity = async (connection: Connection, tokenVaultPda: PublicKe
     return vaultLiquidtySerialize?.amount.toString() || null;
 }
 
-type VaultDetails = {
-    vaultParams: VaultParams,
-    vaultPda: PublicKey,
-    tokenVaultPda: PublicKey,
-    vaultState: VaultState,
-    lpSupply: string,
-}
-
-type VaultInfo = {
-    total_amount: number;
-    total_amount_with_profit: number;
-    is_monitoring: boolean;
-    token_address: string;
-    token_amount: number;
-    earned_amount: number;
-    virtual_price: string;
-    closest_apy: number;
-    average_apy: number;
-    usd_rate: number;
-    strategies: Array<StrategyInfo>;
-};
-
-export enum StrategyType {
-    PortFinanceWithoutLM = 'PortFinanceWithoutLM',
-    PortFinanceWithLM = 'PortFinanceWithLM',
-    SolendWithoutLM = 'SolendWithoutLM',
-    Mango = 'Mango',
-    Vault = 'Vault',
-}
-
-export type StrategyInfo = {
-    pubkey: string;
-    reserve: string;
-    strategy_type: StrategyType;
-    strategy_name: string;
-    liquidity: number;
-    reward: number;
-    apy: number;
-};
-
-const VAULT_STRATEGY_ADDRESS = '11111111111111111111111111111111';
-const LOCKED_PROFIT_DEGRADATION_DENOMINATOR = new Decimal(1_000_000_000_000);
 export default class VaultImpl implements VaultImplementation {
     private connection: Connection;
     private cluster: Cluster = 'mainnet-beta';

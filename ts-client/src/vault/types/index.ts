@@ -46,6 +46,32 @@ export interface VaultState {
     totalAmount: BN;
 }
 
+export type VaultDetails = {
+    vaultParams: VaultParams,
+    vaultPda: PublicKey,
+    tokenVaultPda: PublicKey,
+    vaultState: VaultState,
+    lpSupply: string,
+}
+
+export enum StrategyType {
+    PortFinanceWithoutLM = 'PortFinanceWithoutLM',
+    PortFinanceWithLM = 'PortFinanceWithLM',
+    SolendWithoutLM = 'SolendWithoutLM',
+    Mango = 'Mango',
+    Vault = 'Vault',
+}
+
+export type StrategyInfo = {
+    pubkey: string;
+    reserve: string;
+    strategy_type: StrategyType;
+    strategy_name: string;
+    liquidity: number;
+    reward: number;
+    apy: number;
+};
+
 /** Utils */
 export interface ParsedClockState {
     info: {
