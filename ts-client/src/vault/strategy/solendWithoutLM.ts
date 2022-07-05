@@ -9,13 +9,13 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 import * as anchor from "@project-serum/anchor";
 
-import { VaultProgram } from "../vault";
 import { ReserveState, StrategyHandler } from ".";
 import { SEEDS } from "../constants";
-import { Strategy } from "../mint";
+import { Strategy } from "../../mint";
+import { VaultProgram } from "../types";
 
 export default class SolendWithoutLMHandler implements StrategyHandler {
-  constructor(public strategyProgram: PublicKey) {}
+  constructor(public strategyProgram: PublicKey) { }
 
   async getReserveState(
     program: VaultProgram,
@@ -48,10 +48,10 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
     lpMint: PublicKey,
     userToken: PublicKey,
     userLp: PublicKey,
-    amount: number,
+    amount: anchor.BN,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[]
-  ): Promise<string> {
+  ) {
     const { collateral, state } = await this.getReserveState(
       program,
       strategy.state.reserve
@@ -95,7 +95,7 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
       throw Error("Cannot get pythOracle or switchboardOracle from Solend");
     }
     const tx = await program.methods
-      .withdrawDirectlyFromStrategy(new anchor.BN(amount), new anchor.BN(0))
+      .withdrawDirectlyFromStrategy(amount, new anchor.BN(0))
       .accounts({
         vault,
         strategy: strategy.pubkey,
@@ -122,7 +122,7 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
         ])
       )
       .postInstructions(postInstructions)
-      .rpc();
+      .transaction()
     return tx;
   }
 }

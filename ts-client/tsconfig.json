@@ -1,6 +1,7 @@
 {
   "extends": "@tsconfig/recommended/tsconfig.json",
   "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
     "outDir": "dist",
     "types": ["jest", "mocha", "chai"],
     "typeRoots": ["./node_modules/@types"],

@@ -1,0 +1,107 @@
+import { AccountMeta, Cluster, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import * as apricot from '@apricot-lend/sdk-ts';
+import * as anchor from '@project-serum/anchor';
+
+import { StrategyHandler } from '.';
+import { VaultProgram } from '../types';
+import { Strategy } from '../../mint';
+import { SEEDS } from '../constants';
+
+export default class ApricotWithoutLMHandler implements StrategyHandler {
+  private address: apricot.Addresses;
+
+  constructor() {
+    this.address = new apricot.Addresses(apricot.PUBLIC_CONFIG);
+  }
+
+  async withdraw(
+    walletPubKey: PublicKey,
+    program: VaultProgram,
+    strategy: Strategy,
+    vault: PublicKey,
+    tokenVault: PublicKey,
+    feeVault: PublicKey,
+    lpMint: PublicKey,
+    userToken: PublicKey,
+    userLp: PublicKey,
+    amount: anchor.BN,
+    preInstructions: TransactionInstruction[],
+    postInstructions: TransactionInstruction[],
+  ): Promise<Transaction | { error: string }> {
+    if (!walletPubKey) throw new Error('No user wallet public key');
+
+    const vaultState = await program.account.vault.fetch(vault);
+    const [[collateralVault], [userInfoSignerPda]] = await Promise.all(
+      [SEEDS.COLLATERAL_VAULT_PREFIX, SEEDS.APRICOT_USER_INFO_SIGNER_PREFIX].map(
+        async (seed) =>
+          await PublicKey.findProgramAddress(
+            [Buffer.from(seed), new PublicKey(strategy.pubkey).toBuffer()],
+            program.programId,
+          ),
+      ),
+    );
+
+    const [basePda] = await this.address.getBasePda();
+
+    const [userInfo, assetPoolSpl, poolSummaries, priceSummaries, userPageStats] = await Promise.all([
+      this.address.getUserInfoKey(userInfoSignerPda),
+      this.address.getAssetPoolSplKey(basePda, vaultState.tokenMint.toBase58()),
+      this.address.getPoolSummariesKey(),
+      this.address.getPriceSummariesKey(basePda),
+      this.address.getUserPagesStatsKey(),
+    ]);
+
+    const accounts = [
+      { pubkey: userInfo },
+      { pubkey: assetPoolSpl },
+      { pubkey: poolSummaries },
+      { pubkey: priceSummaries },
+      { pubkey: userInfoSignerPda },
+      { pubkey: basePda },
+      { pubkey: userPageStats },
+    ];
+
+    const remainingAccounts: Array<AccountMeta> = accounts.map((account) => ({
+      pubkey: account.pubkey,
+      isWritable: true,
+      isSigner: false,
+    }));
+
+    const tx = await program.methods
+      .withdrawDirectlyFromStrategy(new anchor.BN(amount), new anchor.BN(0))
+      .accounts({
+        vault,
+        strategy: strategy.pubkey,
+        reserve: new PublicKey(strategy.state.reserve),
+        strategyProgram: this.address.getProgramKey(),
+        collateralVault,
+        tokenVault,
+        feeVault,
+        lpMint,
+        userToken,
+        userLp,
+        user: walletPubKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .remainingAccounts(remainingAccounts)
+      .preInstructions(
+        preInstructions.concat(
+          // refreshUser Instruction
+          new TransactionInstruction({
+            programId: this.address.getProgramKey(),
+            keys: [
+              { pubkey: userInfoSignerPda, isSigner: false, isWritable: false },
+              { pubkey: userInfo, isSigner: false, isWritable: true },
+              { pubkey: poolSummaries, isSigner: false, isWritable: false },
+            ],
+            data: Buffer.from([apricot.CMD_REFRESH_USER]),
+          }),
+        ),
+      )
+      .postInstructions(postInstructions)
+      .transaction();
+
+    return tx;
+  }
+}
