@@ -39,8 +39,8 @@ const getVaultLiquidity = async (connection: Connection, tokenVaultPda: PublicKe
   const vaultLiquidityResponse = await connection.getAccountInfo(tokenVaultPda);
   if (!vaultLiquidityResponse) return null;
 
-  const vaultLiquidtySerialize = deserializeAccount(vaultLiquidityResponse.data);
-  return vaultLiquidtySerialize?.amount.toString() || null;
+  const vaultLiquiditySerialize = deserializeAccount(vaultLiquidityResponse.data);
+  return vaultLiquiditySerialize?.amount.toString() || null;
 };
 
 export default class VaultImpl implements VaultImplementation {
