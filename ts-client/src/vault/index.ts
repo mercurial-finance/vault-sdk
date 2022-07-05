@@ -48,9 +48,9 @@ export default class VaultImpl implements VaultImplementation {
   private cluster: Cluster = 'mainnet-beta';
 
   // Vault
-  private tokenInfo: TokenInfo;
   private program: VaultProgram;
 
+  public tokenInfo: TokenInfo;
   public vaultPda: PublicKey;
   public tokenVaultPda: PublicKey;
   public vaultState: VaultState;
@@ -60,7 +60,7 @@ export default class VaultImpl implements VaultImplementation {
     this.connection = program.provider.connection;
     this.cluster = opt?.cluster ?? 'mainnet-beta';
 
-    this.tokenInfo = vaultDetails.vaultParams;
+    this.tokenInfo = vaultDetails.tokenInfo;
     this.program = program;
     this.vaultPda = vaultDetails.vaultPda;
     this.tokenVaultPda = vaultDetails.tokenVaultPda;
@@ -70,7 +70,7 @@ export default class VaultImpl implements VaultImplementation {
 
   public static async create(
     connection: Connection,
-    vaultParams: TokenInfo,
+    tokenInfo: TokenInfo,
     opt?: {
       cluster?: Cluster;
       programId?: string;
@@ -79,8 +79,8 @@ export default class VaultImpl implements VaultImplementation {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
 
-    const { vaultPda, tokenVaultPda, vaultState, lpSupply } = await getVaultState(vaultParams, program);
-    return new VaultImpl(program, { vaultParams, vaultPda, tokenVaultPda, vaultState, lpSupply }, opt);
+    const { vaultPda, tokenVaultPda, vaultState, lpSupply } = await getVaultState(tokenInfo, program);
+    return new VaultImpl(program, { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply }, opt);
   }
 
   public async getUserBalance(owner: PublicKey): Promise<BN> {
