@@ -1,27 +1,18 @@
-import {
-  PublicKey,
-  AccountMeta,
-  SYSVAR_CLOCK_PUBKEY,
-  Cluster,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { PublicKey, AccountMeta, SYSVAR_CLOCK_PUBKEY, Cluster, TransactionInstruction } from '@solana/web3.js';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
-import * as anchor from "@project-serum/anchor";
+import * as anchor from '@project-serum/anchor';
 
-import * as port from "@port.finance/port-sdk";
+import * as port from '@port.finance/port-sdk';
 
-import { ReserveState, StrategyHandler } from ".";
-import { VaultProgram } from "../types";
-import { SEEDS } from "../constants";
-import { Strategy } from "../../mint";
+import { ReserveState, StrategyHandler } from '.';
+import { VaultProgram } from '../types';
+import { SEEDS } from '../constants';
+import { Strategy } from '../../mint';
 
 export default class PortWithoutLMHandler implements StrategyHandler {
   constructor(public strategyProgram: PublicKey) {}
-  async getReserveState(
-    program: VaultProgram,
-    reserve: PublicKey
-  ): Promise<ReserveState> {
+  async getReserveState(program: VaultProgram, reserve: PublicKey): Promise<ReserveState> {
     const account = await program.provider.connection.getAccountInfo(reserve);
     const state = port.ReserveLayout.decode(account!.data) as port.ReserveData;
     return {
@@ -46,32 +37,25 @@ export default class PortWithoutLMHandler implements StrategyHandler {
     userLp: PublicKey,
     amount: anchor.BN,
     preInstructions: TransactionInstruction[],
-    postInstructions: TransactionInstruction[]
+    postInstructions: TransactionInstruction[],
   ) {
-    const { state } = await this.getReserveState(
-      program,
-      strategy.state.reserve
-    );
+    const { state } = await this.getReserveState(program, strategy.state.reserve);
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
 
     let [collateralVault] = await PublicKey.findProgramAddress(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
-      program.programId
+      program.programId,
     );
 
-    const {
-      collateral: portCollateral,
-      lendingMarket,
-      liquidity,
-    } = state as port.ReserveData;
+    const { collateral: portCollateral, lendingMarket, liquidity } = state as port.ReserveData;
 
     const [lendingMarketAuthority] = await PublicKey.findProgramAddress(
       [lendingMarket.toBuffer()],
-      this.strategyProgram
+      this.strategyProgram,
     );
 
     const accountData = [
-      { pubkey: portCollateral.supplyPubkey, isWritable: true },
+      { pubkey: liquidity.supplyPubkey, isWritable: true },
       { pubkey: lendingMarket },
       { pubkey: lendingMarketAuthority },
       { pubkey: portCollateral.mintPubkey, isWritable: true },
@@ -105,15 +89,11 @@ export default class PortWithoutLMHandler implements StrategyHandler {
       .remainingAccounts(remainingAccounts)
       .preInstructions(
         preInstructions.concat([
-          port.refreshReserveInstruction(
-            strategy.state.reserve,
-            liquidity.oraclePubkey,
-            this.strategyProgram
-          ),
-        ])
+          port.refreshReserveInstruction(strategy.state.reserve, liquidity.oraclePubkey, this.strategyProgram),
+        ]),
       )
       .postInstructions(postInstructions)
-      .transaction()
+      .transaction();
 
     return tx;
   }
