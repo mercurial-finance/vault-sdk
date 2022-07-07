@@ -3,9 +3,9 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 import * as anchor from '@project-serum/anchor';
 
-import { VaultProgram } from '../vault';
 import { StrategyHandler } from '.';
-import { Strategy } from '../mint';
+import { Strategy } from '../../mint';
+import { VaultProgram } from '../types';
 
 export default class VaultHandler implements StrategyHandler {
   async withdraw(
@@ -18,12 +18,12 @@ export default class VaultHandler implements StrategyHandler {
     lpMint: PublicKey,
     userToken: PublicKey,
     userLp: PublicKey,
-    amount: number,
+    amount: anchor.BN,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[],
-  ): Promise<string> {
+  ) {
     const tx = await program.methods
-      .withdraw(new anchor.BN(amount), new anchor.BN(0))
+      .withdraw(amount, new anchor.BN(0))
       .accounts({
         vault,
         tokenVault,
@@ -35,9 +35,7 @@ export default class VaultHandler implements StrategyHandler {
       })
       .preInstructions(preInstructions)
       .postInstructions(postInstructions)
-      .rpc({
-        maxRetries: 40,
-      });
+      .transaction();
 
     return tx;
   }

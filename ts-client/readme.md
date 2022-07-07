@@ -1,137 +1,90 @@
 # Mercurial Vault SDK
 
+<p align="center">
+<img align="center" src="https://vaults.mercurial.finance/icons/logo.svg" width="180" height="180" />
+</p>
+<br>
+
+## Getting started
+NPM: https://www.npmjs.com/package/@mercurial-finance/vault-sdk
+
+SDK: https://github.com/mercurial-finance/vault-sdk
+
+Demo: https://vault-sdk-demo.vercel.app/
+
+Demo repo: https://github.com/mercurial-finance/vault-sdk-demo
+- Easiest way to get started with our Typescript SDK, the example demo includes all functionality and information we display on our own site.
+
+Docs: https://docs.mercurial.finance/mercurial-dynamic-yield-infra/
+
+Discord: https://discord.com/channels/841152225564950528/864859354335412224
+
+<hr>
+
 ## Install
 
-1. Install deps 
-```
-npm i @mercurial-finance/vault-sdk @project-serum/anchor @solana/web3.js
-```
-2. Setup the required parameters, and init the instance
+1. Install deps
 
+```
+npm i @mercurial-finance/vault-sdk @project-serum/anchor @solana/web3.js @solana/spl-token @solana/spl-token-registry
+```
+
+2. Initialize VaultImpl instance
 ```ts
-import Vault from "@mercurial-finance/vault-sdk";
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  SYSVAR_CLOCK_PUBKEY,
-  ParsedAccountData,
-} from "@solana/web3.js";
-import { Wallet, AnchorProvider } from "@project-serum/anchor";
+import VaultImpl from '@mercurial-finance/vault-sdk';
+import { PublicKey } from '@solana/web3.js';
+import { StaticTokenListResolutionStrategy, TokenInfo } from "@solana/spl-token-registry";
+import { Wallet, AnchorProvider } from '@project-serum/anchor';
 
-const SOL_MINT = new PublicKey("So11111111111111111111111111111111111111112");
+// Connection, Wallet, and AnchorProvider to interact with the network
+const mainnetConnection = new Connection('https://api.mainnet-beta.solana.com');
+const mockWallet = new Wallet(new Keypair());
+const provider = new AnchorProvider(mainnetConnection, mockWallet, {
+    commitment: 'confirmed',
+});
+// Alternatively, to use Solana Wallet Adapter, refer to `Demo Repo`
 
-async function main() {
-  const mockWallet = new Wallet(new Keypair()); // Or real wallet private key
-  const mainnetConnection = new Connection(
-    "https://api.mainnet-beta.solana.com"
-  );
-  const provider = new AnchorProvider(mainnetConnection, mockWallet, {
-    commitment: "processed",
-  });
-
-  const vault = new Vault(provider, mockWallet.publicKey);
-  await vault.init(SOL_MINT);
-}
-
-main();
+const tokenMap = new StaticTokenListResolutionStrategy().resolve();
+// Find the token info you want to use.
+const SOL_TOKEN_INFO = tokenMap.find(token => token.symbol === 'SOL') as TokenInfo;
+const vaultImpl = await VaultImpl.create(connection, SOL_TOKEN_INFO);
 ```
 
-<br>
-
----
-
-<br>
-
-## Reading Vault's state
-<br>
-
-### Getting started 
-How to get on chain time
-
+3. To interact with the VaultImpl
 ```ts
-import { SYSVAR_CLOCK_PUBKEY } from "@solana/web3.js";
+// To refetch the vault's latest supply
+// Alternatively, use `vaultImpl.lpSupply`
+const lpSupply = await vaultImpl.getVaultSupply();
 
-const parsedClock = await mainnetConnection.getParsedAccountInfo(
-  SYSVAR_CLOCK_PUBKEY
-);
+// Rewards are not instantly redeemable, and are subject to a lock.
+// This function returns the amount of LP that are redeemable.
+const unlockedAmount = await vaultImpl.getWithdrawableAmount()
 
-const parsedClockAccount = (parsedClock.value!.data as ParsedAccountData)
-  .parsed as ParsedClockState;
+// To deposit into the vault
+const amountInLamports = 1 * 10 ** SOL_TOKEN_INFO.decimals; // 1.0 SOL
+const depositTx = await vaultImpl.deposit(mockWallet.publicKey, new BN(amountInLamports)); // Web3 Transaction Object
+const depositResult = await provider.sendAndConfirm(depositTx); // Transaction hash
 
-const currentTime = parsedClockAccount.info.unixTimestamp; // use on-chain time instead of local time
-console.log("current time: ", currentTime);
+// Get the user's ATA LP balance
+const userLpBalance = await vaultImpl.getUserBalance(mockWallet.publicKey);
+
+// To withdraw from the vault
+const withdrawTx = await vaultImpl.withdraw(mockWallet.publicKey, new BN(userLpBalance)); // Web3 Transaction Object
+const withdrawResult = await provider.sendAndConfirm(withdrawTx); // Transaction hash
 ```
 
-### Get LP token supply
-
+4. Helper function
 ```ts
-const response = await mainnetConnection.getTokenSupply(vault.state.lpMint);
-const result = response.value.amount;
-console.log(result);
-```
+import { helper } from '@mercurial-finance/vault-sdk';
 
-### Get unlocked token amount
+const userShare = await vaultImpl.getUserBalance(mockWallet.publicKey);
+const unlockedAmount = await vaultImpl.getWithdrawableAmount()
+const lpSupply = await vaultImpl.getVaultSupply();
 
-```ts
-const result = vault.getUnlockedAmount(currentTime);
-console.log(result);
-```
+// To convert user's LP balance into underlying token amount
+const underlyingShare = helper.getAmountByShare(userShare, unlockedAmount, lpSupply)
 
-### Get amount by shares
-
-```ts
-const result = vault.getAmountByShare(currentTime, 100_000_000, lpSupply);
-
-console.log(result);
-```
-
-### Get un-mint amount
-
-```ts
-const result = vault.getUnmintAmount(currentTime, 100_000_000, lpSupply);
-console.log(result);
-```
-
-<br>
-
----
-
-<br>
-
-## Interact with Vault
-
-### Getting started
-
-How to get the token info
-```ts
-import {
-  StaticTokenListResolutionStrategy,
-  TokenInfo,
-} from "@solana/spl-token-registry";
-
-const SOL_TOKEN_INFO = new StaticTokenListResolutionStrategy()
-  .resolve()
-  .find((token) => token.symbol === "SOL") as TokenInfo;
-```
-
-### Deposit SOL
-
-```ts
-const result = await vault.deposit(SOL_TOKEN_INFO, 2000);
-console.log(result);
-```
-
-### Withdraw SOL
-
-```ts
-const result = await vault.withdraw(SOL_TOKEN_INFO, 1000);
-console.log(result);
-```
-
-### Withdraw from Strategy
-
-```ts
-const result = await vault.withdrawFromStrategy(SOL_TOKEN_INFO, strategy, 1000);
-console.log(result);
+// To convert underlying token amount into user's LP balance
+const amountInLamports = 1 * 10 ** SOL_TOKEN_INFO.decimals; // 1.0 SOL
+const lpToUnmint = helper.getUnmintAmount(new BN(amountInLamports), unlockedAmount, lpSupply) // To withdraw 1.0 SOL
 ```

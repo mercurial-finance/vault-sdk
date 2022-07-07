@@ -1,6 +1,7 @@
-export * as constants from './src/constants';
-export * as utils from "./src/utils";
-export * as vault from "./src/vault";
+export * as constants from './src/vault/constants';
+export * as utils from './src/vault/utils';
+export * as helper from './src/vault/helper';
+export * as types from './src/vault/types';
 
-import Vault from "./src/vault";
-export default Vault;
+import VaultImpl from './src/vault/index';
+export default VaultImpl;
