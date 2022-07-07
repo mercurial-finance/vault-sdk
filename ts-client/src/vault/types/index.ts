@@ -3,8 +3,10 @@ import { TokenInfo } from '@solana/spl-token-registry';
 import { PublicKey, Transaction } from '@solana/web3.js';
 
 import { Vault as VaultIdl } from '../idl';
+import { AffiliateVault as AffiliateVaultIdl } from '../affiliate-idl';
 
 export type VaultProgram = Program<VaultIdl>;
+export type AffiliateVaultProgram = Program<AffiliateVaultIdl>;
 
 export type VaultImplementation = {
   getUserBalance: (owner: PublicKey) => Promise<BN>;

@@ -1,9 +1,9 @@
 import { AnchorProvider, Program, BN } from '@project-serum/anchor';
-import { PublicKey, TransactionInstruction, Connection, Transaction, Cluster } from '@solana/web3.js';
+import { PublicKey, TransactionInstruction, Connection, Transaction, Cluster, SYSVAR_RENT_PUBKEY, SystemProgram } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
 
-import { VaultDetails, VaultImplementation, VaultProgram, VaultState } from './types';
+import { AffiliateVaultProgram, VaultDetails, VaultImplementation, VaultProgram, VaultState } from './types';
 import {
   deserializeAccount,
   getAssociatedTokenAccount,
@@ -14,9 +14,10 @@ import {
   unwrapSOLInstruction,
   wrapSOLInstruction,
 } from './utils';
-import { LOCKED_PROFIT_DEGRADATION_DENOMINATOR, PROGRAM_ID, SOL_MINT, VAULT_STRATEGY_ADDRESS } from './constants';
+import { AFFILIATE_PROGRAM_ID, LOCKED_PROFIT_DEGRADATION_DENOMINATOR, PROGRAM_ID, SOL_MINT, VAULT_STRATEGY_ADDRESS } from './constants';
 import { getStrategyHandler, getStrategyType, StrategyState } from './strategy';
 import { IDL, Vault as VaultIdl } from './idl';
+import { IDL as AffiliateIDL, AffiliateVault as AffiliateVaultIdl } from './affiliate-idl';
 
 const getVaultState = async (
   vaultParams: TokenInfo,
@@ -49,6 +50,8 @@ export default class VaultImpl implements VaultImplementation {
 
   // Vault
   private program: VaultProgram;
+  private affiliateId: PublicKey | undefined;
+  private affiliateProgram: AffiliateVaultProgram | undefined;
 
   public tokenInfo: TokenInfo;
   public vaultPda: PublicKey;
@@ -56,12 +59,23 @@ export default class VaultImpl implements VaultImplementation {
   public vaultState: VaultState;
   public lpSupply: BN = new BN(0);
 
-  private constructor(program: VaultProgram, vaultDetails: VaultDetails, opt?: { cluster?: Cluster }) {
+  private constructor(
+    program: VaultProgram,
+    vaultDetails: VaultDetails,
+    opt?: {
+      cluster?: Cluster,
+      affiliateId?: PublicKey,
+      affiliateProgram?: AffiliateVaultProgram
+    }
+  ) {
     this.connection = program.provider.connection;
     this.cluster = opt?.cluster ?? 'mainnet-beta';
 
     this.tokenInfo = vaultDetails.tokenInfo;
     this.program = program;
+    this.affiliateProgram = opt?.affiliateProgram;
+    this.affiliateId = opt?.affiliateId;
+
     this.vaultPda = vaultDetails.vaultPda;
     this.tokenVaultPda = vaultDetails.tokenVaultPda;
     this.vaultState = vaultDetails.vaultState;
@@ -74,13 +88,29 @@ export default class VaultImpl implements VaultImplementation {
     opt?: {
       cluster?: Cluster;
       programId?: string;
+      affiliateId?: PublicKey;
+      affiliateProgramId?: string;
     },
   ): Promise<VaultImpl> {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
 
     const { vaultPda, tokenVaultPda, vaultState, lpSupply } = await getVaultState(tokenInfo, program);
-    return new VaultImpl(program, { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply }, opt);
+    return new VaultImpl(
+      program,
+      { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply },
+      {
+        ...opt,
+        affiliateId: opt?.affiliateId,
+        affiliateProgram: opt?.affiliateId
+          ? new Program<AffiliateVaultIdl>(
+            AffiliateIDL as AffiliateVaultIdl,
+            opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
+            provider
+          )
+          : undefined
+      }
+    );
   }
 
   public async getUserBalance(owner: PublicKey): Promise<BN> {
@@ -162,21 +192,75 @@ export default class VaultImpl implements VaultImplementation {
       preInstructions = preInstructions.concat(wrapSOLInstruction(owner, userToken, baseTokenAmount));
     }
 
-    const depositTx = await this.program.methods
-      .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
-      .accounts({
-        vault: this.vaultPda,
-        tokenVault: this.tokenVaultPda,
-        lpMint: this.vaultState.lpMint,
-        userToken,
-        userLp: userLpToken,
-        user: owner,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .preInstructions(preInstructions)
-      .transaction();
+    if (this.affiliateId && this.affiliateProgram) {
+      // const userInit = await this.affiliateProgram.account.partner.fetchNullable(owner)
+      const userInit = await this.affiliateProgram.account.user.getAccountInfo(owner);
+      const deser = deserializeAccount(userInit?.data);
 
-    return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(depositTx);
+      const partner = this.affiliateId;
+      const partnerToken = await getAssociatedTokenAccount(
+        new PublicKey(this.tokenInfo.address),
+        partner,
+      );
+
+      const [partnerAddress, _nonce] = await PublicKey.findProgramAddress(
+        [this.vaultPda.toBuffer(), partnerToken.toBuffer()],
+        this.affiliateProgram.programId
+      );
+      const [userAddress, _nonceUser] = await PublicKey.findProgramAddress(
+        [partnerAddress.toBuffer(), owner.toBuffer()],
+        this.affiliateProgram.programId,
+      );
+
+      if (!deser) {
+        preInstructions.push(
+          await this.affiliateProgram.methods
+            .initUser()
+            .accounts({
+              user: userAddress,
+              partner: partnerAddress,
+              owner: owner,
+              systemProgram: SystemProgram.programId,
+              rent: SYSVAR_RENT_PUBKEY,
+            })
+            .instruction()
+        )
+      }
+
+      const depositTx = await this.affiliateProgram.methods
+        .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
+        .accounts({
+          partner: partnerAddress,
+          user: userAddress,
+          vaultProgram: this.program.programId,
+          vault: this.vaultPda,
+          tokenVault: this.tokenVaultPda,
+          vaultLpMint: this.vaultState.lpMint,
+          userToken,
+          userLp: userLpToken,
+          owner,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .preInstructions(preInstructions)
+        .transaction()
+
+      return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(depositTx);
+    } else {
+      const depositTx = await this.program.methods
+        .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
+        .accounts({
+          vault: this.vaultPda,
+          tokenVault: this.tokenVaultPda,
+          lpMint: this.vaultState.lpMint,
+          userToken,
+          userLp: userLpToken,
+          user: owner,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .preInstructions(preInstructions)
+        .transaction()
+      return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(depositTx);
+    }
   }
 
   private async getStrategyWithHighestLiquidity(strategy?: PublicKey) {
@@ -205,9 +289,9 @@ export default class VaultImpl implements VaultImplementation {
     return highestLiquidity
       ? highestLiquidity
       : {
-          publicKey: new PublicKey(VAULT_STRATEGY_ADDRESS),
-          strategyState: null,
-        };
+        publicKey: new PublicKey(VAULT_STRATEGY_ADDRESS),
+        strategyState: null,
+      };
   }
 
   public async withdraw(owner: PublicKey, baseTokenAmount: BN, opt?: { strategy?: PublicKey }): Promise<Transaction> {
