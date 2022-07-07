@@ -166,6 +166,88 @@ export default class VaultImpl implements VaultImplementation {
     this.vaultState = vaultState;
   }
 
+  public async depositAffiliate(owner: PublicKey, baseTokenAmount: BN): Promise<Transaction> {
+    // Refresh vault state
+    await this.refreshVaultState();
+
+    if (!this.affiliateId || !this.affiliateProgram) throw new Error('Affiliate ID or program not found');
+
+    // const userInit = await this.affiliateProgram.account.partner.fetchNullable(owner)
+    const userInit = await this.affiliateProgram.account.user.getAccountInfo(owner);
+    const deser = deserializeAccount(userInit?.data);
+    const partner = this.affiliateId;
+    const partnerToken = await getAssociatedTokenAccount(
+      new PublicKey(this.tokenInfo.address),
+      partner,
+    );
+
+    const [partnerAddress, _nonce] = await PublicKey.findProgramAddress(
+      [this.vaultPda.toBuffer(), partnerToken.toBuffer()],
+      this.affiliateProgram.programId
+    );
+    const [userAddress, _nonceUser] = await PublicKey.findProgramAddress(
+      [partnerAddress.toBuffer(), owner.toBuffer()],
+      this.affiliateProgram.programId,
+    );
+
+    // Append ATA
+    let preInstructions: TransactionInstruction[] = [];
+    const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
+      new PublicKey(this.tokenInfo.address),
+      owner,
+      this.connection,
+    );
+    const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(
+      this.vaultState.lpMint,
+      userAddress,
+      this.connection,
+    );
+    if (createUserTokenIx) {
+      preInstructions.push(createUserTokenIx);
+    }
+    if (createUserLpTokenIx) {
+      preInstructions.push(createUserLpTokenIx);
+    }
+    // If it's SOL vault, wrap desired amount of SOL
+    if (this.tokenInfo.address === SOL_MINT.toString()) {
+      preInstructions = preInstructions.concat(wrapSOLInstruction(owner, userToken, baseTokenAmount));
+    }
+
+    if (!deser) {
+      preInstructions.push(
+        await this.affiliateProgram.methods
+          .initUser()
+          .accounts({
+            user: userAddress,
+            partner: partnerAddress,
+            owner,
+            systemProgram: SystemProgram.programId,
+            rent: SYSVAR_RENT_PUBKEY,
+          })
+          .instruction()
+      )
+    }
+
+    const depositTx = await this.affiliateProgram.methods
+      .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
+      .accounts({
+        partner: partnerAddress,
+        user: userAddress,
+        vaultProgram: this.program.programId,
+        vault: this.vaultPda,
+        tokenVault: this.tokenVaultPda,
+        vaultLpMint: this.vaultState.lpMint,
+        userToken,
+        userLp: userLpToken,
+        owner,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .preInstructions(preInstructions)
+      .transaction()
+
+    return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(depositTx);
+  }
+
   public async deposit(owner: PublicKey, baseTokenAmount: BN): Promise<Transaction> {
     // Refresh vault state
     await this.refreshVaultState();
@@ -192,75 +274,20 @@ export default class VaultImpl implements VaultImplementation {
       preInstructions = preInstructions.concat(wrapSOLInstruction(owner, userToken, baseTokenAmount));
     }
 
-    if (this.affiliateId && this.affiliateProgram) {
-      // const userInit = await this.affiliateProgram.account.partner.fetchNullable(owner)
-      const userInit = await this.affiliateProgram.account.user.getAccountInfo(owner);
-      const deser = deserializeAccount(userInit?.data);
-
-      const partner = this.affiliateId;
-      const partnerToken = await getAssociatedTokenAccount(
-        new PublicKey(this.tokenInfo.address),
-        partner,
-      );
-
-      const [partnerAddress, _nonce] = await PublicKey.findProgramAddress(
-        [this.vaultPda.toBuffer(), partnerToken.toBuffer()],
-        this.affiliateProgram.programId
-      );
-      const [userAddress, _nonceUser] = await PublicKey.findProgramAddress(
-        [partnerAddress.toBuffer(), owner.toBuffer()],
-        this.affiliateProgram.programId,
-      );
-
-      if (!deser) {
-        preInstructions.push(
-          await this.affiliateProgram.methods
-            .initUser()
-            .accounts({
-              user: userAddress,
-              partner: partnerAddress,
-              owner,
-              systemProgram: SystemProgram.programId,
-              rent: SYSVAR_RENT_PUBKEY,
-            })
-            .instruction()
-        )
-      }
-
-      const depositTx = await this.affiliateProgram.methods
-        .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
-        .accounts({
-          partner: partnerAddress,
-          user: userAddress,
-          vaultProgram: this.program.programId,
-          vault: this.vaultPda,
-          tokenVault: this.tokenVaultPda,
-          vaultLpMint: this.vaultState.lpMint,
-          userToken,
-          userLp: userAddress,
-          owner,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .preInstructions(preInstructions)
-        .transaction()
-
-      return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(depositTx);
-    } else {
-      const depositTx = await this.program.methods
-        .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
-        .accounts({
-          vault: this.vaultPda,
-          tokenVault: this.tokenVaultPda,
-          lpMint: this.vaultState.lpMint,
-          userToken,
-          userLp: userLpToken,
-          user: owner,
-          tokenProgram: TOKEN_PROGRAM_ID,
-        })
-        .preInstructions(preInstructions)
-        .transaction()
-      return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(depositTx);
-    }
+    const depositTx = await this.program.methods
+      .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
+      .accounts({
+        vault: this.vaultPda,
+        tokenVault: this.tokenVaultPda,
+        lpMint: this.vaultState.lpMint,
+        userToken,
+        userLp: userLpToken,
+        user: owner,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .preInstructions(preInstructions)
+      .transaction()
+    return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(depositTx);
   }
 
   private async getStrategyWithHighestLiquidity(strategy?: PublicKey) {

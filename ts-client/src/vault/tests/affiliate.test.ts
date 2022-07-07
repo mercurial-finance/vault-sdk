@@ -36,7 +36,7 @@ describe('Interact with Vault in devnet', () => {
 
     test('Test affiliate init user', async () => {
         try {
-            const depositTx = await vaultImpl.deposit(mockWallet.publicKey, new BN(100_000_000));
+            const depositTx = await vaultImpl.depositAffiliate(mockWallet.publicKey, new BN(100_000_000));
             console.log(depositTx.instructions.forEach(ix => console.log(ix.programId.toString())))
             const depositResult = await provider.sendAndConfirm(depositTx);
             console.log('Deposit result', depositResult);
