@@ -201,6 +201,7 @@ export default class VaultImpl implements VaultImplementation {
       this.vaultState.lpMint,
       userAddress,
       this.connection,
+      owner,
     );
     if (createUserTokenIx) {
       preInstructions.push(createUserTokenIx);
