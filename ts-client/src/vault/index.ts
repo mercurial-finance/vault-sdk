@@ -219,7 +219,7 @@ export default class VaultImpl implements VaultImplementation {
             .accounts({
               user: userAddress,
               partner: partnerAddress,
-              owner: owner,
+              owner,
               systemProgram: SystemProgram.programId,
               rent: SYSVAR_RENT_PUBKEY,
             })
@@ -237,7 +237,7 @@ export default class VaultImpl implements VaultImplementation {
           tokenVault: this.tokenVaultPda,
           vaultLpMint: this.vaultState.lpMint,
           userToken,
-          userLp: userLpToken,
+          userLp: userAddress,
           owner,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
