@@ -114,7 +114,18 @@ export default class VaultImpl implements VaultImplementation {
   }
 
   public async getUserBalance(owner: PublicKey): Promise<BN> {
-    const address = await getAssociatedTokenAccount(this.vaultState.lpMint, owner);
+    const isAffiliated = this.affiliateId && this.affiliateProgram;
+
+    const address = await (async () => {
+      // User deposit directly
+      if (!isAffiliated) {
+        return await getAssociatedTokenAccount(this.vaultState.lpMint, owner);
+      }
+
+      // Get user affiliated address with the partner
+      const { userLpToken } = await this.createAffiliateATAPreInstructions(owner);
+      return userLpToken;
+    })()
     const accountInfo = await this.connection.getAccountInfo(address);
 
     if (!accountInfo) {

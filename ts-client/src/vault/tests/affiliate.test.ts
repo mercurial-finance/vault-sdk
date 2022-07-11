@@ -34,7 +34,7 @@ describe('Interact with Vault in devnet', () => {
         );
     });
 
-    test('Test affiliate init user, and deposits', async () => {
+    test('Test affiliate init user, check balance, and deposits', async () => {
         // First deposit
         const depositTx = await vaultImpl.deposit(mockWallet.publicKey, new BN(100_000_000));
         expect(depositTx.instructions.map(ix => ix.programId.toString())).toEqual([
@@ -49,6 +49,10 @@ describe('Interact with Vault in devnet', () => {
         console.log('Deposit result', depositResult);
         expect(typeof depositResult).toBe('string');
 
+        // Check balance
+        const userBalanceDeposit = await vaultImpl.getUserBalance(mockWallet.publicKey);
+        expect(Number(userBalanceDeposit)).toBeGreaterThan(0);
+
         // Subsequent deposit should not create ATA, and no need to init user
         const depositTx2 = await vaultImpl.deposit(mockWallet.publicKey, new BN(100_000_000));
         expect(depositTx2.instructions.map(ix => ix.programId.toString())).toEqual([
@@ -59,6 +63,10 @@ describe('Interact with Vault in devnet', () => {
         const depositResult2 = await provider.sendAndConfirm(depositTx2);
         console.log('Deposit result', depositResult2);
         expect(typeof depositResult2).toBe('string');
+
+        // Check balance again
+        const userBalanceDeposit2 = await vaultImpl.getUserBalance(mockWallet.publicKey);
+        expect(Number(userBalanceDeposit2)).toBeGreaterThan(0);
     })
 
     test('Test affiliate user withdraw', async () => {
