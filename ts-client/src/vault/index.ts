@@ -166,15 +166,35 @@ export default class VaultImpl implements VaultImplementation {
     this.vaultState = vaultState;
   }
 
-  public async depositAffiliate(owner: PublicKey, baseTokenAmount: BN): Promise<Transaction> {
-    // Refresh vault state
-    await this.refreshVaultState();
+  private async createATAPreInstructions(owner: PublicKey) {
+    let preInstructions: TransactionInstruction[] = [];
+    const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
+      new PublicKey(this.tokenInfo.address),
+      owner,
+      this.connection,
+    );
+    const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(
+      this.vaultState.lpMint,
+      owner,
+      this.connection,
+    );
+    if (createUserTokenIx) {
+      preInstructions.push(createUserTokenIx);
+    }
+    if (createUserLpTokenIx) {
+      preInstructions.push(createUserLpTokenIx);
+    }
 
+    return {
+      preInstructions,
+      userToken,
+      userLpToken,
+    };
+  }
+
+  private async createAffiliateATAPreInstructions(owner: PublicKey) {
     if (!this.affiliateId || !this.affiliateProgram) throw new Error('Affiliate ID or program not found');
 
-    // const userInit = await this.affiliateProgram.account.partner.fetchNullable(owner)
-    const userInit = await this.affiliateProgram.account.user.getAccountInfo(owner);
-    const deser = deserializeAccount(userInit?.data);
     const partner = this.affiliateId;
     const partnerToken = await getAssociatedTokenAccount(
       new PublicKey(this.tokenInfo.address),
@@ -190,7 +210,6 @@ export default class VaultImpl implements VaultImplementation {
       this.affiliateProgram.programId,
     );
 
-    // Append ATA
     let preInstructions: TransactionInstruction[] = [];
     const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
       new PublicKey(this.tokenInfo.address),
@@ -201,7 +220,10 @@ export default class VaultImpl implements VaultImplementation {
       this.vaultState.lpMint,
       userAddress,
       this.connection,
-      owner,
+      {
+        payer: owner,
+        allowOwnerOffCurve: true,
+      }
     );
     if (createUserTokenIx) {
       preInstructions.push(createUserTokenIx);
@@ -209,44 +231,15 @@ export default class VaultImpl implements VaultImplementation {
     if (createUserLpTokenIx) {
       preInstructions.push(createUserLpTokenIx);
     }
-    // If it's SOL vault, wrap desired amount of SOL
-    if (this.tokenInfo.address === SOL_MINT.toString()) {
-      preInstructions = preInstructions.concat(wrapSOLInstruction(owner, userToken, baseTokenAmount));
-    }
 
-    if (!deser) {
-      preInstructions.push(
-        await this.affiliateProgram.methods
-          .initUser()
-          .accounts({
-            user: userAddress,
-            partner: partnerAddress,
-            owner,
-            systemProgram: SystemProgram.programId,
-            rent: SYSVAR_RENT_PUBKEY,
-          })
-          .instruction()
-      )
-    }
-
-    const depositTx = await this.affiliateProgram.methods
-      .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
-      .accounts({
-        partner: partnerAddress,
-        user: userAddress,
-        vaultProgram: this.program.programId,
-        vault: this.vaultPda,
-        tokenVault: this.tokenVaultPda,
-        vaultLpMint: this.vaultState.lpMint,
-        userToken,
-        userLp: userLpToken,
-        owner,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .preInstructions(preInstructions)
-      .transaction()
-
-    return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(depositTx);
+    return {
+      preInstructions,
+      partner,
+      partnerAddress,
+      userAddress,
+      userToken,
+      userLpToken,
+    };
   }
 
   public async deposit(owner: PublicKey, baseTokenAmount: BN): Promise<Transaction> {
@@ -254,40 +247,83 @@ export default class VaultImpl implements VaultImplementation {
     await this.refreshVaultState();
 
     let preInstructions: TransactionInstruction[] = [];
-    const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
-      new PublicKey(this.tokenInfo.address),
-      owner,
-      this.connection,
-    );
-    const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(
-      this.vaultState.lpMint,
-      owner,
-      this.connection,
-    );
-    if (createUserTokenIx) {
-      preInstructions.push(createUserTokenIx);
+
+    let partnerAddress: PublicKey | undefined;
+    let userAddress: PublicKey | undefined;
+    let userToken: PublicKey | undefined;
+    let userLpToken: PublicKey | undefined;
+
+    // Withdraw with Affiliate
+    if (this.affiliateId && this.affiliateProgram) {
+      const { preInstructions: preInstructionsATA, partnerAddress: partnerAddressATA, userAddress: userAddressATA, userToken: userTokenATA, userLpToken: userLpTokenATA } = await this.createAffiliateATAPreInstructions(owner);
+      preInstructions = preInstructionsATA;
+      userToken = userTokenATA;
+      userLpToken = userLpTokenATA;
+      partnerAddress = partnerAddressATA;
+      userAddress = userAddressATA;
+    } else {
+      // Without affiliate
+      const { preInstructions: preInstructionsATA, userToken: userTokenATA, userLpToken: userLpTokenATA } = await this.createATAPreInstructions(owner);
+      preInstructions = preInstructionsATA;
+      userToken = userTokenATA;
+      userLpToken = userLpTokenATA;
     }
-    if (createUserLpTokenIx) {
-      preInstructions.push(createUserLpTokenIx);
-    }
+
     // If it's SOL vault, wrap desired amount of SOL
     if (this.tokenInfo.address === SOL_MINT.toString()) {
       preInstructions = preInstructions.concat(wrapSOLInstruction(owner, userToken, baseTokenAmount));
     }
 
-    const depositTx = await this.program.methods
-      .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
-      .accounts({
-        vault: this.vaultPda,
-        tokenVault: this.tokenVaultPda,
-        lpMint: this.vaultState.lpMint,
-        userToken,
-        userLp: userLpToken,
-        user: owner,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .preInstructions(preInstructions)
-      .transaction()
+    let depositTx: Transaction;
+    if (partnerAddress && userAddress && this.affiliateId && this.affiliateProgram) {
+      const userPda = await this.connection.getParsedAccountInfo(userAddress);
+      if (!userPda || !userPda.value?.data) {
+        // Init first time user
+        preInstructions.push(
+          await this.affiliateProgram.methods
+            .initUser()
+            .accounts({
+              user: userAddress,
+              partner: partnerAddress,
+              owner,
+              systemProgram: SystemProgram.programId,
+              rent: SYSVAR_RENT_PUBKEY,
+            })
+            .instruction()
+        )
+      }
+
+      depositTx = await this.affiliateProgram.methods
+        .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
+        .accounts({
+          partner: partnerAddress,
+          user: userAddress,
+          vaultProgram: this.program.programId,
+          vault: this.vaultPda,
+          tokenVault: this.tokenVaultPda,
+          vaultLpMint: this.vaultState.lpMint,
+          userToken,
+          userLp: userLpToken,
+          owner,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .preInstructions(preInstructions)
+        .transaction()
+    } else {
+      depositTx = await this.program.methods
+        .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
+        .accounts({
+          vault: this.vaultPda,
+          tokenVault: this.tokenVaultPda,
+          lpMint: this.vaultState.lpMint,
+          userToken,
+          userLp: userLpToken,
+          user: owner,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .preInstructions(preInstructions)
+        .transaction()
+    }
     return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(depositTx);
   }
 
@@ -356,21 +392,30 @@ export default class VaultImpl implements VaultImplementation {
     }
 
     let preInstructions: TransactionInstruction[] = [];
-    const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
-      new PublicKey(this.tokenInfo.address),
-      owner,
-      this.connection,
-    );
-    const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(
-      this.vaultState.lpMint,
-      owner,
-      this.connection,
-    );
-    if (createUserTokenIx) {
-      preInstructions.push(createUserTokenIx);
-    }
-    if (createUserLpTokenIx) {
-      preInstructions.push(createUserLpTokenIx);
+    let withdrawOpt = {};
+    let userToken: PublicKey | undefined;
+    let userLpToken: PublicKey | undefined;
+
+    // Withdraw with Affiliate
+    if (this.affiliateId && this.affiliateProgram) {
+      const { preInstructions: preInstructionsATA, partnerAddress, userAddress, userToken: userTokenATA, userLpToken: userLpTokenATA } = await this.createAffiliateATAPreInstructions(owner);
+      preInstructions = preInstructionsATA;
+      withdrawOpt = {
+        affiliate: {
+          affiliateId: this.affiliateId,
+          affiliateProgram: this.affiliateProgram,
+          partner: partnerAddress,
+          user: userAddress,
+        }
+      }
+      userToken = userTokenATA;
+      userLpToken = userLpTokenATA;
+    } else {
+      // Without affiliate
+      const { preInstructions: preInstructionsATA, userToken: userTokenATA, userLpToken: userLpTokenATA } = await this.createATAPreInstructions(owner);
+      preInstructions = preInstructionsATA;
+      userToken = userTokenATA;
+      userLpToken = userLpTokenATA;
     }
 
     // Unwrap SOL
@@ -398,6 +443,7 @@ export default class VaultImpl implements VaultImplementation {
       baseTokenAmount,
       preInstructions,
       postInstruction,
+      withdrawOpt,
     );
 
     if (withdrawFromStrategyTx instanceof Transaction) {

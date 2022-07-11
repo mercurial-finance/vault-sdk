@@ -1,7 +1,7 @@
 import { BN } from '@project-serum/anchor';
 import { Cluster, Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { StrategyProgram } from '../constants';
-import type { VaultProgram } from '../types';
+import type { AffiliateVaultProgram, VaultProgram } from '../types';
 import ApricotWithoutLMHandler from './apricotWithoutLM';
 import FranciumHandler from './francium';
 import MangoHandler from './mango';
@@ -52,6 +52,14 @@ export interface StrategyHandler {
     amount: BN,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[],
+    opt?: {
+      affiliate?: {
+        affiliateId: PublicKey,
+        affiliateProgram: AffiliateVaultProgram,
+        partner: PublicKey,
+        user: PublicKey,
+      }
+    },
   ): Promise<Transaction | { error: string }>;
 }
 

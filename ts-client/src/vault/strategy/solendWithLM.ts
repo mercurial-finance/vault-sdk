@@ -8,14 +8,14 @@ import * as solend from "@solendprotocol/solend-sdk";
 import * as anchor from "@project-serum/anchor";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
-import { VaultProgram } from "../types";
+import { AffiliateVaultProgram, VaultProgram } from "../types";
 import { ReserveState, StrategyHandler } from ".";
 import { SEEDS } from "../constants";
 import { Strategy } from "../../mint";
 
 // not using now
 export default class SolendWithLMHandler implements StrategyHandler {
-  constructor(public strategyProgram: PublicKey) {}
+  constructor(public strategyProgram: PublicKey) { }
 
   async getReserveState(
     program: VaultProgram,
@@ -50,7 +50,15 @@ export default class SolendWithLMHandler implements StrategyHandler {
     userLp: PublicKey,
     amount: anchor.BN,
     preInstructions: TransactionInstruction[],
-    postInstructions: TransactionInstruction[]
+    postInstructions: TransactionInstruction[],
+    opt?: {
+      affiliate?: {
+        affiliateId: PublicKey,
+        affiliateProgram: AffiliateVaultProgram,
+        partner: PublicKey,
+        user: PublicKey,
+      }
+    },
   ) {
     const { collateral, state } = await this.getReserveState(
       program,
@@ -96,21 +104,53 @@ export default class SolendWithLMHandler implements StrategyHandler {
       return { error: "Incorrect pythOracle or switchboardOracle pubkey" }
     }
 
+    const txAccounts = {
+      vault,
+      strategy: strategy.pubkey,
+      reserve: strategy.state.reserve,
+      strategyProgram: this.strategyProgram,
+      collateralVault,
+      feeVault,
+      tokenVault,
+      userToken,
+      userLp,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    }
+
+    if (opt?.affiliate) {
+      const tx = await opt.affiliate.affiliateProgram.methods
+        .withdrawDirectlyFromStrategy(amount, new anchor.BN(0))
+        .accounts({
+          ...txAccounts,
+          partner: opt.affiliate.partner,
+          user: opt.affiliate.user,
+          vaultProgram: program.programId,
+          vaultLpMint: lpMint,
+          owner: walletPubKey,
+        })
+        .remainingAccounts(remainingAccounts)
+        .preInstructions(
+          preInstructions.concat([
+            solend.refreshReserveInstruction(
+              strategy.state.reserve,
+              this.strategyProgram,
+              pythOracle,
+              switchboardOracle
+            ),
+          ])
+        )
+        .postInstructions(postInstructions)
+        .transaction()
+
+      return tx;
+    }
+
     const tx = await program.methods
       .withdrawDirectlyFromStrategy(amount, new anchor.BN(0))
       .accounts({
-        vault,
-        strategy: strategy.pubkey,
-        reserve: strategy.state.reserve,
-        strategyProgram: this.strategyProgram,
-        collateralVault,
-        tokenVault,
-        feeVault,
+        ...txAccounts,
         lpMint,
-        userToken,
-        userLp,
         user: walletPubKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
       })
       .remainingAccounts(remainingAccounts)
       .preInstructions(

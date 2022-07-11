@@ -8,7 +8,7 @@ import {
 import { StrategyHandler } from ".";
 import { SEEDS } from "../constants";
 import { Strategy } from "../../mint";
-import { VaultProgram } from "../types";
+import { AffiliateVaultProgram, VaultProgram } from "../types";
 
 export default class MangoHandler implements StrategyHandler {
   static MangoProgramId = new PublicKey(
@@ -30,7 +30,15 @@ export default class MangoHandler implements StrategyHandler {
     userLp: PublicKey,
     amount: anchor.BN,
     preInstructions: TransactionInstruction[],
-    postInstructions: TransactionInstruction[]
+    postInstructions: TransactionInstruction[],
+    opt?: {
+      affiliate?: {
+        affiliateId: PublicKey,
+        affiliateProgram: AffiliateVaultProgram,
+        partner: PublicKey,
+        user: PublicKey,
+      }
+    },
   ) {
     const [mangoAccountPK] = await PublicKey.findProgramAddress(
       [
@@ -89,24 +97,46 @@ export default class MangoHandler implements StrategyHandler {
       program.programId
     );
 
+    const txAccounts = {
+      vault,
+      strategy: strategy.pubkey,
+      reserve: strategy.state.reserve,
+      strategyProgram: MangoHandler.MangoProgramId,
+      collateralVault,
+      feeVault,
+      tokenVault,
+      userToken,
+      userLp,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    }
+
+    if (opt?.affiliate) {
+      const tx = await opt.affiliate.affiliateProgram.methods
+        .withdrawDirectlyFromStrategy(amount, new anchor.BN(0))
+        .preInstructions(preInstructions)
+        .postInstructions(postInstructions)
+        .remainingAccounts(remainingAccounts)
+        .accounts({
+          ...txAccounts,
+          partner: opt.affiliate.partner,
+          user: opt.affiliate.user,
+          vaultProgram: program.programId,
+          vaultLpMint: lpMint,
+          owner: walletPubKey,
+        })
+        .transaction()
+      return tx;
+    }
+
     const tx = await program.methods
       .withdrawDirectlyFromStrategy(amount, new anchor.BN(0))
       .preInstructions(preInstructions)
       .postInstructions(postInstructions)
       .remainingAccounts(remainingAccounts)
       .accounts({
-        vault,
-        strategy: strategy.pubkey,
-        reserve: strategy.state.reserve,
-        strategyProgram: MangoHandler.MangoProgramId,
-        collateralVault,
-        feeVault,
-        tokenVault,
+        ...txAccounts,
         lpMint,
-        userToken,
-        userLp,
         user: walletPubKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
       })
       .transaction()
     return tx;

@@ -4,7 +4,7 @@ import * as apricot from '@apricot-lend/sdk-ts';
 import * as anchor from '@project-serum/anchor';
 
 import { StrategyHandler } from '.';
-import { VaultProgram } from '../types';
+import { AffiliateVaultProgram, VaultProgram } from '../types';
 import { Strategy } from '../../mint';
 import { SEEDS } from '../constants';
 
@@ -28,6 +28,14 @@ export default class ApricotWithoutLMHandler implements StrategyHandler {
     amount: anchor.BN,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[],
+    opt?: {
+      affiliate?: {
+        affiliateId: PublicKey,
+        affiliateProgram: AffiliateVaultProgram,
+        partner: PublicKey,
+        user: PublicKey,
+      }
+    },
   ): Promise<Transaction | { error: string }> {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
@@ -68,21 +76,57 @@ export default class ApricotWithoutLMHandler implements StrategyHandler {
       isSigner: false,
     }));
 
+    const txAccounts = {
+      vault,
+      strategy: strategy.pubkey,
+      reserve: new PublicKey(strategy.state.reserve),
+      strategyProgram: this.address.getProgramKey(),
+      collateralVault,
+      tokenVault,
+      feeVault,
+      userToken,
+      userLp,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    }
+
+    if (opt?.affiliate) {
+      const tx = await opt.affiliate.affiliateProgram.methods
+        .withdrawDirectlyFromStrategy(new anchor.BN(amount), new anchor.BN(0))
+        .accounts({
+          ...txAccounts,
+          partner: opt.affiliate.partner,
+          user: opt.affiliate.user,
+          vaultProgram: program.programId,
+          vaultLpMint: lpMint,
+          owner: walletPubKey,
+        })
+        .remainingAccounts(remainingAccounts)
+        .preInstructions(
+          preInstructions.concat(
+            // refreshUser Instruction
+            new TransactionInstruction({
+              programId: this.address.getProgramKey(),
+              keys: [
+                { pubkey: userInfoSignerPda, isSigner: false, isWritable: false },
+                { pubkey: userInfo, isSigner: false, isWritable: true },
+                { pubkey: poolSummaries, isSigner: false, isWritable: false },
+              ],
+              data: Buffer.from([apricot.CMD_REFRESH_USER]),
+            }),
+          ),
+        )
+        .postInstructions(postInstructions)
+        .transaction();
+
+      return tx;
+    }
+
     const tx = await program.methods
       .withdrawDirectlyFromStrategy(new anchor.BN(amount), new anchor.BN(0))
       .accounts({
-        vault,
-        strategy: strategy.pubkey,
-        reserve: new PublicKey(strategy.state.reserve),
-        strategyProgram: this.address.getProgramKey(),
-        collateralVault,
-        tokenVault,
-        feeVault,
+        ...txAccounts,
         lpMint,
-        userToken,
-        userLp,
         user: walletPubKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
       })
       .remainingAccounts(remainingAccounts)
       .preInstructions(

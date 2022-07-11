@@ -6,12 +6,12 @@ import * as anchor from '@project-serum/anchor';
 import * as port from '@port.finance/port-sdk';
 
 import { ReserveState, StrategyHandler } from '.';
-import { VaultProgram } from '../types';
+import { AffiliateVaultProgram, VaultProgram } from '../types';
 import { SEEDS } from '../constants';
 import { Strategy } from '../../mint';
 
 export default class PortWithoutLMHandler implements StrategyHandler {
-  constructor(public strategyProgram: PublicKey) {}
+  constructor(public strategyProgram: PublicKey) { }
   async getReserveState(program: VaultProgram, reserve: PublicKey): Promise<ReserveState> {
     const account = await program.provider.connection.getAccountInfo(reserve);
     const state = port.ReserveLayout.decode(account!.data) as port.ReserveData;
@@ -38,6 +38,14 @@ export default class PortWithoutLMHandler implements StrategyHandler {
     amount: anchor.BN,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[],
+    opt?: {
+      affiliate?: {
+        affiliateId: PublicKey,
+        affiliateProgram: AffiliateVaultProgram,
+        partner: PublicKey,
+        user: PublicKey,
+      }
+    },
   ) {
     const { state } = await this.getReserveState(program, strategy.state.reserve);
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
@@ -70,21 +78,49 @@ export default class PortWithoutLMHandler implements StrategyHandler {
       });
     }
 
+    const txAccounts = {
+      vault,
+      strategy: strategy.pubkey,
+      reserve: strategy.state.reserve,
+      strategyProgram: this.strategyProgram,
+      collateralVault,
+      tokenVault,
+      feeVault,
+      userToken,
+      userLp,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    }
+
+    if (opt?.affiliate) {
+      const tx = await opt.affiliate.affiliateProgram.methods
+        .withdrawDirectlyFromStrategy(new anchor.BN(amount), new anchor.BN(0))
+        .accounts({
+          ...txAccounts,
+          partner: opt.affiliate.partner,
+          user: opt.affiliate.user,
+          vaultProgram: program.programId,
+          vaultLpMint: lpMint,
+          owner: walletPubKey,
+        })
+        .remainingAccounts(remainingAccounts)
+        .preInstructions(
+          preInstructions.concat([
+            port.refreshReserveInstruction(strategy.state.reserve, liquidity.oraclePubkey, this.strategyProgram),
+          ]),
+        )
+        .postInstructions(postInstructions)
+        .transaction();
+
+      return tx;
+    }
+
+
     const tx = await program.methods
       .withdrawDirectlyFromStrategy(amount, new anchor.BN(0))
       .accounts({
-        vault,
-        strategy: strategy.pubkey,
-        reserve: strategy.state.reserve,
-        strategyProgram: this.strategyProgram,
-        collateralVault,
-        tokenVault,
-        feeVault,
+        ...txAccounts,
         lpMint,
-        userToken,
-        userLp,
         user: walletPubKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
       })
       .remainingAccounts(remainingAccounts)
       .preInstructions(

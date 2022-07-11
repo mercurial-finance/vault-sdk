@@ -57,7 +57,10 @@ export const getOrCreateATAInstruction = async (
   tokenMint: PublicKey,
   owner: PublicKey,
   connection: Connection,
-  payer?: PublicKey,
+  opt?: {
+    payer?: PublicKey,
+    allowOwnerOffCurve?: boolean
+  },
 ): Promise<[PublicKey, TransactionInstruction?]> => {
   let toAccount;
   try {
@@ -65,7 +68,8 @@ export const getOrCreateATAInstruction = async (
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       tokenMint,
-      owner
+      owner,
+      opt?.allowOwnerOffCurve
     );
     const account = await connection.getAccountInfo(toAccount);
     if (!account) {
@@ -75,7 +79,7 @@ export const getOrCreateATAInstruction = async (
         tokenMint,
         toAccount,
         owner,
-        payer || owner
+        opt?.payer || owner,
       );
       return [toAccount, ix];
     }
