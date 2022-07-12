@@ -3,7 +3,7 @@ import { PublicKey, TransactionInstruction, Connection, Transaction, Cluster, SY
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
 
-import { AffiliateVaultProgram, VaultDetails, VaultImplementation, VaultProgram, VaultState } from './types';
+import { AffiliateInfo, AffiliateVaultProgram, VaultDetails, VaultImplementation, VaultProgram, VaultState } from './types';
 import {
   deserializeAccount,
   getAssociatedTokenAccount,
@@ -513,5 +513,23 @@ export default class VaultImpl implements VaultImplementation {
       .transaction();
 
     return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(withdrawTx);
+  }
+
+  public async getAffiliateInfo(): Promise<AffiliateInfo> {
+    if (!this.affiliateId || !this.affiliateProgram) throw new Error('No affiliateId or affiliate program found');
+
+    const partner = this.affiliateId;
+    const partnerToken = await getAssociatedTokenAccount(
+      new PublicKey(this.tokenInfo.address),
+      partner,
+    );
+
+    const [partnerAddress, _nonce] = await PublicKey.findProgramAddress(
+      [this.vaultPda.toBuffer(), partnerToken.toBuffer()],
+      this.affiliateProgram.programId
+    );
+
+    const partnerDetails = (await this.affiliateProgram.account.partner.fetchNullable(partnerAddress)) as AffiliateInfo
+    return partnerDetails;
   }
 }

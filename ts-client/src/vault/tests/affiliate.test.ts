@@ -64,16 +64,20 @@ describe('Interact with Vault in devnet', () => {
         console.log('Deposit result', depositResult2);
         expect(typeof depositResult2).toBe('string');
 
-        // Check balance again
+        // Check balance again, should be greater than first deposit
         const userBalanceDeposit2 = await vaultImpl.getUserBalance(mockWallet.publicKey);
-        expect(Number(userBalanceDeposit2)).toBeGreaterThan(0);
+        expect(Number(userBalanceDeposit2)).toBeGreaterThan(Number(userBalanceDeposit));
     })
 
     test('Test affiliate user withdraw', async () => {
-        // TODO: Remove selected strat
         const withdrawTx = await vaultImpl.withdraw(mockWallet.publicKey, new BN(100_000_000));
         const withdrawResult = await provider.sendAndConfirm(withdrawTx);
         console.log('Withdraw result', withdrawResult);
         expect(typeof withdrawResult).toBe('string');
+    })
+
+    test('Get affiliate partner info', async () => {
+        const partnerInfo = await vaultImpl.getAffiliateInfo();
+        expect(Object.keys(partnerInfo)).toEqual(expect.arrayContaining(["partnerToken", "vault", "totalFee", "feeRatio", "cummulativeFee"]));
     })
 });
