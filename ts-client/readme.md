@@ -30,6 +30,7 @@ npm i @mercurial-finance/vault-sdk @project-serum/anchor @solana/web3.js @solana
 ```
 
 2. Initialize VaultImpl instance
+- Affiliate or partner? refer to the [Vault Affiliate Program]()
 ```ts
 import VaultImpl from '@mercurial-finance/vault-sdk';
 import { PublicKey } from '@solana/web3.js';
@@ -87,4 +88,30 @@ const underlyingShare = helper.getAmountByShare(userShare, unlockedAmount, lpSup
 // To convert underlying token amount into user's LP balance
 const amountInLamports = 1 * 10 ** SOL_TOKEN_INFO.decimals; // 1.0 SOL
 const lpToUnmint = helper.getUnmintAmount(new BN(amountInLamports), unlockedAmount, lpSupply) // To withdraw 1.0 SOL
+```
+
+<hr>
+
+## Vault Affiliate
+To be a part of the Mercurial Finance's Vault Affiliate Program, visit our Discord above!
+
+<br>
+
+#### To initialize vault with affiliate
+Affiliates only need to initialize the vault instance with the third paratemer `opt.affiliate`, subsequently, all interaction with the vault are the same as the usage guide above, no further configuration required.
+
+```ts
+const vaultImpl = await VaultImpl.create(
+    connection, 
+    SOL_TOKEN_INFO,
+    {
+        affiliateId: new PublicKey('YOUR_PARTNER_PUBLIC_KEY');
+    }
+);
+```
+
+#### To check Partner info
+```ts
+// Affiliate / Partner info
+const partnerInfo = await vaultImpl.getAffiliateInfo();
 ```
