@@ -68,17 +68,25 @@ export default class VaultImpl implements VaultImplementation {
     this.lpSupply = vaultDetails.lpSupply;
   }
 
-  public static async create(
+  static createProgram(
     connection: Connection,
-    tokenInfo: TokenInfo,
     opt?: {
-      cluster?: Cluster;
       programId?: string;
     },
-  ): Promise<VaultImpl> {
+  ) {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
 
+    return program;
+  }
+
+  public static async create(
+    program: Program<VaultIdl>,
+    tokenInfo: TokenInfo,
+    opt?: {
+      cluster?: Cluster;
+    },
+  ): Promise<VaultImpl> {
     const { vaultPda, tokenVaultPda, vaultState, lpSupply } = await getVaultState(tokenInfo, program);
     return new VaultImpl(program, { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply }, opt);
   }
