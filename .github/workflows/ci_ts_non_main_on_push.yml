@@ -12,7 +12,23 @@ on:
       - staging
 
 jobs:
+  changed_files:
+    runs-on: self-hosted
+    outputs:
+      program: ${{steps.changed-files-specific.outputs.any_changed}}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Get specific changed files
+        id: changed-files-specific
+        uses: tj-actions/changed-files@v18.6
+        with:
+          files: |
+            ts-client
+
   ts-test:
+    needs: changed_files
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

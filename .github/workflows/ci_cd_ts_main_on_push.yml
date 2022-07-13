@@ -9,37 +9,25 @@ on:
       - '.editorconfig'
     branches:
       - main
-      - master
-
-  # pull_request:
-  #   paths-ignore:
-  #     - 'docs/**'
-  #     - 'README.md'
-  #     - 'LICENSE'
-  #     - '.editorconfig'
-  #   branches:
-  #     - main
 
 jobs:
-  # release:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v2
-  #     - name: Create Release
-  #       id: create_release
-  #       uses: actions/create-release@v1
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         tag_name: ${{ github.ref }}
-  #         release_name: ${{ github.ref }}
-  #         draft: false
-  #         prerelease: false
+  changed_files:
+    runs-on: self-hosted
+    outputs:
+      program: ${{steps.changed-files-specific.outputs.any_changed}}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Get specific changed files
+        id: changed-files-specific
+        uses: tj-actions/changed-files@v18.6
+        with:
+          files: |
+            ts-client
 
   ts-test-publish:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == 'true'
     steps:
       - uses: actions/checkout@v2
       - name: Setup .npmrc file to publish to npm
