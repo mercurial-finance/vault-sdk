@@ -46,9 +46,12 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
+      - uses: pnpm/action-setup@v2.2.2
+        with:
+          version: 6.0.2
       - name: Install dependencies
         working-directory: ${{ env.working_dir }}
-        run: npm install
+        run: pnpm install
       - name: Run tests
         working-directory: ${{ env.working_dir }}
-        run: npm run test
+        run: pnpm run test
