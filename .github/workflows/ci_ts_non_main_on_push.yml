@@ -11,6 +11,9 @@ on:
       - develop
       - staging
 
+env:
+  working_dir: ./ts-client
+
 jobs:
   changed_files:
     runs-on: self-hosted
@@ -44,10 +47,8 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Install dependencies
-        run: |
-          cd ts-client/
-          npm install
+        working-directory: ${{ env.working_dir }}
+        run: npm install
       - name: Run tests
-        run: |
-          cd ts-client/
-          npm run test
+        working-directory: ${{ env.working_dir }}
+        run: npm run test
