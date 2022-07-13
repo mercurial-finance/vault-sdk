@@ -32,13 +32,7 @@ jobs:
 
   ts-test:
     needs: changed_files
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
-        node: [16.x]
+    runs-on: self-hosted
 
     steps:
       - uses: actions/checkout@v2
