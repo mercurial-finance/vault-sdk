@@ -10,6 +10,9 @@ on:
     branches:
       - main
 
+env:
+  working_dir: ./ts-client
+
 jobs:
   changed_files:
     runs-on: self-hosted
@@ -36,18 +39,18 @@ jobs:
           node-version: '16.x'
           registry-url: 'https://registry.npmjs.org'
       - name: Install modules
+        working-directory: ${{ env.working_dir }}
         run: npm install
       - name: Run tests
-        run: |
-          cd ts-client/
-          npm run test
+        working-directory: ${{ env.working_dir }}
+        run: npm run test
       - name: Build
-        run: |
-          cd ts-client/
-          npm run build
+        working-directory: ${{ env.working_dir }}
+        run: npm run build
       - name: Add git commit tag to env
         run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
       - name: Publish to npm
+        working-directory: ${{ env.working_dir }}
         run: |
           npm version --no-git-tag-version prerelease --preid=${SHORT_SHA} --force
           npm publish --tag next
