@@ -38,15 +38,18 @@ jobs:
         with:
           node-version: '16.x'
           registry-url: 'https://registry.npmjs.org'
+      - uses: pnpm/action-setup@v2.2.2
+        with:
+          version: 6.0.2
       - name: Install modules
         working-directory: ${{ env.working_dir }}
-        run: npm install
+        run: pnpm i
       - name: Run tests
         working-directory: ${{ env.working_dir }}
-        run: npm run test
+        run: pnpm run test
       - name: Build
         working-directory: ${{ env.working_dir }}
-        run: npm run build
+        run: pnpm run build
       - name: Add git commit tag to env
         run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
       - name: Publish to npm
