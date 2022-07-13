@@ -5,7 +5,7 @@ import * as anchor from '@project-serum/anchor';
 
 import { StrategyHandler } from '.';
 import { Strategy } from '../../mint';
-import { VaultProgram } from '../types';
+import { AffiliateVaultProgram, VaultProgram } from '../types';
 
 export default class VaultHandler implements StrategyHandler {
   async withdraw(
@@ -21,17 +21,47 @@ export default class VaultHandler implements StrategyHandler {
     amount: anchor.BN,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[],
+    opt?: {
+      affiliate?: {
+        affiliateId: PublicKey,
+        affiliateProgram: AffiliateVaultProgram,
+        partner: PublicKey,
+        user: PublicKey,
+      }
+    },
   ) {
+    const txAccounts = {
+      vault,
+      tokenVault,
+      userToken,
+      userLp,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    }
+
+    if (opt?.affiliate) {
+      const tx = await opt.affiliate.affiliateProgram.methods
+        .withdraw(amount, new anchor.BN(0))
+        .accounts({
+          ...txAccounts,
+          partner: opt.affiliate.partner,
+          user: opt.affiliate.user,
+          vaultProgram: program.programId,
+          vaultLpMint: lpMint,
+          owner: walletPubKey,
+        })
+        .preInstructions(preInstructions)
+        .postInstructions(postInstructions)
+        .transaction();
+
+      return tx;
+    }
+
     const tx = await program.methods
       .withdraw(amount, new anchor.BN(0))
       .accounts({
-        vault,
-        tokenVault,
+        ...txAccounts,
         lpMint,
-        userToken,
-        userLp,
         user: walletPubKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
       })
       .preInstructions(preInstructions)
       .postInstructions(postInstructions)

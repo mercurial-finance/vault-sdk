@@ -1,9 +1,9 @@
 import { AnchorProvider, Program, BN } from '@project-serum/anchor';
-import { PublicKey, TransactionInstruction, Connection, Transaction, Cluster } from '@solana/web3.js';
+import { PublicKey, TransactionInstruction, Connection, Transaction, Cluster, SYSVAR_RENT_PUBKEY, SystemProgram } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
 
-import { VaultDetails, VaultImplementation, VaultProgram, VaultState } from './types';
+import { AffiliateInfo, AffiliateVaultProgram, VaultDetails, VaultImplementation, VaultProgram, VaultState } from './types';
 import {
   deserializeAccount,
   getAssociatedTokenAccount,
@@ -14,9 +14,10 @@ import {
   unwrapSOLInstruction,
   wrapSOLInstruction,
 } from './utils';
-import { LOCKED_PROFIT_DEGRADATION_DENOMINATOR, PROGRAM_ID, SOL_MINT, VAULT_STRATEGY_ADDRESS } from './constants';
+import { AFFILIATE_PROGRAM_ID, LOCKED_PROFIT_DEGRADATION_DENOMINATOR, PROGRAM_ID, SOL_MINT, VAULT_STRATEGY_ADDRESS } from './constants';
 import { getStrategyHandler, getStrategyType, StrategyState } from './strategy';
 import { IDL, Vault as VaultIdl } from './idl';
+import { IDL as AffiliateIDL, AffiliateVault as AffiliateVaultIdl } from './affiliate-idl';
 
 const getVaultState = async (
   vaultParams: TokenInfo,
@@ -49,6 +50,8 @@ export default class VaultImpl implements VaultImplementation {
 
   // Vault
   private program: VaultProgram;
+  private affiliateId: PublicKey | undefined;
+  private affiliateProgram: AffiliateVaultProgram | undefined;
 
   public tokenInfo: TokenInfo;
   public vaultPda: PublicKey;
@@ -56,12 +59,23 @@ export default class VaultImpl implements VaultImplementation {
   public vaultState: VaultState;
   public lpSupply: BN = new BN(0);
 
-  private constructor(program: VaultProgram, vaultDetails: VaultDetails, opt?: { cluster?: Cluster }) {
+  private constructor(
+    program: VaultProgram,
+    vaultDetails: VaultDetails,
+    opt?: {
+      cluster?: Cluster,
+      affiliateId?: PublicKey,
+      affiliateProgram?: AffiliateVaultProgram
+    }
+  ) {
     this.connection = program.provider.connection;
     this.cluster = opt?.cluster ?? 'mainnet-beta';
 
     this.tokenInfo = vaultDetails.tokenInfo;
     this.program = program;
+    this.affiliateProgram = opt?.affiliateProgram;
+    this.affiliateId = opt?.affiliateId;
+
     this.vaultPda = vaultDetails.vaultPda;
     this.tokenVaultPda = vaultDetails.tokenVaultPda;
     this.vaultState = vaultDetails.vaultState;
@@ -74,17 +88,44 @@ export default class VaultImpl implements VaultImplementation {
     opt?: {
       cluster?: Cluster;
       programId?: string;
+      affiliateId?: PublicKey;
+      affiliateProgramId?: string;
     },
   ): Promise<VaultImpl> {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
 
     const { vaultPda, tokenVaultPda, vaultState, lpSupply } = await getVaultState(tokenInfo, program);
-    return new VaultImpl(program, { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply }, opt);
+    return new VaultImpl(
+      program,
+      { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply },
+      {
+        ...opt,
+        affiliateId: opt?.affiliateId,
+        affiliateProgram: opt?.affiliateId
+          ? new Program<AffiliateVaultIdl>(
+            AffiliateIDL as AffiliateVaultIdl,
+            opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
+            provider
+          )
+          : undefined
+      }
+    );
   }
 
   public async getUserBalance(owner: PublicKey): Promise<BN> {
-    const address = await getAssociatedTokenAccount(this.vaultState.lpMint, owner);
+    const isAffiliated = this.affiliateId && this.affiliateProgram;
+
+    const address = await (async () => {
+      // User deposit directly
+      if (!isAffiliated) {
+        return await getAssociatedTokenAccount(this.vaultState.lpMint, owner);
+      }
+
+      // Get user affiliated address with the partner
+      const { userLpToken } = await this.createAffiliateATAPreInstructions(owner);
+      return userLpToken;
+    })()
     const accountInfo = await this.connection.getAccountInfo(address);
 
     if (!accountInfo) {
@@ -136,10 +177,7 @@ export default class VaultImpl implements VaultImplementation {
     this.vaultState = vaultState;
   }
 
-  public async deposit(owner: PublicKey, baseTokenAmount: BN): Promise<Transaction> {
-    // Refresh vault state
-    await this.refreshVaultState();
-
+  private async createATAPreInstructions(owner: PublicKey) {
     let preInstructions: TransactionInstruction[] = [];
     const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
       new PublicKey(this.tokenInfo.address),
@@ -157,25 +195,146 @@ export default class VaultImpl implements VaultImplementation {
     if (createUserLpTokenIx) {
       preInstructions.push(createUserLpTokenIx);
     }
+
+    return {
+      preInstructions,
+      userToken,
+      userLpToken,
+    };
+  }
+
+  private async createAffiliateATAPreInstructions(owner: PublicKey) {
+    if (!this.affiliateId || !this.affiliateProgram) throw new Error('Affiliate ID or program not found');
+
+    const partner = this.affiliateId;
+    const partnerToken = await getAssociatedTokenAccount(
+      new PublicKey(this.tokenInfo.address),
+      partner,
+    );
+
+    const [partnerAddress, _nonce] = await PublicKey.findProgramAddress(
+      [this.vaultPda.toBuffer(), partnerToken.toBuffer()],
+      this.affiliateProgram.programId
+    );
+    const [userAddress, _nonceUser] = await PublicKey.findProgramAddress(
+      [partnerAddress.toBuffer(), owner.toBuffer()],
+      this.affiliateProgram.programId,
+    );
+
+    let preInstructions: TransactionInstruction[] = [];
+    const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
+      new PublicKey(this.tokenInfo.address),
+      owner,
+      this.connection,
+    );
+    const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(
+      this.vaultState.lpMint,
+      userAddress,
+      this.connection,
+      {
+        payer: owner,
+        allowOwnerOffCurve: true,
+      }
+    );
+    if (createUserTokenIx) {
+      preInstructions.push(createUserTokenIx);
+    }
+    if (createUserLpTokenIx) {
+      preInstructions.push(createUserLpTokenIx);
+    }
+
+    return {
+      preInstructions,
+      partner,
+      partnerAddress,
+      userAddress,
+      userToken,
+      userLpToken,
+    };
+  }
+
+  public async deposit(owner: PublicKey, baseTokenAmount: BN): Promise<Transaction> {
+    // Refresh vault state
+    await this.refreshVaultState();
+
+    let preInstructions: TransactionInstruction[] = [];
+
+    let partnerAddress: PublicKey | undefined;
+    let userAddress: PublicKey | undefined;
+    let userToken: PublicKey | undefined;
+    let userLpToken: PublicKey | undefined;
+
+    // Withdraw with Affiliate
+    if (this.affiliateId && this.affiliateProgram) {
+      const { preInstructions: preInstructionsATA, partnerAddress: partnerAddressATA, userAddress: userAddressATA, userToken: userTokenATA, userLpToken: userLpTokenATA } = await this.createAffiliateATAPreInstructions(owner);
+      preInstructions = preInstructionsATA;
+      userToken = userTokenATA;
+      userLpToken = userLpTokenATA;
+      partnerAddress = partnerAddressATA;
+      userAddress = userAddressATA;
+    } else {
+      // Without affiliate
+      const { preInstructions: preInstructionsATA, userToken: userTokenATA, userLpToken: userLpTokenATA } = await this.createATAPreInstructions(owner);
+      preInstructions = preInstructionsATA;
+      userToken = userTokenATA;
+      userLpToken = userLpTokenATA;
+    }
+
     // If it's SOL vault, wrap desired amount of SOL
     if (this.tokenInfo.address === SOL_MINT.toString()) {
       preInstructions = preInstructions.concat(wrapSOLInstruction(owner, userToken, baseTokenAmount));
     }
 
-    const depositTx = await this.program.methods
-      .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
-      .accounts({
-        vault: this.vaultPda,
-        tokenVault: this.tokenVaultPda,
-        lpMint: this.vaultState.lpMint,
-        userToken,
-        userLp: userLpToken,
-        user: owner,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .preInstructions(preInstructions)
-      .transaction();
+    let depositTx: Transaction;
+    if (partnerAddress && userAddress && this.affiliateId && this.affiliateProgram) {
+      const userPda = await this.connection.getParsedAccountInfo(userAddress);
+      if (!userPda || !userPda.value?.data) {
+        // Init first time user
+        preInstructions.push(
+          await this.affiliateProgram.methods
+            .initUser()
+            .accounts({
+              user: userAddress,
+              partner: partnerAddress,
+              owner,
+              systemProgram: SystemProgram.programId,
+              rent: SYSVAR_RENT_PUBKEY,
+            })
+            .instruction()
+        )
+      }
 
+      depositTx = await this.affiliateProgram.methods
+        .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
+        .accounts({
+          partner: partnerAddress,
+          user: userAddress,
+          vaultProgram: this.program.programId,
+          vault: this.vaultPda,
+          tokenVault: this.tokenVaultPda,
+          vaultLpMint: this.vaultState.lpMint,
+          userToken,
+          userLp: userLpToken,
+          owner,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .preInstructions(preInstructions)
+        .transaction()
+    } else {
+      depositTx = await this.program.methods
+        .deposit(new BN(baseTokenAmount.toString()), new BN(0)) // Vault does not have slippage, second parameter is ignored.
+        .accounts({
+          vault: this.vaultPda,
+          tokenVault: this.tokenVaultPda,
+          lpMint: this.vaultState.lpMint,
+          userToken,
+          userLp: userLpToken,
+          user: owner,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .preInstructions(preInstructions)
+        .transaction()
+    }
     return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(depositTx);
   }
 
@@ -205,9 +364,9 @@ export default class VaultImpl implements VaultImplementation {
     return highestLiquidity
       ? highestLiquidity
       : {
-          publicKey: new PublicKey(VAULT_STRATEGY_ADDRESS),
-          strategyState: null,
-        };
+        publicKey: new PublicKey(VAULT_STRATEGY_ADDRESS),
+        strategyState: null,
+      };
   }
 
   public async withdraw(owner: PublicKey, baseTokenAmount: BN, opt?: { strategy?: PublicKey }): Promise<Transaction> {
@@ -244,21 +403,30 @@ export default class VaultImpl implements VaultImplementation {
     }
 
     let preInstructions: TransactionInstruction[] = [];
-    const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
-      new PublicKey(this.tokenInfo.address),
-      owner,
-      this.connection,
-    );
-    const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(
-      this.vaultState.lpMint,
-      owner,
-      this.connection,
-    );
-    if (createUserTokenIx) {
-      preInstructions.push(createUserTokenIx);
-    }
-    if (createUserLpTokenIx) {
-      preInstructions.push(createUserLpTokenIx);
+    let withdrawOpt = {};
+    let userToken: PublicKey | undefined;
+    let userLpToken: PublicKey | undefined;
+
+    // Withdraw with Affiliate
+    if (this.affiliateId && this.affiliateProgram) {
+      const { preInstructions: preInstructionsATA, partnerAddress, userAddress, userToken: userTokenATA, userLpToken: userLpTokenATA } = await this.createAffiliateATAPreInstructions(owner);
+      preInstructions = preInstructionsATA;
+      withdrawOpt = {
+        affiliate: {
+          affiliateId: this.affiliateId,
+          affiliateProgram: this.affiliateProgram,
+          partner: partnerAddress,
+          user: userAddress,
+        }
+      }
+      userToken = userTokenATA;
+      userLpToken = userLpTokenATA;
+    } else {
+      // Without affiliate
+      const { preInstructions: preInstructionsATA, userToken: userTokenATA, userLpToken: userLpTokenATA } = await this.createATAPreInstructions(owner);
+      preInstructions = preInstructionsATA;
+      userToken = userTokenATA;
+      userLpToken = userLpTokenATA;
     }
 
     // Unwrap SOL
@@ -286,6 +454,7 @@ export default class VaultImpl implements VaultImplementation {
       baseTokenAmount,
       preInstructions,
       postInstruction,
+      withdrawOpt,
     );
 
     if (withdrawFromStrategyTx instanceof Transaction) {
@@ -344,5 +513,23 @@ export default class VaultImpl implements VaultImplementation {
       .transaction();
 
     return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(withdrawTx);
+  }
+
+  public async getAffiliateInfo(): Promise<AffiliateInfo> {
+    if (!this.affiliateId || !this.affiliateProgram) throw new Error('No affiliateId or affiliate program found');
+
+    const partner = this.affiliateId;
+    const partnerToken = await getAssociatedTokenAccount(
+      new PublicKey(this.tokenInfo.address),
+      partner,
+    );
+
+    const [partnerAddress, _nonce] = await PublicKey.findProgramAddress(
+      [this.vaultPda.toBuffer(), partnerToken.toBuffer()],
+      this.affiliateProgram.programId
+    );
+
+    const partnerDetails = (await this.affiliateProgram.account.partner.fetchNullable(partnerAddress)) as AffiliateInfo
+    return partnerDetails;
   }
 }

@@ -3,8 +3,10 @@ import { TokenInfo } from '@solana/spl-token-registry';
 import { PublicKey, Transaction } from '@solana/web3.js';
 
 import { Vault as VaultIdl } from '../idl';
+import { AffiliateVault as AffiliateVaultIdl } from '../affiliate-idl';
 
 export type VaultProgram = Program<VaultIdl>;
+export type AffiliateVaultProgram = Program<AffiliateVaultIdl>;
 
 export type VaultImplementation = {
   getUserBalance: (owner: PublicKey) => Promise<BN>;
@@ -12,6 +14,9 @@ export type VaultImplementation = {
   getWithdrawableAmount: (ownerPublicKey: PublicKey) => Promise<BN>;
   deposit: (owner: PublicKey, baseTokenAmount: BN) => Promise<Transaction>;
   withdraw: (owner: PublicKey, baseTokenAmount: BN) => Promise<Transaction | { error: string }>;
+
+  // Affiliate
+  getAffiliateInfo: () => Promise<AffiliateInfo>
 };
 
 export interface VaultState {
@@ -61,6 +66,15 @@ export type StrategyInfo = {
   reward: number;
   apy: number;
 };
+
+/** Affiliate */
+export interface AffiliateInfo {
+  partnerToken: PublicKey;
+  vault: PublicKey;
+  totalFee: BN;
+  feeRatio: BN;
+  cummulativeFee: BN;
+}
 
 /** Utils */
 export interface ParsedClockState {

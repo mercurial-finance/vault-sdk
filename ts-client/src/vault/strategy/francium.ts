@@ -12,7 +12,7 @@ import FranciumSDK, * as francium from 'francium-sdk';
 import * as anchor from '@project-serum/anchor';
 
 import { StrategyHandler } from '.';
-import { VaultProgram } from '../types';
+import { AffiliateVaultProgram, VaultProgram } from '../types';
 import { Strategy } from '../../mint';
 import { SEEDS } from '../constants';
 
@@ -38,6 +38,14 @@ export default class FranciumHandler implements StrategyHandler {
     amount: anchor.BN,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[],
+    opt?: {
+      affiliate?: {
+        affiliateId: PublicKey,
+        affiliateProgram: AffiliateVaultProgram,
+        partner: PublicKey,
+        user: PublicKey,
+      }
+    },
   ): Promise<Transaction | { error: string }> {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
@@ -73,21 +81,44 @@ export default class FranciumHandler implements StrategyHandler {
       });
     }
 
+    const txAccounts = {
+      vault,
+      strategy: new PublicKey(strategy.pubkey),
+      reserve: new PublicKey(strategy.state.reserve),
+      strategyProgram: lendingPool.programId,
+      collateralVault,
+      feeVault,
+      tokenVault,
+      userToken,
+      userLp,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    }
+
+    if (opt?.affiliate) {
+      const tx = await opt.affiliate.affiliateProgram.methods
+        .withdrawDirectlyFromStrategy(new anchor.BN(amount), new anchor.BN(0))
+        .accounts({
+          ...txAccounts,
+          partner: opt.affiliate.partner,
+          user: opt.affiliate.user,
+          vaultProgram: program.programId,
+          vaultLpMint: lpMint,
+          owner: walletPubKey,
+        })
+        .remainingAccounts(remainingAccounts)
+        .preInstructions(preInstructions)
+        .postInstructions(postInstructions)
+        .transaction();
+
+      return tx;
+    }
+
     const tx = await program.methods
       .withdrawDirectlyFromStrategy(new anchor.BN(amount), new anchor.BN(0))
       .accounts({
-        vault,
-        strategy: new PublicKey(strategy.pubkey),
-        reserve: new PublicKey(strategy.state.reserve),
-        strategyProgram: lendingPool.programId,
-        collateralVault,
-        feeVault,
-        tokenVault,
+        ...txAccounts,
         lpMint,
-        userToken,
-        userLp,
         user: walletPubKey,
-        tokenProgram: TOKEN_PROGRAM_ID,
       })
       .remainingAccounts(remainingAccounts)
       .preInstructions(preInstructions)

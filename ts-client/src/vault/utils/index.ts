@@ -56,7 +56,11 @@ export const deserializeAccount = (data: Buffer | undefined): AccountInfo | unde
 export const getOrCreateATAInstruction = async (
   tokenMint: PublicKey,
   owner: PublicKey,
-  connection: Connection
+  connection: Connection,
+  opt?: {
+    payer?: PublicKey,
+    allowOwnerOffCurve?: boolean
+  },
 ): Promise<[PublicKey, TransactionInstruction?]> => {
   let toAccount;
   try {
@@ -64,7 +68,8 @@ export const getOrCreateATAInstruction = async (
       ASSOCIATED_TOKEN_PROGRAM_ID,
       TOKEN_PROGRAM_ID,
       tokenMint,
-      owner
+      owner,
+      opt?.allowOwnerOffCurve
     );
     const account = await connection.getAccountInfo(toAccount);
     if (!account) {
@@ -74,7 +79,7 @@ export const getOrCreateATAInstruction = async (
         tokenMint,
         toAccount,
         owner,
-        owner
+        opt?.payer || owner,
       );
       return [toAccount, ix];
     }

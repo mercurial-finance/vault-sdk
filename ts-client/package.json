@@ -8,7 +8,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "jest ./src/vault/tests/*.test.ts"
+    "test": "jest ./src/vault/tests/*.test.ts --runInBand",
+    "test-affiliate": "jest ./src/vault/tests/affiliate.test.ts --runInBand"
   },
   "keywords": [],
   "author": "mercurial-finance",
