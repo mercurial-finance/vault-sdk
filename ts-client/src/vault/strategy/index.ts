@@ -16,7 +16,7 @@ export type StrategyType =
   | 'portFinanceWithLm'
   | 'solendWithoutLm'
   | 'solendWithLm'
-  | 'fancium'
+  | 'francium'
   | 'apricotWithoutLM'
   | 'mango'
   | 'vault';
@@ -83,7 +83,7 @@ export const getStrategyHandler = (
       return new PortWithoutLMHandler(strategyProgramAddresses.portFinance);
     case 'portFinanceWithLm':
       return new PortWithLMHandler(strategyProgramAddresses.portFinance);
-    case 'fancium':
+    case 'francium':
       return new FranciumHandler(connection);
     case 'apricotWithoutLM':
       return new ApricotWithoutLMHandler();
