@@ -345,6 +345,13 @@ export default class VaultImpl implements VaultImplementation {
       return { publicKey: strategy, strategyState };
     }
 
+    // FIX: Fail to deserialize
+    try {
+      console.log('%%%', await this.program.account.strategy.fetch('8oJKm8T16yzEiVBjRbi4AXhJH6pfDUwM9HMUPZgwrNER'));
+    } catch (error) {
+      console.log('%%% error', error);
+    }
+
     const vaultStrategiesStatePromise = this.vaultState.strategies
       .filter((address) => address.toString() !== VAULT_STRATEGY_ADDRESS)
       .map(async (strat) => {

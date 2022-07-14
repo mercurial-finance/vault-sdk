@@ -4,8 +4,10 @@ import { Wallet, AnchorProvider, BN } from '@project-serum/anchor';
 
 import VaultImpl from '..';
 import { airDropSol } from './utils';
+import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes';
 
-const mockWallet = new Wallet(new Keypair());
+
+const mockWallet = new Wallet(Keypair.fromSecretKey(bs58.decode('')));
 const mainnetConnection = new Connection('https://api.mainnet-beta.solana.com');
 // devnet ATA creation and reading must use confirmed.
 const devnetConnection = new Connection('https://api.devnet.solana.com/', { commitment: 'confirmed' });
@@ -15,6 +17,31 @@ const tokenMap = new StaticTokenListResolutionStrategy().resolve();
 const SOL_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'SOL') as TokenInfo;
 const USDC_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'USDC') as TokenInfo;
 const USDT_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'USDT') as TokenInfo;
+
+describe.only('test withdraw from strategy', () => {
+  let vaultImpl: VaultImpl;
+  beforeAll(async () => {
+    vaultImpl = await VaultImpl.create(mainnetConnection, SOL_TOKEN_INFO, { programId: '6YRZW57XsrT2DxSNLXHHQd4QmiqBode4d6btASkRqcFo' });
+  })
+
+  test.only('test liquidity issue', async () => {
+    try {
+      const provider = new AnchorProvider(mainnetConnection, mockWallet, {
+        commitment: 'confirmed',
+      });
+
+      const result = await vaultImpl.getWithdrawableAmount();
+      const userBalance = await vaultImpl.getUserBalance(mockWallet.publicKey);
+
+      const withdrawResult = await vaultImpl.withdraw(mockWallet.publicKey, new BN(1.981930954 * 1e9));
+      console.log('Result', withdrawResult)
+      const sendResult = await provider.sendAndConfirm(withdrawResult)
+      console.log('Send Result', sendResult)
+    } catch (error) {
+      console.log(error)
+    }
+  })
+})
 
 describe('Get Mainnet vault state', () => {
   let vaults: VaultImpl[] = [];
