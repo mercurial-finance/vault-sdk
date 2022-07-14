@@ -7,7 +7,7 @@ import { airDropSol } from './utils';
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes';
 
 
-const mockWallet = new Wallet(Keypair.fromSecretKey(bs58.decode('')));
+const mockWallet = new Wallet(new Keypair());
 const mainnetConnection = new Connection('https://api.mainnet-beta.solana.com');
 // devnet ATA creation and reading must use confirmed.
 const devnetConnection = new Connection('https://api.devnet.solana.com/', { commitment: 'confirmed' });
