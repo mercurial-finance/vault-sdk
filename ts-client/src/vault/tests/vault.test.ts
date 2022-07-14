@@ -4,8 +4,6 @@ import { Wallet, AnchorProvider, BN } from '@project-serum/anchor';
 
 import VaultImpl from '..';
 import { airDropSol } from './utils';
-import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes';
-
 
 const mockWallet = new Wallet(new Keypair());
 const mainnetConnection = new Connection('https://api.mainnet-beta.solana.com');
