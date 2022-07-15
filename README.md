@@ -25,4 +25,13 @@ Discord: https://discord.com/channels/841152225564950528/864859354335412224
 
 <hr>
 
-Refer to [Typescript Readme](https://github.com/mercurial-finance/vault-sdk/blob/main/ts-client/readme.md) for full installation guide
+Refer to [Typescript Readme](https://github.com/mercurial-finance/vault-sdk/blob/main/ts-client/README.md) for full installation guide
+
+## Install & Run
+
+1. `pnpm i`
+2. `pnpm run test`
+
+## Install & Run Affiliate
+1. `pnpm i`
+2. `pnpm run test-affiliate`
