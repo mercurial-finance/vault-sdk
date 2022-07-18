@@ -78,7 +78,7 @@ describe('Interact with Vault in devnet', () => {
   test('Get affiliate partner info', async () => {
     const partnerInfo = await vaultImpl.getAffiliateInfo();
     expect(Object.keys(partnerInfo)).toEqual(
-      expect.arrayContaining(['partnerToken', 'vault', 'totalFee', 'feeRatio', 'cummulativeFee']),
+      expect.arrayContaining(['partnerToken', 'vault', 'outstandingFee', 'feeRatio', 'cummulativeFee']),
     );
   });
 });

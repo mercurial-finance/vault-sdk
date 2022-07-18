@@ -15,7 +15,7 @@ env:
 
 jobs:
   changed_files:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     outputs:
       program: ${{steps.changed-files-specific.outputs.any_changed}}
     steps:
@@ -31,7 +31,7 @@ jobs:
 
   ts-test-publish:
     needs: changed_files
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Setup .npmrc file to publish to npm

@@ -26,7 +26,7 @@ export type VaultState = TypeDef<VaultIdl['accounts']['0'], IdlTypes<VaultIdl>>;
 export interface AffiliateInfo {
   partnerToken: PublicKey;
   vault: PublicKey;
-  totalFee: BN;
+  outstandingFee: BN;
   feeRatio: BN;
   cummulativeFee: BN;
 }
