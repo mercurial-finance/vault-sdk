@@ -29,6 +29,11 @@ export type StrategyState = {
   currentLiquidity: BN;
 };
 
+export type Strategy = {
+  pubkey: PublicKey;
+  state: StrategyState;
+};
+
 export type ReserveState = {
   collateral: {
     mintPubkey: PublicKey;
@@ -54,11 +59,11 @@ export interface StrategyHandler {
     postInstructions: TransactionInstruction[],
     opt?: {
       affiliate?: {
-        affiliateId: PublicKey,
-        affiliateProgram: AffiliateVaultProgram,
-        partner: PublicKey,
-        user: PublicKey,
-      }
+        affiliateId: PublicKey;
+        affiliateProgram: AffiliateVaultProgram;
+        partner: PublicKey;
+        user: PublicKey;
+      };
     },
   ): Promise<Transaction | { error: string }>;
 }

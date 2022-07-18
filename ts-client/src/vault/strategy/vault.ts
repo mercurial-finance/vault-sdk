@@ -3,8 +3,7 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 import * as anchor from '@project-serum/anchor';
 
-import { StrategyHandler } from '.';
-import { Strategy } from '../../mint';
+import { StrategyHandler, Strategy } from '.';
 import { AffiliateVaultProgram, VaultProgram } from '../types';
 
 export default class VaultHandler implements StrategyHandler {
@@ -23,11 +22,11 @@ export default class VaultHandler implements StrategyHandler {
     postInstructions: TransactionInstruction[],
     opt?: {
       affiliate?: {
-        affiliateId: PublicKey,
-        affiliateProgram: AffiliateVaultProgram,
-        partner: PublicKey,
-        user: PublicKey,
-      }
+        affiliateId: PublicKey;
+        affiliateProgram: AffiliateVaultProgram;
+        partner: PublicKey;
+        user: PublicKey;
+      };
     },
   ) {
     const txAccounts = {
@@ -36,7 +35,7 @@ export default class VaultHandler implements StrategyHandler {
       userToken,
       userLp,
       tokenProgram: TOKEN_PROGRAM_ID,
-    }
+    };
 
     if (opt?.affiliate) {
       const tx = await opt.affiliate.affiliateProgram.methods

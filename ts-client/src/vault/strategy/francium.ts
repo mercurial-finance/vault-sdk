@@ -11,9 +11,8 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import FranciumSDK, * as francium from 'francium-sdk';
 import * as anchor from '@project-serum/anchor';
 
-import { StrategyHandler } from '.';
+import { StrategyHandler, Strategy } from '.';
 import { AffiliateVaultProgram, VaultProgram } from '../types';
-import { Strategy } from '../../mint';
 import { SEEDS } from '../constants';
 
 export default class FranciumHandler implements StrategyHandler {
@@ -40,11 +39,11 @@ export default class FranciumHandler implements StrategyHandler {
     postInstructions: TransactionInstruction[],
     opt?: {
       affiliate?: {
-        affiliateId: PublicKey,
-        affiliateProgram: AffiliateVaultProgram,
-        partner: PublicKey,
-        user: PublicKey,
-      }
+        affiliateId: PublicKey;
+        affiliateProgram: AffiliateVaultProgram;
+        partner: PublicKey;
+        user: PublicKey;
+      };
     },
   ): Promise<Transaction | { error: string }> {
     if (!walletPubKey) throw new Error('No user wallet public key');
@@ -92,7 +91,7 @@ export default class FranciumHandler implements StrategyHandler {
       userToken,
       userLp,
       tokenProgram: TOKEN_PROGRAM_ID,
-    }
+    };
 
     if (opt?.affiliate) {
       const tx = await opt.affiliate.affiliateProgram.methods
