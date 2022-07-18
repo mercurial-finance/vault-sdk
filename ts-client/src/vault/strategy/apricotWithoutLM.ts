@@ -3,9 +3,8 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import * as apricot from '@apricot-lend/sdk-ts';
 import * as anchor from '@project-serum/anchor';
 
-import { StrategyHandler } from '.';
+import { StrategyHandler, Strategy } from '.';
 import { AffiliateVaultProgram, VaultProgram } from '../types';
-import { Strategy } from '../../mint';
 import { SEEDS } from '../constants';
 
 export default class ApricotWithoutLMHandler implements StrategyHandler {

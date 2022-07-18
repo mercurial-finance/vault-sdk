@@ -29,6 +29,11 @@ export type StrategyState = {
   currentLiquidity: BN;
 };
 
+export type Strategy = {
+  pubkey: PublicKey;
+  state: StrategyState;
+};
+
 export type ReserveState = {
   collateral: {
     mintPubkey: PublicKey;

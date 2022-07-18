@@ -11,14 +11,7 @@ import {
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
 
-import {
-  AffiliateInfo,
-  AffiliateVaultProgram,
-  VaultDetails,
-  VaultImplementation,
-  VaultProgram,
-  VaultState,
-} from './types';
+import { AffiliateInfo, AffiliateVaultProgram, VaultImplementation, VaultProgram, VaultState } from './types';
 import {
   deserializeAccount,
   getAssociatedTokenAccount,
@@ -39,6 +32,14 @@ import {
 import { getStrategyHandler, getStrategyType, StrategyState } from './strategy';
 import { IDL, Vault as VaultIdl } from './idl';
 import { IDL as AffiliateIDL, AffiliateVault as AffiliateVaultIdl } from './affiliate-idl';
+
+type VaultDetails = {
+  tokenInfo: TokenInfo;
+  vaultPda: PublicKey;
+  tokenVaultPda: PublicKey;
+  vaultState: VaultState;
+  lpSupply: BN;
+};
 
 const getVaultState = async (
   vaultParams: TokenInfo,

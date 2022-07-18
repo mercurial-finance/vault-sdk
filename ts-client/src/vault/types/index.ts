@@ -1,6 +1,7 @@
-import { BN, Program } from '@project-serum/anchor';
+import { BN, IdlTypes, Program } from '@project-serum/anchor';
 import { TokenInfo } from '@solana/spl-token-registry';
 import { PublicKey, Transaction } from '@solana/web3.js';
+import { TypeDef } from '@project-serum/anchor/dist/cjs/program/namespace/types';
 
 import { Vault as VaultIdl } from '../idl';
 import { AffiliateVault as AffiliateVaultIdl } from '../affiliate-idl';
@@ -19,53 +20,7 @@ export type VaultImplementation = {
   getAffiliateInfo: () => Promise<AffiliateInfo>;
 };
 
-export interface VaultState {
-  admin: PublicKey;
-  base: PublicKey;
-  bumps: {
-    vaultBump: number;
-    tokenVaultBump: number;
-  };
-  enabled: 1 | 0;
-  feeVault: PublicKey;
-  lockedProfitTracker: {
-    lastUpdatedLockedProfit: BN;
-    lastReport: BN;
-    lockedProfitDegradation: BN;
-  };
-  lpMint: PublicKey;
-  operator: PublicKey;
-  strategies: Array<PublicKey>;
-  tokenMint: PublicKey;
-  tokenVault: PublicKey;
-  totalAmount: BN;
-}
-
-export type VaultDetails = {
-  tokenInfo: TokenInfo;
-  vaultPda: PublicKey;
-  tokenVaultPda: PublicKey;
-  vaultState: VaultState;
-  lpSupply: BN;
-};
-
-export enum StrategyType {
-  PortFinanceWithoutLM = 'PortFinanceWithoutLM',
-  PortFinanceWithLM = 'PortFinanceWithLM',
-  SolendWithoutLM = 'SolendWithoutLM',
-  Mango = 'Mango',
-  Vault = 'Vault',
-}
-
-export type StrategyInfo = {
-  pubkey: string;
-  reserve: string;
-  strategy_type: StrategyType;
-  strategy_name: string;
-  liquidity: number;
-  reward: number;
-  apy: number;
-};
+export type VaultState = TypeDef<VaultIdl['accounts']['0'], IdlTypes<VaultIdl>>;
 
 /** Affiliate */
 export interface AffiliateInfo {

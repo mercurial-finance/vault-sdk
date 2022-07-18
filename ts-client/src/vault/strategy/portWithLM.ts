@@ -13,10 +13,9 @@ import { Token } from '@solana/spl-token';
 import * as port from '@port.finance/port-sdk';
 import { QuarrySDK } from '@quarryprotocol/quarry-sdk';
 
-import { ReserveState, StrategyHandler } from '.';
+import { ReserveState, Strategy, StrategyHandler } from '.';
 import { AffiliateVaultProgram, VaultProgram } from '../types';
 import { REWARDER, SEEDS } from '../constants';
-import { Strategy } from '../../mint';
 
 export default class PortWithLMHandler implements StrategyHandler {
   private quarrySDK: quarry.QuarrySDK;

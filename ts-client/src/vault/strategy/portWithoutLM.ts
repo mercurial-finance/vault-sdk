@@ -5,10 +5,9 @@ import * as anchor from '@project-serum/anchor';
 
 import * as port from '@port.finance/port-sdk';
 
-import { ReserveState, StrategyHandler } from '.';
+import { ReserveState, Strategy, StrategyHandler } from '.';
 import { AffiliateVaultProgram, VaultProgram } from '../types';
 import { SEEDS } from '../constants';
-import { Strategy } from '../../mint';
 
 export default class PortWithoutLMHandler implements StrategyHandler {
   constructor(public strategyProgram: PublicKey) {}

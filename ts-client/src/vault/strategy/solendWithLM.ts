@@ -4,9 +4,8 @@ import * as anchor from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 import { AffiliateVaultProgram, VaultProgram } from '../types';
-import { ReserveState, StrategyHandler } from '.';
+import { ReserveState, StrategyHandler, Strategy } from '.';
 import { SEEDS } from '../constants';
-import { Strategy } from '../../mint';
 
 // not using now
 export default class SolendWithLMHandler implements StrategyHandler {

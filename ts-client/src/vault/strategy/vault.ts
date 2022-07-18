@@ -3,8 +3,7 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 import * as anchor from '@project-serum/anchor';
 
-import { StrategyHandler } from '.';
-import { Strategy } from '../../mint';
+import { StrategyHandler, Strategy } from '.';
 import { AffiliateVaultProgram, VaultProgram } from '../types';
 
 export default class VaultHandler implements StrategyHandler {
