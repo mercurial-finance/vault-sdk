@@ -7,9 +7,6 @@ import { VaultImplementation, VaultState, AffiliateInfo, ParsedClockState } from
 export default VaultImpl;
 export {
   // Constant
-  SOL_MINT,
-  USDC_MINT,
-  USDT_MINT,
   PROGRAM_ID,
   AFFILIATE_PROGRAM_ID,
   KEEPER_URL,
