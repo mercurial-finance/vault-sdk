@@ -9,6 +9,15 @@
 
 24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi
 
+
+## Getting started (Rust)
+Refer to [Rust Client Readme](https://github.com/mercurial-finance/vault-sdk/blob/main/rust-client/README.md) for full installation guide
+
+### Affiliate
+Refer to [Affiliate Rust Client Readme](https://github.com/mercurial-finance/vault-periphery/tree/main/affiliate/rust-client) for affiliate Readme
+
+<hr>
+
 ## Getting started (TypeScript)
 NPM: https://www.npmjs.com/package/@mercurial-finance/vault-sdk
 
@@ -29,11 +38,11 @@ Discord: https://discord.com/channels/841152225564950528/864859354335412224
 
 Refer to [Typescript Readme](https://github.com/mercurial-finance/vault-sdk/blob/main/ts-client/README.md) for full installation guide
 
-## Install & Run
+### Install & Run
 
 1. `pnpm i`
 2. `pnpm run test`
 
-## Install & Run Affiliate
+### Install & Run Affiliate
 1. `pnpm i`
 2. `pnpm run test-affiliate`

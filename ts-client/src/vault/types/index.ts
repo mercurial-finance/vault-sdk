@@ -71,7 +71,7 @@ export type StrategyInfo = {
 export interface AffiliateInfo {
   partnerToken: PublicKey;
   vault: PublicKey;
-  totalFee: BN;
+  outstandingFee: BN;
   feeRatio: BN;
   cummulativeFee: BN;
 }
