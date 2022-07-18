@@ -23,11 +23,11 @@ export default class VaultHandler implements StrategyHandler {
     postInstructions: TransactionInstruction[],
     opt?: {
       affiliate?: {
-        affiliateId: PublicKey,
-        affiliateProgram: AffiliateVaultProgram,
-        partner: PublicKey,
-        user: PublicKey,
-      }
+        affiliateId: PublicKey;
+        affiliateProgram: AffiliateVaultProgram;
+        partner: PublicKey;
+        user: PublicKey;
+      };
     },
   ) {
     const txAccounts = {
@@ -36,7 +36,7 @@ export default class VaultHandler implements StrategyHandler {
       userToken,
       userLp,
       tokenProgram: TOKEN_PROGRAM_ID,
-    }
+    };
 
     if (opt?.affiliate) {
       const tx = await opt.affiliate.affiliateProgram.methods

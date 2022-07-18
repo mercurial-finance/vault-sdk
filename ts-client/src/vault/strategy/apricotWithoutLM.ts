@@ -30,11 +30,11 @@ export default class ApricotWithoutLMHandler implements StrategyHandler {
     postInstructions: TransactionInstruction[],
     opt?: {
       affiliate?: {
-        affiliateId: PublicKey,
-        affiliateProgram: AffiliateVaultProgram,
-        partner: PublicKey,
-        user: PublicKey,
-      }
+        affiliateId: PublicKey;
+        affiliateProgram: AffiliateVaultProgram;
+        partner: PublicKey;
+        user: PublicKey;
+      };
     },
   ): Promise<Transaction | { error: string }> {
     if (!walletPubKey) throw new Error('No user wallet public key');
@@ -87,7 +87,7 @@ export default class ApricotWithoutLMHandler implements StrategyHandler {
       userToken,
       userLp,
       tokenProgram: TOKEN_PROGRAM_ID,
-    }
+    };
 
     if (opt?.affiliate) {
       const tx = await opt.affiliate.affiliateProgram.methods

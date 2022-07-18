@@ -16,7 +16,7 @@ export type VaultImplementation = {
   withdraw: (owner: PublicKey, baseTokenAmount: BN) => Promise<Transaction | { error: string }>;
 
   // Affiliate
-  getAffiliateInfo: () => Promise<AffiliateInfo>
+  getAffiliateInfo: () => Promise<AffiliateInfo>;
 };
 
 export interface VaultState {

@@ -53,11 +53,11 @@ export default class PortWithLMHandler implements StrategyHandler {
     postInstructions: TransactionInstruction[],
     opt?: {
       affiliate?: {
-        affiliateId: PublicKey,
-        affiliateProgram: AffiliateVaultProgram,
-        partner: PublicKey,
-        user: PublicKey,
-      }
+        affiliateId: PublicKey;
+        affiliateProgram: AffiliateVaultProgram;
+        partner: PublicKey;
+        user: PublicKey;
+      };
     },
   ) {
     if (!walletPubKey) throw new Error('No user wallet public key');
@@ -137,7 +137,7 @@ export default class PortWithLMHandler implements StrategyHandler {
       userToken,
       userLp,
       tokenProgram: TOKEN_PROGRAM_ID,
-    }
+    };
 
     if (opt?.affiliate) {
       const tx = await opt.affiliate.affiliateProgram.methods

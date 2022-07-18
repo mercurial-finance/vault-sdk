@@ -7,7 +7,7 @@ export type Strategy = {
   state: StrategyState;
 };
 
-export interface VaultCoin {  
+export interface VaultCoin {
   deposit(amount: number): Promise<string>;
   withdraw(unmintAmount: number): Promise<string>;
   withdrawFromStrategy(strategy: Strategy, strategyHandler: StrategyHandler, unmintAmount: number): Promise<string>;

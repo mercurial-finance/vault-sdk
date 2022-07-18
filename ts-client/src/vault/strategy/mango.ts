@@ -1,22 +1,16 @@
-import * as mango from "@blockworks-foundation/mango-client";
-import * as anchor from "@project-serum/anchor";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import {
-  AccountMeta, PublicKey, TransactionInstruction
-} from "@solana/web3.js";
+import * as mango from '@blockworks-foundation/mango-client';
+import * as anchor from '@project-serum/anchor';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { AccountMeta, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
-import { StrategyHandler } from ".";
-import { SEEDS } from "../constants";
-import { Strategy } from "../../mint";
-import { AffiliateVaultProgram, VaultProgram } from "../types";
+import { StrategyHandler } from '.';
+import { SEEDS } from '../constants';
+import { Strategy } from '../../mint';
+import { AffiliateVaultProgram, VaultProgram } from '../types';
 
 export default class MangoHandler implements StrategyHandler {
-  static MangoProgramId = new PublicKey(
-    "mv3ekLzLbnVPNxjSKvqBpU3ZeZXPQdEC3bp5MDEBG68"
-  );
-  static MangoGrouPK = new PublicKey(
-    "98pjRuQjK3qA6gXts96PqZT4Ze5QmnCmt3QYjhbUSPue"
-  );
+  static MangoProgramId = new PublicKey('mv3ekLzLbnVPNxjSKvqBpU3ZeZXPQdEC3bp5MDEBG68');
+  static MangoGrouPK = new PublicKey('98pjRuQjK3qA6gXts96PqZT4Ze5QmnCmt3QYjhbUSPue');
 
   async withdraw(
     walletPubKey: PublicKey,
@@ -33,42 +27,29 @@ export default class MangoHandler implements StrategyHandler {
     postInstructions: TransactionInstruction[],
     opt?: {
       affiliate?: {
-        affiliateId: PublicKey,
-        affiliateProgram: AffiliateVaultProgram,
-        partner: PublicKey,
-        user: PublicKey,
-      }
+        affiliateId: PublicKey;
+        affiliateProgram: AffiliateVaultProgram;
+        partner: PublicKey;
+        user: PublicKey;
+      };
     },
   ) {
     const [mangoAccountPK] = await PublicKey.findProgramAddress(
-      [
-        MangoHandler.MangoGrouPK.toBuffer(),
-        vault.toBuffer(),
-        Buffer.from([0, 0, 0, 0, 0, 0, 0, 0]),
-      ],
-      MangoHandler.MangoProgramId
+      [MangoHandler.MangoGrouPK.toBuffer(), vault.toBuffer(), Buffer.from([0, 0, 0, 0, 0, 0, 0, 0])],
+      MangoHandler.MangoProgramId,
     );
-    const mangoClient = new mango.MangoClient(
-      program.provider.connection,
-      MangoHandler.MangoProgramId
-    );
+    const mangoClient = new mango.MangoClient(program.provider.connection, MangoHandler.MangoProgramId);
     const rootBankPK = strategy.state.reserve;
-    const mangoGroupState = await mangoClient.getMangoGroup(
-      MangoHandler.MangoGrouPK
-    );
+    const mangoGroupState = await mangoClient.getMangoGroup(MangoHandler.MangoGrouPK);
     await mangoGroupState.loadRootBanks(program.provider.connection);
 
-    const rootBankIdx = mangoGroupState.getRootBankIndex(
-      new PublicKey(rootBankPK)
-    );
+    const rootBankIdx = mangoGroupState.getRootBankIndex(new PublicKey(rootBankPK));
 
     const rootBankState = mangoGroupState.rootBankAccounts[rootBankIdx];
     if (!rootBankState) return { error: 'Root bank state not found' };
     const nodeBankPK = rootBankState.nodeBanks[0];
 
-    const nodeBankState = rootBankState.nodeBankAccounts.find(
-      (t) => t.publicKey.toBase58() === nodeBankPK.toBase58()
-    );
+    const nodeBankState = rootBankState.nodeBankAccounts.find((t) => t.publicKey.toBase58() === nodeBankPK.toBase58());
     if (!nodeBankState) return { error: 'Node bank state not found' };
     const accountData = [
       { pubkey: MangoHandler.MangoGrouPK, isWritable: true },
@@ -90,11 +71,8 @@ export default class MangoHandler implements StrategyHandler {
     }
 
     const [collateralVault] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX),
-        new PublicKey(strategy.pubkey).toBuffer(),
-      ],
-      program.programId
+      [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), new PublicKey(strategy.pubkey).toBuffer()],
+      program.programId,
     );
 
     const txAccounts = {
@@ -108,7 +86,7 @@ export default class MangoHandler implements StrategyHandler {
       userToken,
       userLp,
       tokenProgram: TOKEN_PROGRAM_ID,
-    }
+    };
 
     if (opt?.affiliate) {
       const tx = await opt.affiliate.affiliateProgram.methods
@@ -124,7 +102,7 @@ export default class MangoHandler implements StrategyHandler {
           vaultLpMint: lpMint,
           owner: walletPubKey,
         })
-        .transaction()
+        .transaction();
       return tx;
     }
 
@@ -138,7 +116,7 @@ export default class MangoHandler implements StrategyHandler {
         lpMint,
         user: walletPubKey,
       })
-      .transaction()
+      .transaction();
     return tx;
   }
 }

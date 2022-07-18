@@ -51,11 +51,7 @@ describe('Interact with Vault in devnet', () => {
   let vault: VaultImpl;
   beforeAll(async () => {
     await airDropSol(devnetConnection, mockWallet.publicKey);
-    vault = await VaultImpl.create(
-      devnetConnection,
-      SOL_TOKEN_INFO,
-      { cluster: 'devnet' },
-    );
+    vault = await VaultImpl.create(devnetConnection, SOL_TOKEN_INFO, { cluster: 'devnet' });
   });
 
   test('Deposit, check balance, withdraw', async () => {
@@ -80,26 +76,25 @@ describe('Interact with Vault in devnet', () => {
     expect(Number(userBalanceWithdraw)).toEqual(0);
   });
 
-  test("Vault Withdraw SOL from all strategy", async () => {
+  test('Vault Withdraw SOL from all strategy', async () => {
     for (var strategy of vault.vaultState.strategies) {
       if (!strategy.equals(PublicKey.default)) {
-        console.log("Test with ", strategy.toString());
+        console.log('Test with ', strategy.toString());
 
         // Deposit
         const depositTx = await vault.deposit(mockWallet.publicKey, new BN(1_000_000));
         const depositResult = await provider.sendAndConfirm(depositTx);
-        expect(typeof depositResult).toBe("string");
+        expect(typeof depositResult).toBe('string');
 
         // Withdraw from specific strategy
         const withdrawTx = await vault.withdraw(mockWallet.publicKey, new BN(1000), { strategy });
 
         try {
           const withdrawResult = await provider.sendAndConfirm(withdrawTx);
-          console.log('Strategy withdraw result', withdrawResult)
-          expect(typeof withdrawResult).toBe("string");
-
+          console.log('Strategy withdraw result', withdrawResult);
+          expect(typeof withdrawResult).toBe('string');
         } catch (error) {
-          console.log('Error creating withdrawFromStrategy instruction', error)
+          console.log('Error creating withdrawFromStrategy instruction', error);
         }
       }
     }

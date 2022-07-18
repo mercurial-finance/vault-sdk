@@ -1,19 +1,21 @@
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Connection, ParsedAccountData, PublicKey, SystemProgram, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from "@solana/web3.js";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import {
+  Connection,
+  ParsedAccountData,
+  PublicKey,
+  SystemProgram,
+  SYSVAR_CLOCK_PUBKEY,
+  TransactionInstruction,
+} from '@solana/web3.js';
 import { AccountInfo, AccountLayout, u64 } from '@solana/spl-token';
-import { BN } from '@project-serum/anchor'
+import { BN } from '@project-serum/anchor';
 
-import { SOL_MINT, VAULT_BASE_KEY } from "../constants";
-import { ParsedClockState } from "../types";
+import { SOL_MINT, VAULT_BASE_KEY } from '../constants';
+import { ParsedClockState } from '../types';
 
 export const getAssociatedTokenAccount = async (tokenMint: PublicKey, owner: PublicKey) => {
-  return await Token.getAssociatedTokenAddress(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID,
-    tokenMint,
-    owner,
-  );
-}
+  return await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, tokenMint, owner);
+};
 
 export const deserializeAccount = (data: Buffer | undefined): AccountInfo | undefined => {
   if (data == undefined || data.length == 0) {
@@ -58,8 +60,8 @@ export const getOrCreateATAInstruction = async (
   owner: PublicKey,
   connection: Connection,
   opt?: {
-    payer?: PublicKey,
-    allowOwnerOffCurve?: boolean
+    payer?: PublicKey;
+    allowOwnerOffCurve?: boolean;
   },
 ): Promise<[PublicKey, TransactionInstruction?]> => {
   let toAccount;
@@ -69,7 +71,7 @@ export const getOrCreateATAInstruction = async (
       TOKEN_PROGRAM_ID,
       tokenMint,
       owner,
-      opt?.allowOwnerOffCurve
+      opt?.allowOwnerOffCurve,
     );
     const account = await connection.getAccountInfo(toAccount);
     if (!account) {
@@ -86,29 +88,20 @@ export const getOrCreateATAInstruction = async (
     return [toAccount, undefined];
   } catch (e) {
     /* handle error */
-    console.error("Error::getOrCreateATAInstruction", e);
+    console.error('Error::getOrCreateATAInstruction', e);
     throw e;
   }
 };
 
-export const getVaultPdas = async (
-  tokenMint: PublicKey,
-  programId: PublicKey
-) => {
+export const getVaultPdas = async (tokenMint: PublicKey, programId: PublicKey) => {
   const [vault, _vaultBump] = await PublicKey.findProgramAddress(
-    [Buffer.from("vault"), tokenMint.toBuffer(), VAULT_BASE_KEY.toBuffer()],
-    programId
+    [Buffer.from('vault'), tokenMint.toBuffer(), VAULT_BASE_KEY.toBuffer()],
+    programId,
   );
 
   const [tokenVault, lpMint] = await Promise.all([
-    PublicKey.findProgramAddress(
-      [Buffer.from("token_vault"), vault.toBuffer()],
-      programId
-    ),
-    PublicKey.findProgramAddress(
-      [Buffer.from("lp_mint"), vault.toBuffer()],
-      programId
-    ),
+    PublicKey.findProgramAddress([Buffer.from('token_vault'), vault.toBuffer()], programId),
+    PublicKey.findProgramAddress([Buffer.from('lp_mint'), vault.toBuffer()], programId),
   ]);
 
   return {
@@ -118,11 +111,7 @@ export const getVaultPdas = async (
   };
 };
 
-export const wrapSOLInstruction = (
-  from: PublicKey,
-  to: PublicKey,
-  amount: BN
-): TransactionInstruction[] => {
+export const wrapSOLInstruction = (from: PublicKey, to: PublicKey, amount: BN): TransactionInstruction[] => {
   return [
     SystemProgram.transfer({
       fromPubkey: from,
@@ -165,18 +154,15 @@ export const unwrapSOLInstruction = async (walletPublicKey: PublicKey) => {
 };
 
 export const getOnchainTime = async (connection: Connection) => {
-  const parsedClock = await connection.getParsedAccountInfo(
-    SYSVAR_CLOCK_PUBKEY
-  );
+  const parsedClock = await connection.getParsedAccountInfo(SYSVAR_CLOCK_PUBKEY);
 
-  const parsedClockAccount = (parsedClock.value!.data as ParsedAccountData)
-    .parsed as ParsedClockState;
+  const parsedClockAccount = (parsedClock.value!.data as ParsedAccountData).parsed as ParsedClockState;
 
   const currentTime = parsedClockAccount.info.unixTimestamp;
   return currentTime;
-}
+};
 
 export const getLpSupply = async (connection: Connection, tokenMint: PublicKey): Promise<BN> => {
   const context = await connection.getTokenSupply(tokenMint);
-  return new BN(context.value.amount)
-}
+  return new BN(context.value.amount);
+};

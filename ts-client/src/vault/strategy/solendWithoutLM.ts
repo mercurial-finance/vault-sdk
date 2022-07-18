@@ -1,26 +1,18 @@
-import {
-  AccountMeta,
-  PublicKey,
-  SYSVAR_CLOCK_PUBKEY,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import * as solend from "@solendprotocol/solend-sdk";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { AccountMeta, PublicKey, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from '@solana/web3.js';
+import * as solend from '@solendprotocol/solend-sdk';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
-import * as anchor from "@project-serum/anchor";
+import * as anchor from '@project-serum/anchor';
 
-import { ReserveState, StrategyHandler } from ".";
-import { SEEDS } from "../constants";
-import { Strategy } from "../../mint";
-import { AffiliateVaultProgram, VaultProgram } from "../types";
+import { ReserveState, StrategyHandler } from '.';
+import { SEEDS } from '../constants';
+import { Strategy } from '../../mint';
+import { AffiliateVaultProgram, VaultProgram } from '../types';
 
 export default class SolendWithoutLMHandler implements StrategyHandler {
-  constructor(public strategyProgram: PublicKey) { }
+  constructor(public strategyProgram: PublicKey) {}
 
-  async getReserveState(
-    program: VaultProgram,
-    reserve: PublicKey
-  ): Promise<ReserveState> {
+  async getReserveState(program: VaultProgram, reserve: PublicKey): Promise<ReserveState> {
     const state = await (async () => {
       const account = await program.provider.connection.getAccountInfo(reserve);
 
@@ -53,31 +45,25 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
     postInstructions: TransactionInstruction[],
     opt?: {
       affiliate?: {
-        affiliateId: PublicKey,
-        affiliateProgram: AffiliateVaultProgram,
-        partner: PublicKey,
-        user: PublicKey,
-      }
+        affiliateId: PublicKey;
+        affiliateProgram: AffiliateVaultProgram;
+        partner: PublicKey;
+        user: PublicKey;
+      };
     },
   ) {
-    const { collateral, state } = await this.getReserveState(
-      program,
-      strategy.state.reserve
-    );
+    const { collateral, state } = await this.getReserveState(program, strategy.state.reserve);
 
     let [collateralVault] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX),
-        new PublicKey(strategy.pubkey).toBuffer(),
-      ],
-      program.programId
+      [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), new PublicKey(strategy.pubkey).toBuffer()],
+      program.programId,
     );
 
     const { liquidity, lendingMarket } = state as solend.Reserve;
 
     const [lendingMarketAuthority] = await PublicKey.findProgramAddress(
       [lendingMarket.toBuffer()],
-      this.strategyProgram
+      this.strategyProgram,
     );
 
     const accounts = [
@@ -100,7 +86,7 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
       switchboardOracle?: PublicKey;
     };
     if (!pythOracle || !switchboardOracle) {
-      throw Error("Cannot get pythOracle or switchboardOracle from Solend");
+      throw Error('Cannot get pythOracle or switchboardOracle from Solend');
     }
 
     const txAccounts = {
@@ -114,7 +100,7 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
       userToken,
       userLp,
       tokenProgram: TOKEN_PROGRAM_ID,
-    }
+    };
 
     if (opt?.affiliate) {
       const tx = await opt.affiliate.affiliateProgram.methods
@@ -134,12 +120,12 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
               strategy.state.reserve,
               this.strategyProgram,
               pythOracle,
-              switchboardOracle
+              switchboardOracle,
             ),
-          ])
+          ]),
         )
         .postInstructions(postInstructions)
-        .transaction()
+        .transaction();
       return tx;
     }
 
@@ -153,16 +139,11 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
       .remainingAccounts(remainingAccounts)
       .preInstructions(
         preInstructions.concat([
-          solend.refreshReserveInstruction(
-            strategy.state.reserve,
-            this.strategyProgram,
-            pythOracle,
-            switchboardOracle
-          ),
-        ])
+          solend.refreshReserveInstruction(strategy.state.reserve, this.strategyProgram, pythOracle, switchboardOracle),
+        ]),
       )
       .postInstructions(postInstructions)
-      .transaction()
+      .transaction();
     return tx;
   }
 }
