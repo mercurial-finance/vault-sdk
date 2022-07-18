@@ -53,7 +53,7 @@ export type AffiliateVault = {
         },
         {
           "name": "admin",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         }
       ],
@@ -367,7 +367,7 @@ export type AffiliateVault = {
             "type": "publicKey"
           },
           {
-            "name": "totalFee",
+            "name": "outstandingFee",
             "type": "u64"
           },
           {
@@ -501,7 +501,7 @@ export const IDL: AffiliateVault = {
         },
         {
           "name": "admin",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         }
       ],
@@ -815,7 +815,7 @@ export const IDL: AffiliateVault = {
             "type": "publicKey"
           },
           {
-            "name": "totalFee",
+            "name": "outstandingFee",
             "type": "u64"
           },
           {
