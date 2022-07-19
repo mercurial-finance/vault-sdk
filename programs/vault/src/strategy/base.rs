@@ -13,6 +13,11 @@ pub enum StrategyType {
     SolendWithLM,
     ApricotWithoutLM,
     Francium,
+    Tulip,
+}
+
+pub fn get_tulip_program_id() -> Pubkey {
+    Pubkey::from_str("4bcFeLv4nydFrsZqV5CgwCVrPhkQKsXtzfy2KyMz7ozM").unwrap()
 }
 
 pub fn get_francium_program_id() -> Pubkey {
