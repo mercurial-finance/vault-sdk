@@ -182,7 +182,7 @@ export default class VaultImpl implements VaultImplementation {
 
     const lockedFundRatio = duration.mul(lockedProfitDegradation);
     if (lockedFundRatio.gt(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)) {
-      return new BN(0);
+      return vaultTotalAmount;
     }
 
     const lockedProfit = lastUpdatedLockedProfit
