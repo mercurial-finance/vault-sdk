@@ -172,13 +172,17 @@ export default class VaultImpl implements VaultImplementation {
 
   public async getWithdrawableAmount(): Promise<BN> {
     const currentTime = await getOnchainTime(this.connection);
+    return this.getWithdrawableAmountAsync(currentTime);
+  }
+
+  public getWithdrawableAmountAsync(onChainTime: number) {
     const vaultTotalAmount = this.vaultState.totalAmount;
 
     const {
       lockedProfitTracker: { lastReport, lockedProfitDegradation, lastUpdatedLockedProfit },
     } = this.vaultState;
 
-    const duration = new BN(currentTime).sub(lastReport);
+    const duration = new BN(onChainTime).sub(lastReport);
 
     const lockedFundRatio = duration.mul(lockedProfitDegradation);
     if (lockedFundRatio.gt(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)) {
