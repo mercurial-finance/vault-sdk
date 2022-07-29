@@ -172,10 +172,10 @@ export default class VaultImpl implements VaultImplementation {
 
   public async getWithdrawableAmount(): Promise<BN> {
     const currentTime = await getOnchainTime(this.connection);
-    return this.getWithdrawableAmountAsync(currentTime);
+    return this.getWithdrawableAmountSync(currentTime);
   }
 
-  public getWithdrawableAmountAsync(onChainTime: number) {
+  public getWithdrawableAmountSync(onChainTime: number) {
     const vaultTotalAmount = this.vaultState.totalAmount;
 
     const {
