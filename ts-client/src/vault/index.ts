@@ -196,7 +196,7 @@ export default class VaultImpl implements VaultImplementation {
     return vaultTotalAmount.sub(lockedProfit);
   }
 
-  private async refreshVaultState() {
+  public async refreshVaultState() {
     const { vaultPda, tokenVaultPda, vaultState } = await getVaultState(this.tokenInfo, this.program);
     this.vaultPda = vaultPda;
     this.tokenVaultPda = tokenVaultPda;
