@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, BN } from '@project-serum/anchor';
+import { AnchorProvider, Program, BN, BorshCoder, Idl } from '@project-serum/anchor';
 import {
   PublicKey,
   TransactionInstruction,
@@ -7,6 +7,7 @@ import {
   Cluster,
   SYSVAR_RENT_PUBKEY,
   SystemProgram,
+  AccountInfo,
 } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
@@ -196,11 +197,14 @@ export default class VaultImpl implements VaultImplementation {
     return vaultTotalAmount.sub(lockedProfit);
   }
 
-  public async refreshVaultState() {
-    const { vaultPda, tokenVaultPda, vaultState } = await getVaultState(this.tokenInfo, this.program);
-    this.vaultPda = vaultPda;
-    this.tokenVaultPda = tokenVaultPda;
+  public async updateState() {
+    const { vaultState } = await getVaultState(this.tokenInfo, this.program);
     this.vaultState = vaultState;
+  }
+
+  public update(vaultAccount: AccountInfo<Buffer>) {
+    const coder = new BorshCoder(IDL as Idl);
+    this.vaultState = coder.accounts.decode('vault', vaultAccount.data);
   }
 
   private async createATAPreInstructions(owner: PublicKey) {
@@ -278,7 +282,7 @@ export default class VaultImpl implements VaultImplementation {
 
   public async deposit(owner: PublicKey, baseTokenAmount: BN): Promise<Transaction> {
     // Refresh vault state
-    await this.refreshVaultState();
+    await this.updateState();
 
     let preInstructions: TransactionInstruction[] = [];
 
@@ -404,7 +408,7 @@ export default class VaultImpl implements VaultImplementation {
 
   public async withdraw(owner: PublicKey, baseTokenAmount: BN, opt?: { strategy?: PublicKey }): Promise<Transaction> {
     // Refresh vault state
-    await this.refreshVaultState();
+    await this.updateState();
 
     // Get strategy with highest liquidity
     // opt.strategy reserved for testing
