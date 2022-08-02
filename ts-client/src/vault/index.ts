@@ -195,13 +195,9 @@ export default class VaultImpl implements VaultImplementation {
   }
 
   public async updateState() {
-    const { vaultState } = await getVaultState(this.tokenInfo, this.program);
+    const { vaultState, lpSupply } = await getVaultState(this.tokenInfo, this.program);
     this.vaultState = vaultState;
-  }
-
-  public update(vaultAccount: AccountInfo<Buffer>) {
-    const coder = new BorshCoder(IDL as Idl);
-    this.vaultState = coder.accounts.decode('vault', vaultAccount.data);
+    this.lpSupply = lpSupply;
   }
 
   private async createATAPreInstructions(owner: PublicKey) {
