@@ -33,6 +33,7 @@ import {
 import { getStrategyHandler, getStrategyType, StrategyState } from './strategy';
 import { IDL, Vault as VaultIdl } from './idl';
 import { IDL as AffiliateIDL, AffiliateVault as AffiliateVaultIdl } from './affiliate-idl';
+import { calculateWithdrawableAmount } from './helper';
 
 type VaultDetails = {
   tokenInfo: TokenInfo;
@@ -174,24 +175,7 @@ export default class VaultImpl implements VaultImplementation {
   public async getWithdrawableAmount(): Promise<BN> {
     const currentTime = await getOnchainTime(this.connection);
 
-    const vaultTotalAmount = this.vaultState.totalAmount;
-
-    const {
-      lockedProfitTracker: { lastReport, lockedProfitDegradation, lastUpdatedLockedProfit },
-    } = this.vaultState;
-
-    const duration = new BN(currentTime).sub(lastReport);
-
-    const lockedFundRatio = duration.mul(lockedProfitDegradation);
-    if (lockedFundRatio.gt(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)) {
-      return vaultTotalAmount;
-    }
-
-    const lockedProfit = lastUpdatedLockedProfit
-      .mul(LOCKED_PROFIT_DEGRADATION_DENOMINATOR.sub(lockedFundRatio))
-      .div(LOCKED_PROFIT_DEGRADATION_DENOMINATOR);
-
-    return vaultTotalAmount.sub(lockedProfit);
+    return calculateWithdrawableAmount(currentTime, this.vaultState);
   }
 
   public async updateState() {
