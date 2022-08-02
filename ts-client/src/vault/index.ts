@@ -178,7 +178,7 @@ export default class VaultImpl implements VaultImplementation {
     return calculateWithdrawableAmount(currentTime, this.vaultState);
   }
 
-  public async updateState() {
+  public async refreshVaultState() {
     const { vaultState, lpSupply } = await getVaultState(this.tokenInfo, this.program);
     this.vaultState = vaultState;
     this.lpSupply = lpSupply;
@@ -259,7 +259,7 @@ export default class VaultImpl implements VaultImplementation {
 
   public async deposit(owner: PublicKey, baseTokenAmount: BN): Promise<Transaction> {
     // Refresh vault state
-    await this.updateState();
+    await this.refreshVaultState();
 
     let preInstructions: TransactionInstruction[] = [];
 
@@ -385,7 +385,7 @@ export default class VaultImpl implements VaultImplementation {
 
   public async withdraw(owner: PublicKey, baseTokenAmount: BN, opt?: { strategy?: PublicKey }): Promise<Transaction> {
     // Refresh vault state
-    await this.updateState();
+    await this.refreshVaultState();
 
     // Get strategy with highest liquidity
     // opt.strategy reserved for testing
