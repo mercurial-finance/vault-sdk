@@ -22,16 +22,11 @@ import {
   unwrapSOLInstruction,
   wrapSOLInstruction,
 } from './utils';
-import {
-  AFFILIATE_PROGRAM_ID,
-  LOCKED_PROFIT_DEGRADATION_DENOMINATOR,
-  PROGRAM_ID,
-  SOL_MINT,
-  VAULT_STRATEGY_ADDRESS,
-} from './constants';
+import { AFFILIATE_PROGRAM_ID, PROGRAM_ID, SOL_MINT, VAULT_STRATEGY_ADDRESS } from './constants';
 import { getStrategyHandler, getStrategyType, StrategyState } from './strategy';
 import { IDL, Vault as VaultIdl } from './idl';
 import { IDL as AffiliateIDL, AffiliateVault as AffiliateVaultIdl } from './affiliate-idl';
+import { calculateWithdrawableAmount } from './helper';
 
 type VaultDetails = {
   tokenInfo: TokenInfo;
@@ -172,35 +167,14 @@ export default class VaultImpl implements VaultImplementation {
 
   public async getWithdrawableAmount(): Promise<BN> {
     const currentTime = await getOnchainTime(this.connection);
-    return this.getWithdrawableAmountSync(currentTime);
-  }
 
-  public getWithdrawableAmountSync(onChainTime: number) {
-    const vaultTotalAmount = this.vaultState.totalAmount;
-
-    const {
-      lockedProfitTracker: { lastReport, lockedProfitDegradation, lastUpdatedLockedProfit },
-    } = this.vaultState;
-
-    const duration = new BN(onChainTime).sub(lastReport);
-
-    const lockedFundRatio = duration.mul(lockedProfitDegradation);
-    if (lockedFundRatio.gt(LOCKED_PROFIT_DEGRADATION_DENOMINATOR)) {
-      return vaultTotalAmount;
-    }
-
-    const lockedProfit = lastUpdatedLockedProfit
-      .mul(LOCKED_PROFIT_DEGRADATION_DENOMINATOR.sub(lockedFundRatio))
-      .div(LOCKED_PROFIT_DEGRADATION_DENOMINATOR);
-
-    return vaultTotalAmount.sub(lockedProfit);
+    return calculateWithdrawableAmount(currentTime, this.vaultState);
   }
 
   public async refreshVaultState() {
-    const { vaultPda, tokenVaultPda, vaultState } = await getVaultState(this.tokenInfo, this.program);
-    this.vaultPda = vaultPda;
-    this.tokenVaultPda = tokenVaultPda;
+    const { vaultState, lpSupply } = await getVaultState(this.tokenInfo, this.program);
     this.vaultState = vaultState;
+    this.lpSupply = lpSupply;
   }
 
   private async createATAPreInstructions(owner: PublicKey) {
