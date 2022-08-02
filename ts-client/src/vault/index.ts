@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, BN, BorshCoder, Idl } from '@project-serum/anchor';
+import { AnchorProvider, Program, BN } from '@project-serum/anchor';
 import {
   PublicKey,
   TransactionInstruction,
@@ -7,7 +7,6 @@ import {
   Cluster,
   SYSVAR_RENT_PUBKEY,
   SystemProgram,
-  AccountInfo,
 } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
@@ -23,13 +22,7 @@ import {
   unwrapSOLInstruction,
   wrapSOLInstruction,
 } from './utils';
-import {
-  AFFILIATE_PROGRAM_ID,
-  LOCKED_PROFIT_DEGRADATION_DENOMINATOR,
-  PROGRAM_ID,
-  SOL_MINT,
-  VAULT_STRATEGY_ADDRESS,
-} from './constants';
+import { AFFILIATE_PROGRAM_ID, PROGRAM_ID, SOL_MINT, VAULT_STRATEGY_ADDRESS } from './constants';
 import { getStrategyHandler, getStrategyType, StrategyState } from './strategy';
 import { IDL, Vault as VaultIdl } from './idl';
 import { IDL as AffiliateIDL, AffiliateVault as AffiliateVaultIdl } from './affiliate-idl';
