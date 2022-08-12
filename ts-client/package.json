@@ -16,7 +16,7 @@
   "author": "mercurial-finance",
   "license": "MIT",
   "dependencies": {
-    "@apricot-lend/sdk-ts": "^0.17.3",
+    "@apricot-lend/sdk-ts": "0.17.5",
     "@blockworks-foundation/mango-client": "^3.4.7",
     "@mercurial-finance/optimist": "^0.1.4",
     "@port.finance/port-sdk": "^0.2.67",

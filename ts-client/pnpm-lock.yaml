@@ -1,7 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@apricot-lend/sdk-ts': ^0.17.3
+  '@apricot-lend/sdk-ts': 0.17.5
   '@blockworks-foundation/mango-client': ^3.4.7
   '@mercurial-finance/optimist': ^0.1.4
   '@port.finance/port-sdk': ^0.2.67
@@ -34,7 +34,7 @@ specifiers:
   typescript: ^4.7.2
 
 dependencies:
-  '@apricot-lend/sdk-ts': 0.17.3_typescript@4.7.3
+  '@apricot-lend/sdk-ts': 0.17.5_typescript@4.7.3
   '@blockworks-foundation/mango-client': 3.4.7
   '@mercurial-finance/optimist': 0.1.4_uaddxilqje56gbevckaobszugi
   '@port.finance/port-sdk': 0.2.67_x7hnsalv3tkefoyaeyocjyrlb4
@@ -78,8 +78,8 @@ packages:
       '@jridgewell/trace-mapping': 0.3.13
     dev: true
 
-  /@apricot-lend/sdk-ts/0.17.3_typescript@4.7.3:
-    resolution: {integrity: sha512-t0pj+l7L389r72989ycXRLZyHWPv++mXREiBXchwE1FltchqI3j81cdl+iLpGEcu+ZXwaqCj34XZTX1q4xjpQQ==}
+  /@apricot-lend/sdk-ts/0.17.5_typescript@4.7.3:
+    resolution: {integrity: sha512-3U4IpYMyKQLXtU5whL/2WkLP3DpfJkZ3aznvm5AvxFBV6BUeVHWSjA8q9Nq/hGe0zSoC8YrtIRax3yUomIP84w==}
     engines: {node: '>=10'}
     dependencies:
       '@apricot-lend/solana-swaps-js': 0.1.18
@@ -88,7 +88,6 @@ packages:
       '@pythnetwork/client': 2.6.3
       '@solana/spl-token': 0.1.8
       '@solana/web3.js': 1.42.0
-      '@strata-foundation/web3-token-auth': 3.5.4
       '@switchboard-xyz/switchboard-api': 0.2.201_typescript@4.7.3
       '@types/coingecko-api': 1.0.10
       axios: 0.24.0
@@ -1188,17 +1187,6 @@ packages:
     transitivePeerDependencies:
       - bufferutil
       - debug
-      - encoding
-      - utf-8-validate
-    dev: false
-
-  /@strata-foundation/web3-token-auth/3.5.4:
-    resolution: {integrity: sha512-+ER4fGRj3q8f9Uz38bOw8aayxrZea2LeTczWWvrdSvaMIt1x7RUu2hl2E/m0O4m9gKMaBSbcmM73x6b/sDYMFQ==}
-    dependencies:
-      '@solana/web3.js': 1.42.0
-      localstorage-memory: 1.0.3
-    transitivePeerDependencies:
-      - bufferutil
       - encoding
       - utf-8-validate
     dev: false
@@ -2404,13 +2392,13 @@ packages:
       '@types/lodash': 4.14.182
       '@types/node': 12.20.52
       '@types/ws': 7.4.7
+      JSONStream: 1.3.5
       commander: 2.20.3
       delay: 5.0.0
       es6-promisify: 5.0.0
       eyes: 0.1.8
       isomorphic-ws: 4.0.1_ws@7.5.7
       json-stringify-safe: 5.0.1
-      JSONStream: 1.3.5
       lodash: 4.17.21
       uuid: 8.3.2
       ws: 7.5.7
@@ -2967,10 +2955,6 @@ packages:
   /lines-and-columns/1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
     dev: true
-
-  /localstorage-memory/1.0.3:
-    resolution: {integrity: sha512-t9P8WB6DcVttbw/W4PIE8HOqum8Qlvx5SjR6oInwR9Uia0EEmyUeBh7S+weKByW+l/f45Bj4L/dgZikGFDM6ng==}
-    dev: false
 
   /locate-path/5.0.0:
     resolution: {integrity: sha512-t7hw9pI+WvuwNJXwk5zVHpyhIqzg2qTlklJOf0mVxGSbe3Fp2VieZcduNYjaLDoy6p9uGpQEGWG87WpMKlNq8g==}
