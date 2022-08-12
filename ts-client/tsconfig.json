@@ -1,14 +1,16 @@
 {
   "extends": "@tsconfig/recommended/tsconfig.json",
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
     "outDir": "dist",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "types": ["jest", "mocha", "chai"],
     "typeRoots": ["./node_modules/@types"],
     "module": "commonjs",
     "target": "es6",
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "skipLibCheck": true
   }
 }
