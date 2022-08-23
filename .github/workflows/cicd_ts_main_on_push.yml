@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: CICD on main
 
 on:
   push:
@@ -8,8 +8,7 @@ on:
       - 'LICENSE'
       - '.editorconfig'
     branches:
-      - develop
-      - staging
+      - main
 
 env:
   working_dir: ./ts-client
@@ -30,22 +29,34 @@ jobs:
           files: |
             ts-client
 
-  ts-test:
+  ts-test-publish:
     needs: changed_files
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Node.js
+      - name: Setup .npmrc file to publish to npm
         uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node }}
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
       - uses: pnpm/action-setup@v2.2.2
         with:
           version: 6.0.2
-      - name: Install dependencies
+      - name: Install modules
         working-directory: ${{ env.working_dir }}
-        run: pnpm install
+        run: pnpm i
       - name: Run tests
         working-directory: ${{ env.working_dir }}
         run: pnpm run test
+      - name: Build
+        working-directory: ${{ env.working_dir }}
+        run: pnpm run build
+      - name: Add git commit tag to env
+        run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
+      - name: Publish to npm
+        working-directory: ${{ env.working_dir }}
+        run: |
+          npm version --no-git-tag-version prerelease --preid=${SHORT_SHA} --force
+          npm publish --tag next
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

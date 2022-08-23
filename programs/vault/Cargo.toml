@@ -3,10 +3,13 @@ name = "mercurial-vault"
 version = "0.4.0"
 description = "Created with Anchor"
 edition = "2018"
+license = "MIT"
 
 [lib]
 crate-type = ["cdylib", "lib"]
 name = "mercurial_vault"
+licence = "MIT"
+version = "0.0.1"
 
 [features]
 no-entrypoint = []
