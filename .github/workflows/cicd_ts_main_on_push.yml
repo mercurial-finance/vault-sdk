@@ -1,4 +1,4 @@
-name: Continuous Deployment to NPM
+name: CICD on main
 
 on:
   - pull_request
