@@ -1,9 +1,10 @@
 [package]
 name = "mercurial-vault"
-version = "0.4.0"
+version = "0.4.2"
 description = "Created with Anchor"
 edition = "2018"
 license = "MIT"
+readme = "README.md"
 
 [lib]
 crate-type = ["cdylib", "lib"]
