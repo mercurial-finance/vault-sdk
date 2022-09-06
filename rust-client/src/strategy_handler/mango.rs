@@ -14,6 +14,70 @@ use solana_sdk::instruction::Instruction;
 pub struct MangoHandler {}
 
 impl StrategyHandler for MangoHandler {
+    fn get_withdraw2_remaining_accounts(
+        &self,
+        program_client: &anchor_client::Program,
+        strategy: Pubkey,
+        token_mint: Pubkey,
+        base: Pubkey,
+    ) -> Result<Vec<AccountMeta>> {
+        let (vault, _vault_bump) = Pubkey::find_program_address(
+            &[
+                mercurial_vault::seed::VAULT_PREFIX.as_ref(),
+                token_mint.as_ref(),
+                base.as_ref(),
+            ],
+            &program_client.id(),
+        );
+
+        let vault_state: mercurial_vault::state::Vault = program_client.account(vault)?;
+        let strategy_state: mercurial_vault::state::Strategy = program_client.account(strategy)?;
+
+        let root_bank_pk = strategy_state.reserve;
+
+        let program_id = get_mango_program_id();
+        let mango_group_pk = get_mango_group_id();
+        let owner_pk = vault;
+        let (mango_account_pk, _bump) = Pubkey::find_program_address(
+            &[
+                &mango_group_pk.as_ref(),
+                &owner_pk.as_ref(),
+                &0u64.to_le_bytes(),
+            ],
+            &program_id,
+        );
+
+        let mango_group_state: MangoGroupAdapter = program_client.account(mango_group_pk)?;
+        let mango_cache_pk = mango_group_state.mango_cache;
+
+        let root_bank_state: MangoRootBankAdapter = program_client.account(root_bank_pk)?;
+        let node_bank_pk = root_bank_state.node_banks[0];
+        let node_bank_state: MangoNodeBankAdapter = program_client.account(node_bank_pk)?;
+        let vault_pk = node_bank_state.vault;
+
+        let signer_pk = mango_group_state.signer_key;
+
+        let mut withdraw2_remaining_accounts = vec![
+            AccountMeta::new(strategy, false),
+            AccountMeta::new(strategy_state.reserve, false),
+            AccountMeta::new_readonly(get_mango_program_id(), false),
+            AccountMeta::new(strategy_state.collateral_vault, false),
+            AccountMeta::new(vault_state.fee_vault, false),
+        ];
+
+        let mut mango_remaining_accounts = vec![
+            AccountMeta::new(mango_group_pk, false),
+            AccountMeta::new(mango_account_pk, false),
+            AccountMeta::new(mango_cache_pk, false),
+            AccountMeta::new(node_bank_pk, false),
+            AccountMeta::new(vault_pk, false),
+            AccountMeta::new(signer_pk, false),
+            AccountMeta::new_readonly(Pubkey::default(), false),
+        ];
+
+        withdraw2_remaining_accounts.append(&mut mango_remaining_accounts);
+        Ok(withdraw2_remaining_accounts)
+    }
     fn withdraw_directly_from_strategy(
         &self,
         program_client: &anchor_client::Program,
