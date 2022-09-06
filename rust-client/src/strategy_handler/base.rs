@@ -6,6 +6,7 @@ use crate::strategy_handler::solend_without_lm::SolendWithoutLMHandler;
 use anyhow::Result;
 use mercurial_vault::strategy::base::StrategyType;
 use solana_program::pubkey::Pubkey;
+use solana_sdk::instruction::AccountMeta;
 
 pub fn get_strategy_handler(strategy_type: StrategyType) -> Box<dyn StrategyHandler> {
     match strategy_type {
@@ -21,6 +22,13 @@ pub fn get_strategy_handler(strategy_type: StrategyType) -> Box<dyn StrategyHand
 }
 
 pub trait StrategyHandler {
+    fn get_withdraw2_remaining_accounts(
+        &self,
+        program_client: &anchor_client::Program,
+        strategy: Pubkey,
+        token_mint: Pubkey,
+        base: Pubkey,
+    ) -> Result<Vec<AccountMeta>>;
     fn withdraw_directly_from_strategy(
         &self,
         program_client: &anchor_client::Program,

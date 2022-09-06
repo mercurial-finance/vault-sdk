@@ -103,3 +103,22 @@ pub struct RebalanceStrategy<'info> {
     #[account(constraint = vault.admin == operator.key() || vault.operator == operator.key())]
     pub operator: Signer<'info>,
 }
+
+/// Remaining accounts (strategy related) when vault token account doesn't have enough liquidity. This struct is for remaining accounts validation for withdraw2 entrypoint
+#[derive(Accounts)]
+pub struct StrategyAccounts<'info> {
+    /// strategy
+    #[account(mut)]
+    pub strategy: Box<Account<'info, Strategy>>,
+    /// CHECK: Reserve account
+    #[account(mut, constraint = strategy.reserve == reserve.key())]
+    pub reserve: UncheckedAccount<'info>,
+    /// CHECK: Strategy program
+    pub strategy_program: UncheckedAccount<'info>,
+    /// collateral_vault
+    #[account( mut, constraint = strategy.collateral_vault == collateral_vault.key())]
+    pub collateral_vault: Box<Account<'info, TokenAccount>>,
+    /// fee_vault
+    #[account(mut)]
+    pub fee_vault: Box<Account<'info, TokenAccount>>,
+}
