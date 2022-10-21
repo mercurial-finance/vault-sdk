@@ -230,7 +230,6 @@ export default class VaultImpl implements VaultImplementation {
       this.connection,
       {
         payer: owner,
-        allowOwnerOffCurve: true,
       },
     );
     if (createUserTokenIx) {

@@ -14,7 +14,7 @@ import { SOL_MINT, VAULT_BASE_KEY } from '../constants';
 import { ParsedClockState } from '../types';
 
 export const getAssociatedTokenAccount = async (tokenMint: PublicKey, owner: PublicKey) => {
-  return await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, tokenMint, owner);
+  return await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, tokenMint, owner, true);
 };
 
 export const deserializeAccount = (data: Buffer | undefined): AccountInfo | undefined => {
@@ -61,7 +61,6 @@ export const getOrCreateATAInstruction = async (
   connection: Connection,
   opt?: {
     payer?: PublicKey;
-    allowOwnerOffCurve?: boolean;
   },
 ): Promise<[PublicKey, TransactionInstruction?]> => {
   let toAccount;
@@ -71,7 +70,7 @@ export const getOrCreateATAInstruction = async (
       TOKEN_PROGRAM_ID,
       tokenMint,
       owner,
-      opt?.allowOwnerOffCurve,
+      true,
     );
     const account = await connection.getAccountInfo(toAccount);
     if (!account) {
@@ -138,6 +137,7 @@ export const unwrapSOLInstruction = async (walletPublicKey: PublicKey) => {
     TOKEN_PROGRAM_ID,
     SOL_MINT,
     walletPublicKey,
+    true,
   );
 
   if (wSolATAAccount) {
