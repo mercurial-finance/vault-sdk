@@ -70,6 +70,8 @@ export default class VaultImpl implements VaultImplementation {
   private affiliateId: PublicKey | undefined;
   private affiliateProgram: AffiliateVaultProgram | undefined;
 
+  private allowOwnerOffCurve?: boolean;
+
   public tokenInfo: TokenInfo;
   public vaultPda: PublicKey;
   public tokenVaultPda: PublicKey;
@@ -80,6 +82,7 @@ export default class VaultImpl implements VaultImplementation {
     program: VaultProgram,
     vaultDetails: VaultDetails,
     opt?: {
+      allowOwnerOffCurve?: boolean;
       cluster?: Cluster;
       affiliateId?: PublicKey;
       affiliateProgram?: AffiliateVaultProgram;
@@ -93,6 +96,8 @@ export default class VaultImpl implements VaultImplementation {
     this.affiliateProgram = opt?.affiliateProgram;
     this.affiliateId = opt?.affiliateId;
 
+    this.allowOwnerOffCurve = opt?.allowOwnerOffCurve;
+
     this.vaultPda = vaultDetails.vaultPda;
     this.tokenVaultPda = vaultDetails.tokenVaultPda;
     this.vaultState = vaultDetails.vaultState;
@@ -103,6 +108,7 @@ export default class VaultImpl implements VaultImplementation {
     connection: Connection,
     tokenInfo: TokenInfo,
     opt?: {
+      allowOwnerOffCurve?: boolean;
       cluster?: Cluster;
       programId?: string;
       affiliateId?: PublicKey;
@@ -136,7 +142,7 @@ export default class VaultImpl implements VaultImplementation {
     const address = await (async () => {
       // User deposit directly
       if (!isAffiliated) {
-        return await getAssociatedTokenAccount(this.vaultState.lpMint, owner);
+        return await getAssociatedTokenAccount(this.vaultState.lpMint, owner, this.allowOwnerOffCurve);
       }
 
       // Get user affiliated address with the partner
@@ -402,7 +408,7 @@ export default class VaultImpl implements VaultImplementation {
     }
 
     const strategyType = getStrategyType(selectedStrategy.strategyState.strategyType);
-    const strategyHandler = getStrategyHandler(strategyType, this.cluster, this.connection);
+    const strategyHandler = getStrategyHandler(strategyType, this.cluster, this.connection, this.allowOwnerOffCurve);
 
     if (!strategyType || !strategyHandler) {
       throw new Error('Cannot find strategy handler');

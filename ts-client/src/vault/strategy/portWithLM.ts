@@ -19,7 +19,7 @@ import { REWARDER, SEEDS } from '../constants';
 
 export default class PortWithLMHandler implements StrategyHandler {
   private quarrySDK: quarry.QuarrySDK;
-  constructor(public strategyProgram: PublicKey) {
+  constructor(public strategyProgram: PublicKey, private allowOwnerOffCurve?: boolean) {
     //@ts-ignore
     this.quarrySDK = QuarrySDK.load({ provider });
   }
@@ -85,7 +85,7 @@ export default class PortWithLMHandler implements StrategyHandler {
       TOKEN_PROGRAM_ID,
       portCollateral.mintPubkey,
       miner,
-      true,
+      this.allowOwnerOffCurve ?? false,
     );
 
     const [lendingMarketAuthority] = await PublicKey.findProgramAddress(

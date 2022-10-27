@@ -76,6 +76,7 @@ export const getStrategyHandler = (
   strategyType: StrategyType,
   cluster: Cluster,
   connection: Connection,
+  allowOwnerOffCurve?: boolean,
 ): StrategyHandler | null => {
   const strategyProgramAddresses = StrategyProgram[cluster ?? 'mainnet-beta'];
 
@@ -87,7 +88,7 @@ export const getStrategyHandler = (
     case 'portFinanceWithoutLm':
       return new PortWithoutLMHandler(strategyProgramAddresses.portFinance);
     case 'portFinanceWithLm':
-      return new PortWithLMHandler(strategyProgramAddresses.portFinance);
+      return new PortWithLMHandler(strategyProgramAddresses.portFinance, allowOwnerOffCurve);
     case 'francium':
       return new FranciumHandler(connection);
     case 'apricotWithoutLM':
