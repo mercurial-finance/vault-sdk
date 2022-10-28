@@ -16,14 +16,14 @@ import { ParsedClockState } from '../types';
 export const getAssociatedTokenAccount = async (
   tokenMint: PublicKey,
   owner: PublicKey,
-  allowOwnerOffCurve?: boolean,
+  allowOwnerOffCurve: boolean = false,
 ) => {
   return await Token.getAssociatedTokenAddress(
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
     tokenMint,
     owner,
-    allowOwnerOffCurve ?? false,
+    allowOwnerOffCurve,
   );
 };
 
