@@ -76,6 +76,7 @@ export const getStrategyHandler = (
   strategyType: StrategyType,
   cluster: Cluster,
   connection: Connection,
+  allowOwnerOffCurve?: boolean,
 ): StrategyHandler | null => {
   const strategyProgramAddresses = StrategyProgram[cluster ?? 'mainnet-beta'];
 

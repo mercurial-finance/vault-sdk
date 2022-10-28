@@ -13,8 +13,18 @@ import { BN } from '@project-serum/anchor';
 import { SOL_MINT, VAULT_BASE_KEY } from '../constants';
 import { ParsedClockState } from '../types';
 
-export const getAssociatedTokenAccount = async (tokenMint: PublicKey, owner: PublicKey) => {
-  return await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, tokenMint, owner, true);
+export const getAssociatedTokenAccount = async (
+  tokenMint: PublicKey,
+  owner: PublicKey,
+  allowOwnerOffCurve: boolean = false,
+) => {
+  return await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    tokenMint,
+    owner,
+    allowOwnerOffCurve,
+  );
 };
 
 export const deserializeAccount = (data: Buffer | undefined): AccountInfo | undefined => {
