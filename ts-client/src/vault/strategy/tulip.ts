@@ -1,14 +1,12 @@
 import {
     PublicKey,
-    Cluster,
     TransactionInstruction,
-    Connection,
     SYSVAR_CLOCK_PUBKEY,
     AccountMeta,
     Transaction,
   } from '@solana/web3.js';
   import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-  import * as tulip from '@tulip-protocol/platform-sdk';
+  import * as tulip from '@mercurial-finance/tulip-platform-sdk';
   import * as anchor from '@project-serum/anchor';
   
   import { StrategyHandler, Strategy } from '.';
@@ -42,7 +40,7 @@ import {
   
       // https://github.com/Francium-DeFi/francium-sdk/blob/master/src/constants/lend/pools.ts#L59
       const lendingPools = tulip.LENDING_RESERVES;
-      const lendingPool = Object.values(lendingPools).find((lendingPool) =>
+      const lendingPool = Object.values(lendingPools).find((lendingPool: any) =>
         lendingPool.account === strategy.state.reserve.toBase58()
       );
       if (!lendingPool) throw new Error('Cannot find francium lending pool');
@@ -71,7 +69,7 @@ import {
       const remainingAccounts: Array<AccountMeta> = [];
       for (const account of accounts) {
         remainingAccounts.push({
-          pubkey: account.pubkey,
+          pubkey: new PublicKey(account.pubkey),
           isWritable: !!account.isWritable,
           isSigner: false,
         });
