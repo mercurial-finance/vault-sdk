@@ -13,7 +13,7 @@ import {
   import { AffiliateVaultProgram, VaultProgram } from '../types';
   import { SEEDS } from '../constants';
   
-  export default class FranciumHandler implements StrategyHandler {
+  export default class TulipHandler implements StrategyHandler {
     async withdraw(
       walletPubKey: PublicKey,
       program: VaultProgram,

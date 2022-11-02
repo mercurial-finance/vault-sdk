@@ -1,13 +1,11 @@
 const TIMEOUT_SEC = 1000;
 
 module.exports = {
-  preset: 'ts-jest',
+  preset: "ts-jest",
   testEnvironment: "node",
   transform: {
-   '\\.[jt]sx?$': "ts-jest",
+    "^.+\\.ts?$": "ts-jest",
   },
-  "transformIgnorePatterns": [
-    "node_modules/(?!(@tulip-protocol)/)",
-  ],
+  transformIgnorePatterns: ["<rootDir>/node_modules/"],
   testTimeout: TIMEOUT_SEC * 90,
 };

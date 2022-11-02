@@ -388,6 +388,7 @@ export default class VaultImpl implements VaultImplementation {
     // Get strategy with highest liquidity
     // opt.strategy reserved for testing
     const selectedStrategy = await this.getStrategyWithHighestLiquidity(opt?.strategy);
+    console.log("🚀 ~ file: index.ts ~ line 391 ~ VaultImpl ~ withdraw ~ selectedStrategy", selectedStrategy)
     if (
       !selectedStrategy || // If there's no strategy deployed to the vault, use Vault Reserves instead
       selectedStrategy.publicKey.toString() === VAULT_STRATEGY_ADDRESS || // If opt.strategy specified Vault Reserves
