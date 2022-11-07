@@ -4,7 +4,7 @@ specifiers:
   '@apricot-lend/sdk-ts': 0.17.5
   '@blockworks-foundation/mango-client': ^3.4.7
   '@mercurial-finance/optimist': ^0.1.4
-  '@mercurial-finance/tulip-platform-sdk': 2.0.26
+  '@mercurial-finance/tulip-platform-sdk': 2.0.30
   '@port.finance/port-sdk': ^0.2.67
   '@project-serum/anchor': 0.24.2
   '@quarryprotocol/quarry-sdk': 5.0.2
@@ -38,7 +38,7 @@ dependencies:
   '@apricot-lend/sdk-ts': 0.17.5_typescript@4.7.3
   '@blockworks-foundation/mango-client': 3.4.7
   '@mercurial-finance/optimist': 0.1.4_uaddxilqje56gbevckaobszugi
-  '@mercurial-finance/tulip-platform-sdk': 2.0.26
+  '@mercurial-finance/tulip-platform-sdk': 2.0.30
   '@port.finance/port-sdk': 0.2.67_x7hnsalv3tkefoyaeyocjyrlb4
   '@project-serum/anchor': 0.24.2
   '@quarryprotocol/quarry-sdk': 5.0.2_fwi2hnnme52caxvenzzpnbdxle
@@ -758,8 +758,8 @@ packages:
       bn.js: 5.2.1
     dev: false
 
-  /@mercurial-finance/tulip-platform-sdk/2.0.26:
-    resolution: {integrity: sha512-8zJNUW+upXLud1u5t7Cn2WsRTEjWlTqWx0QG1yNdBthzOeCEcSEXjfHp89Xkq15crOhZklSu/kB0TywKZFeLoA==}
+  /@mercurial-finance/tulip-platform-sdk/2.0.30:
+    resolution: {integrity: sha512-ySPxAtFLtati9Vv7g3czrcNEiT9HBZboRDNnfEDmCFJqsub87Y2ZF125dpspaZzKUlolOrBIqBy1FZYIreMgfg==}
     dependencies:
       '@project-serum/anchor': 0.25.0
       '@project-serum/associated-token': 0.1.1_@solana+web3.js@1.66.2

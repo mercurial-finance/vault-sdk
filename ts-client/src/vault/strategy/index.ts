@@ -67,7 +67,7 @@ export interface StrategyHandler {
         user: PublicKey;
       };
     },
-  ): Promise<Transaction | { error: string }>;
+  ): Promise<Transaction>;
 }
 
 export const getStrategyType = (strategyResponse: any) => {

@@ -86,7 +86,7 @@ export default class SolendWithLMHandler implements StrategyHandler {
     };
 
     if (!pythOracle || !switchboardOracle) {
-      return { error: 'Incorrect pythOracle or switchboardOracle pubkey' };
+      throw new Error('Incorrect pythOracle or switchboardOracle pubkey');
     }
 
     const txAccounts = {

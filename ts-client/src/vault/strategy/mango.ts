@@ -45,11 +45,11 @@ export default class MangoHandler implements StrategyHandler {
     const rootBankIdx = mangoGroupState.getRootBankIndex(new PublicKey(rootBankPK));
 
     const rootBankState = mangoGroupState.rootBankAccounts[rootBankIdx];
-    if (!rootBankState) return { error: 'Root bank state not found' };
+    if (!rootBankState) throw new Error('Root bank state not found');
     const nodeBankPK = rootBankState.nodeBanks[0];
 
     const nodeBankState = rootBankState.nodeBankAccounts.find((t) => t.publicKey.toBase58() === nodeBankPK.toBase58());
-    if (!nodeBankState) return { error: 'Node bank state not found' };
+    if (!nodeBankState) throw new Error('Node bank state not found');
     const accountData = [
       { pubkey: MangoHandler.MangoGrouPK, isWritable: true },
       { pubkey: mangoAccountPK, isWritable: true },

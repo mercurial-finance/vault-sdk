@@ -45,7 +45,7 @@ export default class FranciumHandler implements StrategyHandler {
         user: PublicKey;
       };
     },
-  ): Promise<Transaction | { error: string }> {
+  ): Promise<Transaction> {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
     const vaultState = await program.account.vault.fetch(vault);

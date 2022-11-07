@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, BN } from '@project-serum/anchor';
+import { AnchorProvider, Program, BN, EventParser } from '@project-serum/anchor';
 import {
   PublicKey,
   TransactionInstruction,
@@ -360,7 +360,7 @@ export default class VaultImpl implements VaultImplementation {
     const vaultStrategiesStatePromise = this.vaultState.strategies
       .filter((address) => address.toString() !== VAULT_STRATEGY_ADDRESS)
       .map(async (strat) => {
-        const strategyState = (await this.program.account.strategy.fetchNullable(strat)) as unknown as StrategyState;
+        const strategyState = (await this.program.account.strategy.fetch(strat)) as unknown as StrategyState;
         return { publicKey: strat, strategyState };
       });
     const vaultStrategiesState = await Promise.allSettled(vaultStrategiesStatePromise);
@@ -388,7 +388,6 @@ export default class VaultImpl implements VaultImplementation {
     // Get strategy with highest liquidity
     // opt.strategy reserved for testing
     const selectedStrategy = await this.getStrategyWithHighestLiquidity(opt?.strategy);
-    console.log("🚀 ~ file: index.ts ~ line 391 ~ VaultImpl ~ withdraw ~ selectedStrategy", selectedStrategy)
     if (
       !selectedStrategy || // If there's no strategy deployed to the vault, use Vault Reserves instead
       selectedStrategy.publicKey.toString() === VAULT_STRATEGY_ADDRESS || // If opt.strategy specified Vault Reserves
@@ -480,14 +479,11 @@ export default class VaultImpl implements VaultImplementation {
       withdrawOpt,
     );
 
-    if (withdrawFromStrategyTx instanceof Transaction) {
-      return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(
-        withdrawFromStrategyTx,
-      );
-    }
+    const tx = new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(
+      withdrawFromStrategyTx,
+    );
 
-    // Return error
-    throw new Error(withdrawFromStrategyTx.error);
+    return tx;
   }
 
   // Reserved code to withdraw from Vault Reserves directly.
