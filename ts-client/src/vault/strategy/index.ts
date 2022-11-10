@@ -5,6 +5,7 @@ import type { AffiliateVaultProgram, VaultProgram } from '../types';
 import ApricotWithoutLMHandler from './apricotWithoutLM';
 import FranciumHandler from './francium';
 import MangoHandler from './mango';
+import TulipHandler from './tulip';
 import PortWithLMHandler from './portWithLM';
 import PortWithoutLMHandler from './portWithoutLM';
 import SolendWithLMHandler from './solendWithLM';
@@ -19,6 +20,7 @@ export type StrategyType =
   | 'francium'
   | 'apricotWithoutLM'
   | 'mango'
+  | 'tulip'
   | 'vault';
 
 export type StrategyState = {
@@ -65,7 +67,7 @@ export interface StrategyHandler {
         user: PublicKey;
       };
     },
-  ): Promise<Transaction | { error: string }>;
+  ): Promise<Transaction>;
 }
 
 export const getStrategyType = (strategyResponse: any) => {
@@ -95,6 +97,8 @@ export const getStrategyHandler = (
       return new ApricotWithoutLMHandler();
     case 'mango':
       return new MangoHandler();
+    case 'tulip':
+      return new TulipHandler();
     case 'vault':
       return new VaultHandler();
     default:

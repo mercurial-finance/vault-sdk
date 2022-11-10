@@ -1,29 +1,13 @@
-import {
-  PublicKey,
-  Cluster,
-  TransactionInstruction,
-  Connection,
-  SYSVAR_CLOCK_PUBKEY,
-  AccountMeta,
-  Transaction,
-} from '@solana/web3.js';
+import { PublicKey, TransactionInstruction, SYSVAR_CLOCK_PUBKEY, AccountMeta, Transaction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import FranciumSDK, * as francium from 'francium-sdk';
+import * as tulip from '@mercurial-finance/tulip-platform-sdk';
 import * as anchor from '@project-serum/anchor';
 
 import { StrategyHandler, Strategy } from '.';
 import { AffiliateVaultProgram, VaultProgram } from '../types';
 import { SEEDS } from '../constants';
 
-export default class FranciumHandler implements StrategyHandler {
-  private franciumSDK: FranciumSDK;
-
-  constructor(private connection: Connection) {
-    this.franciumSDK = new FranciumSDK({
-      connection,
-    });
-  }
-
+export default class TulipHandler implements StrategyHandler {
   async withdraw(
     walletPubKey: PublicKey,
     program: VaultProgram,
@@ -48,25 +32,28 @@ export default class FranciumHandler implements StrategyHandler {
   ): Promise<Transaction> {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
-    const vaultState = await program.account.vault.fetch(vault);
-    // https://github.com/Francium-DeFi/francium-sdk/blob/master/src/constants/lend/pools.ts#L59
-    const lendingPools = francium.LENDING_CONFIG;
-    const lendingPool = Object.values(lendingPools).find((lendingPool) =>
-      lendingPool.lendingPoolInfoAccount.equals(new PublicKey(strategy.state.reserve)),
+    const lendingPools = tulip.LENDING_RESERVES;
+    const lendingPool = Object.values(lendingPools).find(
+      (lendingPool: any) => lendingPool.account === strategy.state.reserve.toBase58(),
     );
-    if (!lendingPool) throw new Error('Cannot find francium lending pool');
+    if (!lendingPool) throw new Error('Cannot find tulip lending pool');
 
-    const collateralMint = lendingPool.lendingPoolShareMint;
+    const collateralMint = lendingPool.collateralTokenMint;
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
     const [collateralVault] = await PublicKey.findProgramAddress(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId,
     );
 
+    const [derivedLendingMarketAuthority] = await anchor.web3.PublicKey.findProgramAddress(
+      [new anchor.web3.PublicKey(tulip.getLendingMarketAccount()).toBytes()],
+      tulip.LENDING_PROGRAM_ID,
+    );
+
     const accounts = [
-      { pubkey: lendingPool.lendingPoolTknAccount, isWritable: true },
-      { pubkey: lendingPool.marketInfoAccount, isWritable: true },
-      { pubkey: lendingPool.lendingMarketAuthority },
+      { pubkey: lendingPool.liquiditySupplyTokenAccount, isWritable: true },
+      { pubkey: tulip.getLendingMarketAccount(), isWritable: true },
+      { pubkey: derivedLendingMarketAuthority },
       { pubkey: collateralMint, isWritable: true },
       { pubkey: SYSVAR_CLOCK_PUBKEY },
     ];
@@ -74,7 +61,7 @@ export default class FranciumHandler implements StrategyHandler {
     const remainingAccounts: Array<AccountMeta> = [];
     for (const account of accounts) {
       remainingAccounts.push({
-        pubkey: account.pubkey,
+        pubkey: new PublicKey(account.pubkey),
         isWritable: !!account.isWritable,
         isSigner: false,
       });
@@ -84,7 +71,7 @@ export default class FranciumHandler implements StrategyHandler {
       vault,
       strategy: new PublicKey(strategy.pubkey),
       reserve: new PublicKey(strategy.state.reserve),
-      strategyProgram: lendingPool.programId,
+      strategyProgram: tulip.LENDING_PROGRAM_ID,
       collateralVault,
       feeVault,
       tokenVault,
@@ -105,7 +92,14 @@ export default class FranciumHandler implements StrategyHandler {
           owner: walletPubKey,
         })
         .remainingAccounts(remainingAccounts)
-        .preInstructions(preInstructions)
+        .preInstructions(
+          preInstructions.concat([
+            tulip.refreshReserve({
+              reserveAccount: strategy.state.reserve,
+              priceAccount: new PublicKey(tulip.getPriceFeedsForReserve(lendingPool.name).price_account),
+            }),
+          ]),
+        )
         .postInstructions(postInstructions)
         .transaction();
 
@@ -120,7 +114,14 @@ export default class FranciumHandler implements StrategyHandler {
         user: walletPubKey,
       })
       .remainingAccounts(remainingAccounts)
-      .preInstructions(preInstructions)
+      .preInstructions(
+        preInstructions.concat([
+          tulip.refreshReserve({
+            reserveAccount: strategy.state.reserve,
+            priceAccount: new PublicKey(tulip.getPriceFeedsForReserve(lendingPool.name).price_account),
+          }),
+        ]),
+      )
       .postInstructions(postInstructions)
       .transaction();
 

@@ -1,6 +1,6 @@
 {
   "name": "@mercurial-finance/vault-sdk",
-  "version": "0.2.27",
+  "version": "0.2.30",
   "description": "Mercurial Vault SDK is a typescript library that allows you to interact with Mercurial v2's vault.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -19,6 +19,7 @@
     "@apricot-lend/sdk-ts": "0.17.5",
     "@blockworks-foundation/mango-client": "^3.4.7",
     "@mercurial-finance/optimist": "^0.1.4",
+    "@mercurial-finance/tulip-platform-sdk": "2.0.30",
     "@port.finance/port-sdk": "^0.2.67",
     "@project-serum/anchor": "0.24.2",
     "@quarryprotocol/quarry-sdk": "5.0.2",
