@@ -1,5 +1,5 @@
 import { AccountMeta, PublicKey, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from '@solana/web3.js';
-import * as solend from '@solendprotocol/solend-sdk';
+import * as solend from '@mercurial-finance/solend-sdk';
 import * as anchor from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 

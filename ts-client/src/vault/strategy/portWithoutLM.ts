@@ -3,7 +3,7 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 import * as anchor from '@project-serum/anchor';
 
-import * as port from '@port.finance/port-sdk';
+import * as port from '@mercurial-finance/port-sdk';
 
 import { ReserveState, Strategy, StrategyHandler } from '.';
 import { AffiliateVaultProgram, VaultProgram } from '../types';

@@ -10,8 +10,7 @@ import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token
 import * as anchor from '@project-serum/anchor';
 import * as quarry from '@quarryprotocol/quarry-sdk';
 import { Token } from '@solana/spl-token';
-import * as port from '@port.finance/port-sdk';
-import { QuarrySDK } from '@quarryprotocol/quarry-sdk';
+import * as port from '@mercurial-finance/port-sdk';
 
 import { ReserveState, Strategy, StrategyHandler } from '.';
 import { AffiliateVaultProgram, VaultProgram } from '../types';
@@ -21,7 +20,7 @@ export default class PortWithLMHandler implements StrategyHandler {
   private quarrySDK: quarry.QuarrySDK;
   constructor(public strategyProgram: PublicKey) {
     //@ts-ignore
-    this.quarrySDK = QuarrySDK.load({ provider });
+    this.quarrySDK = quarry.QuarrySDK.load({ provider });
   }
 
   async getReserveState(program: VaultProgram, reserve: PublicKey): Promise<ReserveState> {

@@ -1,6 +1,6 @@
 import { AccountMeta, Cluster, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import * as apricot from '@apricot-lend/sdk-ts';
+import * as apricot from '@mercurial-finance/apricot-sdk';
 import * as anchor from '@project-serum/anchor';
 
 import { StrategyHandler, Strategy } from '.';
