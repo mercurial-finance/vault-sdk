@@ -8,7 +8,7 @@ import {
   Transaction,
 } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import FranciumSDK, * as francium from 'francium-sdk';
+import FranciumSDK, * as francium from '@mercurial-finance/francium-sdk';
 import * as anchor from '@project-serum/anchor';
 
 import { StrategyHandler, Strategy } from '.';
