@@ -1,6 +1,6 @@
 [package]
 name = "mercurial-vault"
-version = "0.4.2"
+version = "0.4.3"
 description = "Created with Anchor"
 edition = "2018"
 license = "MIT"
@@ -24,7 +24,7 @@ no-capture = []
 
 [dependencies]
 serde = { version = "1.0.136"}
-anchor-lang = "0.24.2"
-anchor-spl = "0.24.2" 
-solana-program = "1.9.*"
-spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
+anchor-lang = "0.25.0"
+anchor-spl = "0.25.0" 
+solana-program = "1.10.29"
+spl-token = { version = "~3.3.0", features = ["no-entrypoint"] }

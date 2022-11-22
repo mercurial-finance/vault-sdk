@@ -1,21 +1,21 @@
 [package]
 name = "rust-client"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2018"
 
 [features]
 devnet = []
 
 [dependencies]
-anchor-lang = {version = "0.24.2"}
-anchor-spl = {version = "0.24.2"}
-anchor-client = {version = "0.24.2"}
+anchor-lang = {version = "0.25.0"}
+anchor-spl = {version = "0.25.0"}
+anchor-client = {version = "0.25.0"}
 anyhow = "1.0"
 clap = {version = "3.0.10", features=["derive"]}
 mercurial-vault = { path = "../programs/vault"}
-solana-program = "1.9.17"
-solana-sdk = "1.9.17"
-spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
+solana-program = "1.10.29"
+solana-sdk = "1.10.29"
+spl-token = { version = "~3.3.0", features = ["no-entrypoint"] }
 shellexpand = "2.1.0"
 spl-associated-token-account = { version = "1.0.2", features = ["no-entrypoint"] }
 rust_decimal="1.20.0"
@@ -25,5 +25,5 @@ solend-program = { git="https://github.com/mercurial-finance/solana-program-libr
 mango = {git="https://github.com/mercurial-finance/mango-v3", rev="5a23b6310fc4cfd5aaef6b9bdbcc6c6c0f3d2898", features = ["no-entrypoint"]}
 mango-common = {git="https://github.com/mercurial-finance/mango-v3", rev="5a23b6310fc4cfd5aaef6b9bdbcc6c6c0f3d2898"}
 bincode = "^1.3.1"
-tulipv2-sdk-common = { git = "https://github.com/sol-farm/tulipv2-sdk", rev="4cf2908a8f589dbb32bea4e43e8df05b120b5efe"}
-tulipv2-sdk-lending = { git = "https://github.com/sol-farm/tulipv2-sdk", rev="4cf2908a8f589dbb32bea4e43e8df05b120b5efe"}
+tulipv2-sdk-common = { git = "https://github.com/mercurial-finance/tulipv2-sdk", rev="0128ea547a0d01bcaf704b5d71d73ca0472d027a"}
+tulipv2-sdk-lending = { git = "https://github.com/mercurial-finance/tulipv2-sdk", rev="0128ea547a0d01bcaf704b5d71d73ca0472d027a"}
