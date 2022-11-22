@@ -1,7 +1,7 @@
 import { PublicKey, TransactionInstruction, SYSVAR_CLOCK_PUBKEY, AccountMeta, Transaction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import * as francium from '@mercurial-finance/francium-sdk';
-import * as anchor from '@project-serum/anchor';
+import { LENDING_CONFIG } from '@mercurial-finance/francium-sdk';
+import { BN } from '@project-serum/anchor';
 
 import { StrategyHandler, Strategy } from '.';
 import { AffiliateVaultProgram, VaultProgram } from '../types';
@@ -18,7 +18,7 @@ export default class FranciumHandler implements StrategyHandler {
     lpMint: PublicKey,
     userToken: PublicKey,
     userLp: PublicKey,
-    amount: anchor.BN,
+    amount: BN,
     preInstructions: TransactionInstruction[],
     postInstructions: TransactionInstruction[],
     opt?: {
@@ -34,7 +34,7 @@ export default class FranciumHandler implements StrategyHandler {
 
     const vaultState = await program.account.vault.fetch(vault);
     // https://github.com/Francium-DeFi/francium-sdk/blob/master/src/constants/lend/pools.ts#L59
-    const lendingPools = francium.LENDING_CONFIG;
+    const lendingPools = LENDING_CONFIG;
     const lendingPool = Object.values(lendingPools).find((lendingPool) =>
       lendingPool.lendingPoolInfoAccount.equals(new PublicKey(strategy.state.reserve)),
     );
@@ -79,7 +79,7 @@ export default class FranciumHandler implements StrategyHandler {
 
     if (opt?.affiliate) {
       const tx = await opt.affiliate.affiliateProgram.methods
-        .withdrawDirectlyFromStrategy(new anchor.BN(amount), new anchor.BN(0))
+        .withdrawDirectlyFromStrategy(new BN(amount), new BN(0))
         .accounts({
           ...txAccounts,
           partner: opt.affiliate.partner,
@@ -97,7 +97,7 @@ export default class FranciumHandler implements StrategyHandler {
     }
 
     const tx = await program.methods
-      .withdrawDirectlyFromStrategy(new anchor.BN(amount), new anchor.BN(0))
+      .withdrawDirectlyFromStrategy(new BN(amount), new BN(0))
       .accounts({
         ...txAccounts,
         lpMint,
