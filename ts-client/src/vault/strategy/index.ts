@@ -92,7 +92,7 @@ export const getStrategyHandler = (
     case 'portFinanceWithLm':
       return new PortWithLMHandler(strategyProgramAddresses.portFinance);
     case 'francium':
-      return new FranciumHandler(connection);
+      return new FranciumHandler();
     case 'apricotWithoutLM':
       return new ApricotWithoutLMHandler();
     case 'mango':
