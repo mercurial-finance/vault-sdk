@@ -56,6 +56,15 @@ pub mod vault {
         Ok(())
     }
 
+    /// Withdraw v2. Withdraw from token vault if no remaining accounts are available. Else, it will attempt to withdraw from strategy and token vault. This method just proxy between 2 methods. Protocol integration should be using withdraw instead of this function.
+    pub fn withdraw2<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, DepositWithdrawLiquidity<'info>>,
+        unmint_amount: u64,
+        min_out_amount: u64,
+    ) -> Result<()> {
+        Ok(())
+    }
+
     // simulate function to get unlocked amount
     pub fn get_unlocked_amount(ctx: Context<GetUnlockedAmount>) -> Result<()> {
         let vault = &ctx.accounts.vault;

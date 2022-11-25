@@ -12,6 +12,54 @@ use solana_sdk::instruction::Instruction;
 pub struct SolendWithoutLMHandler {}
 
 impl StrategyHandler for SolendWithoutLMHandler {
+    fn get_withdraw2_remaining_accounts(
+        &self,
+        program_client: &anchor_client::Program,
+        strategy: Pubkey,
+        token_mint: Pubkey,
+        base: Pubkey,
+    ) -> Result<Vec<AccountMeta>> {
+        let (vault, _vault_bump) = Pubkey::find_program_address(
+            &[
+                mercurial_vault::seed::VAULT_PREFIX.as_ref(),
+                token_mint.as_ref(),
+                base.as_ref(),
+            ],
+            &program_client.id(),
+        );
+
+        let vault_state: mercurial_vault::state::Vault = program_client.account(vault)?;
+        let strategy_state: mercurial_vault::state::Strategy = program_client.account(strategy)?;
+
+        let reserve_state: SolendReserve = program_client.account(strategy_state.reserve)?;
+
+        let collateral_mint = reserve_state.collateral.mint_pubkey;
+
+        let (lending_market_authority, _bump_seed) = Pubkey::find_program_address(
+            &[&reserve_state.lending_market.as_ref()],
+            &get_solend_program_id(),
+        );
+
+        let mut withdraw2_remaining_accounts = vec![
+            AccountMeta::new(strategy, false),
+            AccountMeta::new(strategy_state.reserve, false),
+            AccountMeta::new_readonly(get_solend_program_id(), false),
+            AccountMeta::new(strategy_state.collateral_vault, false),
+            AccountMeta::new(vault_state.fee_vault, false),
+        ];
+
+        let mut solend_remaining_accounts = vec![
+            AccountMeta::new(reserve_state.liquidity.supply_pubkey, false),
+            AccountMeta::new_readonly(reserve_state.lending_market, false),
+            AccountMeta::new_readonly(lending_market_authority, false),
+            AccountMeta::new(collateral_mint, false),
+            AccountMeta::new_readonly(sysvar::clock::id(), false),
+        ];
+
+        withdraw2_remaining_accounts.append(&mut solend_remaining_accounts);
+        Ok(withdraw2_remaining_accounts)
+    }
+
     fn withdraw_directly_from_strategy(
         &self,
         program_client: &anchor_client::Program,

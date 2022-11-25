@@ -57,6 +57,10 @@ pub enum UserCommand {
     Withdraw {
         unmint_amount: u64,
     },
+    Withdraw2 {
+        unmint_amount: u64,
+        strategy: Option<Pubkey>,
+    },
     WithdrawFromStrategy {
         unmint_amount: u64,
         strategy: Pubkey,
@@ -126,6 +130,10 @@ fn main() -> Result<()> {
             UserCommand::Withdraw { unmint_amount } => {
                 withdraw(&program_client, token_mint, base, unmint_amount)?
             }
+            UserCommand::Withdraw2 {
+                unmint_amount,
+                strategy,
+            } => withdraw2(&program_client, token_mint, base, unmint_amount, strategy)?,
             UserCommand::WithdrawFromStrategy {
                 unmint_amount,
                 strategy,

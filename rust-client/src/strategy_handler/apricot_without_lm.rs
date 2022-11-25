@@ -14,6 +14,59 @@ use solana_sdk::instruction::Instruction;
 pub struct ApricotWithoutLMHandler {}
 
 impl StrategyHandler for ApricotWithoutLMHandler {
+    fn get_withdraw2_remaining_accounts(
+        &self,
+        program_client: &anchor_client::Program,
+        strategy: Pubkey,
+        token_mint: Pubkey,
+        base: Pubkey,
+    ) -> Result<Vec<AccountMeta>> {
+        let (vault, _vault_bump) = Pubkey::find_program_address(
+            &[b"vault".as_ref(), token_mint.as_ref(), base.as_ref()],
+            &program_client.id(),
+        );
+
+        let vault_state: mercurial_vault::state::Vault = program_client.account(vault)?;
+        let strategy_state: mercurial_vault::state::Strategy = program_client.account(strategy)?;
+
+        let pool_id = config::get_pool_id_by_token_mint(vault_state.token_mint);
+        let asset_pool_spl = consts::get_asset_pool_spl_k(&spl_token::ID, pool_id);
+        let pool_summaries = consts::get_pool_summaries_k();
+        let price_summaries = consts::get_price_summaries_k();
+        let user_pages_stats = consts::get_user_pages_stats_k();
+        let base_pda = consts::base_pda::id();
+
+        let (user_info_signer_pda, _user_info_signer_bump) = Pubkey::find_program_address(
+            &[
+                mercurial_vault::seed::APRICOT_USER_INFO_SIGNER_PREFIX.as_ref(),
+                strategy.as_ref(),
+            ],
+            &mercurial_vault::ID,
+        );
+        let user_info = consts::get_user_info_k(&user_info_signer_pda);
+
+        let mut withdraw2_remaining_accounts = vec![
+            AccountMeta::new(strategy, false),
+            AccountMeta::new(strategy_state.reserve, false),
+            AccountMeta::new_readonly(get_apricot_program_id(), false),
+            AccountMeta::new(strategy_state.collateral_vault, false),
+            AccountMeta::new(vault_state.fee_vault, false),
+        ];
+
+        let mut apricot_remaining_accounts = vec![
+            AccountMeta::new(user_info, false),
+            AccountMeta::new(asset_pool_spl, false),
+            AccountMeta::new(pool_summaries, false),
+            AccountMeta::new(price_summaries, false),
+            AccountMeta::new(user_info_signer_pda, false),
+            AccountMeta::new(base_pda, false),
+            AccountMeta::new(user_pages_stats, false),
+        ];
+
+        withdraw2_remaining_accounts.append(&mut apricot_remaining_accounts);
+        Ok(withdraw2_remaining_accounts)
+    }
+
     fn withdraw_directly_from_strategy(
         &self,
         program_client: &Program,
