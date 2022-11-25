@@ -1,13 +1,14 @@
-name: CI on non-main
+name: CI on pull_request
 
 on:
-  push:
+  pull_request:
     paths-ignore:
       - "docs/**"
       - "README.md"
       - "LICENSE"
       - ".editorconfig"
     branches:
+      - main
       - develop
       - staging
 
@@ -35,6 +36,7 @@ jobs:
   rust-test:
     needs: changed_files_rust
     runs-on: ubuntu-latest
+    if: needs.changed_files_rust.outputs.program == 'true'
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup-dep

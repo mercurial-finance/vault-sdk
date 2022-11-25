@@ -1,13 +1,14 @@
 name: Continuous Integration NPM
 
 on:
-  push:
+  pull_request:
     paths-ignore:
-      - 'docs/**'
-      - 'README.md'
-      - 'LICENSE'
-      - '.editorconfig'
+      - "docs/**"
+      - "README.md"
+      - "LICENSE"
+      - ".editorconfig"
     branches:
+      - main
       - develop
       - staging
 
@@ -33,6 +34,7 @@ jobs:
   ts-test:
     needs: changed_files_ts
     runs-on: ubuntu-latest
+    if: needs.changed_files_ts.outputs.program == 'true'
     steps:
       - uses: actions/checkout@v2
       - name: Set up Node.js

@@ -25,6 +25,7 @@ jobs:
   ts-test-publish:
     needs: changed_files_ts
     runs-on: ubuntu-latest
+    if: needs.changed_files_ts.outputs.program == 'true'
     steps:
       - uses: actions/checkout@v2
       - name: Setup .npmrc file to publish to npm
