@@ -48,6 +48,15 @@ pub mod vault {
         Ok(())
     }
 
+    /// Withdraw v2. Withdraw from token vault if no remaining accounts are available. Else, it will attempt to withdraw from strategy and token vault. This method just proxy between 2 methods. Protocol integration should be using withdraw instead of this function.
+    pub fn withdraw2(
+        ctx: Context<DepositWithdrawLiquidity>,
+        unmint_amount: u64,
+        min_out_amount: u64,
+    ) -> Result<()> {
+        Ok(())
+    }
+
     pub fn withdraw_directly_from_strategy<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, WithdrawDirectlyFromStrategy<'info>>,
         unmint_amount: u64,
@@ -111,6 +120,33 @@ pub enum VaultError {
 
     #[msg("lockedProfitDegradation is invalid")]
     InvalidLockedProfitDegradation,
+
+    #[msg("Maximum number of strategies have been reached")]
+    MaxStrategyReached,
+
+    #[msg("Strategy existed")]
+    StrategyExisted,
+
+    #[msg("Invalid unmint amount")]
+    InvalidUnmintAmount,
+
+    #[msg("Invalid accounts for strategy")]
+    InvalidAccountsForStrategy,
+
+    #[msg("Invalid bump")]
+    InvalidBump,
+
+    #[msg("Amount must be greater than 0")]
+    AmountMustGreaterThanZero,
+
+    #[msg("Mango is not supported anymore")]
+    MangoIsNotSupportedAnymore,
+
+    #[msg("Strategy is not supported")]
+    StrategyIsNotSupported,
+
+    #[msg("Pay amount is exceeded")]
+    PayAmountIsExeeced,
 }
 
 #[event]

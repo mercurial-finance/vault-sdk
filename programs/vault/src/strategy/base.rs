@@ -9,7 +9,7 @@ pub enum StrategyType {
     PortFinanceWithoutLM,
     PortFinanceWithLM,
     SolendWithoutLM,
-    Mango,
+    Mango, // Mango is no longer supported
     SolendWithLM,
     ApricotWithoutLM,
     Francium,
@@ -26,14 +26,6 @@ pub fn get_francium_program_id() -> Pubkey {
 
 pub fn get_apricot_program_id() -> Pubkey {
     Pubkey::from_str("6UeJYTLU1adaoHWeApWsoj1xNEDbWA2RhM2DLc8CrDDi").unwrap()
-}
-
-pub fn get_mango_program_id() -> Pubkey {
-    Pubkey::from_str("mv3ekLzLbnVPNxjSKvqBpU3ZeZXPQdEC3bp5MDEBG68").unwrap()
-}
-
-pub fn get_mango_group_id() -> Pubkey {
-    Pubkey::from_str("98pjRuQjK3qA6gXts96PqZT4Ze5QmnCmt3QYjhbUSPue").unwrap()
 }
 
 #[cfg(feature = "devnet")]

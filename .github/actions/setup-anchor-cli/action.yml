@@ -1,0 +1,8 @@
+name: "Setup anchor-cli"
+description: "Setup node js and anchor cli"
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v2
+    - run: npm install -g @project-serum/anchor-cli@${{ env.ANCHOR_CLI_VERSION }} yarn
+      shell: bash

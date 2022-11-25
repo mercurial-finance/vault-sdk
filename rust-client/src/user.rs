@@ -1,9 +1,10 @@
+use anchor_client::solana_sdk::signature::Signer;
+use anchor_client::solana_sdk::signer::keypair::Keypair;
+use anchor_client::solana_sdk::system_instruction;
+use anchor_lang::solana_program::program_pack::Pack;
+use anchor_lang::solana_program::pubkey::Pubkey;
+use anchor_spl::token::spl_token;
 use anyhow::Result;
-use solana_program::program_pack::Pack;
-use solana_program::pubkey::Pubkey;
-use solana_sdk::signature::Signer;
-use solana_sdk::signer::keypair::Keypair;
-use solana_sdk::system_instruction;
 use spl_associated_token_account;
 
 pub fn deposit(

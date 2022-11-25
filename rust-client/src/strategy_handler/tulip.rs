@@ -1,15 +1,15 @@
 use crate::strategy_handler::{base::StrategyHandler, tulip_adapter::TulipReserve};
 use crate::user::get_or_create_ata;
+use anchor_client::solana_sdk::instruction::AccountMeta;
+use anchor_client::solana_sdk::instruction::Instruction;
 use anchor_client::Program;
+use anchor_lang::solana_program::pubkey::Pubkey;
+use anchor_lang::solana_program::sysvar;
 use anchor_lang::InstructionData;
 use anchor_lang::ToAccountMetas;
+use anchor_spl::token::spl_token;
 use anyhow::Result;
 use mercurial_vault::strategy::base::get_tulip_program_id;
-use solana_program::sysvar;
-use solana_sdk::instruction::AccountMeta;
-use solana_sdk::instruction::Instruction;
-use solana_sdk::pubkey::Pubkey;
-
 pub struct TulipHandler {}
 
 impl StrategyHandler for TulipHandler {

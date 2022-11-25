@@ -3,15 +3,15 @@ name: CICD on main
 on:
   push:
     paths-ignore:
-      - 'docs/**'
-      - 'README.md'
-      - 'LICENSE'
-      - '.editorconfig'
+      - "docs/**"
+      - "README.md"
+      - "LICENSE"
+      - ".editorconfig"
     branches:
       - main
 
 env:
-  SOLANA_CLI_VERSION: 1.9.17
+  SOLANA_CLI_VERSION: 1.14.6
 
 jobs:
   changed_files_rust:
