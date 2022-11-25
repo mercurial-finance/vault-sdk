@@ -312,7 +312,7 @@ checksum = "216261ddc8289130e551ddcd5ce8a064710c0d064a4d2895c67151c92b5443f6"
 [[package]]
 name = "apricot-client"
 version = "0.15.1"
-source = "git+https://github.com/mercurial-finance/apricot-client?rev=ecc9f4b9bcc8ff5ddc03ab0525b7c2ae5fa8995b#ecc9f4b9bcc8ff5ddc03ab0525b7c2ae5fa8995b"
+source = "git+https://github.com/mercurial-finance/apricot-client?rev=af66bdcb15cdd19612ceee78f6195668a984f4b4#af66bdcb15cdd19612ceee78f6195668a984f4b4"
 dependencies = [
  "itertools 0.9.0",
  "solana-program",

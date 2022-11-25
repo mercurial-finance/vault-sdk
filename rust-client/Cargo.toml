@@ -17,7 +17,7 @@ shellexpand = "2.1.0"
 spl-associated-token-account = { version = "1.0.2", features = ["no-entrypoint"] }
 rust_decimal="1.20.0"
 port-variable-rate-lending-instructions = "0.3.0"
-apricot-client = {git="https://github.com/mercurial-finance/apricot-client", rev="ecc9f4b9bcc8ff5ddc03ab0525b7c2ae5fa8995b"}
+apricot-client = {git="https://github.com/mercurial-finance/apricot-client", rev="af66bdcb15cdd19612ceee78f6195668a984f4b4"}
 solend-program = { git="https://github.com/mercurial-finance/solana-program-library", rev ="68f815523377428f29cb6db1803f1d5de509ea5f", features = [ "no-entrypoint" ] }
 bincode = "^1.3.1"
 tulipv2-sdk-common = { git = "https://github.com/mercurial-finance/tulipv2-sdk", rev="0128ea547a0d01bcaf704b5d71d73ca0472d027a"}
