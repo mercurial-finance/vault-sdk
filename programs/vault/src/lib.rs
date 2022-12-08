@@ -48,15 +48,6 @@ pub mod vault {
         Ok(())
     }
 
-    /// Withdraw v2. Withdraw from token vault if no remaining accounts are available. Else, it will attempt to withdraw from strategy and token vault. This method just proxy between 2 methods. Protocol integration should be using withdraw instead of this function.
-    pub fn withdraw2(
-        ctx: Context<DepositWithdrawLiquidity>,
-        unmint_amount: u64,
-        min_out_amount: u64,
-    ) -> Result<()> {
-        Ok(())
-    }
-
     pub fn withdraw_directly_from_strategy<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, WithdrawDirectlyFromStrategy<'info>>,
         unmint_amount: u64,
