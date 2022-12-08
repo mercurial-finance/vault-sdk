@@ -111,6 +111,33 @@ pub enum VaultError {
 
     #[msg("lockedProfitDegradation is invalid")]
     InvalidLockedProfitDegradation,
+
+    #[msg("Maximum number of strategies have been reached")]
+    MaxStrategyReached,
+
+    #[msg("Strategy existed")]
+    StrategyExisted,
+
+    #[msg("Invalid unmint amount")]
+    InvalidUnmintAmount,
+
+    #[msg("Invalid accounts for strategy")]
+    InvalidAccountsForStrategy,
+
+    #[msg("Invalid bump")]
+    InvalidBump,
+
+    #[msg("Amount must be greater than 0")]
+    AmountMustGreaterThanZero,
+
+    #[msg("Mango is not supported anymore")]
+    MangoIsNotSupportedAnymore,
+
+    #[msg("Strategy is not supported")]
+    StrategyIsNotSupported,
+
+    #[msg("Pay amount is exceeded")]
+    PayAmountIsExeeced,
 }
 
 #[event]

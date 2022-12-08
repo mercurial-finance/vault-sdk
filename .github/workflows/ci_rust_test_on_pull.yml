@@ -1,19 +1,21 @@
-name: CI on non-main
+name: CI on pull_request
 
 on:
-  push:
+  pull_request:
     paths-ignore:
-      - 'docs/**'
-      - 'README.md'
-      - 'LICENSE'
-      - '.editorconfig'
+      - "docs/**"
+      - "README.md"
+      - "LICENSE"
+      - ".editorconfig"
     branches:
+      - main
       - develop
       - staging
 
 env:
-  SOLANA_CLI_VERSION: 1.9.17
-  
+  SOLANA_CLI_VERSION: 1.14.6
+  ANCHOR_CLI_VERSION: 0.25.0
+
 jobs:
   changed_files_rust:
     runs-on: ubuntu-latest
@@ -34,10 +36,12 @@ jobs:
   rust-test:
     needs: changed_files_rust
     runs-on: ubuntu-latest
+    if: needs.changed_files_rust.outputs.program == 'true'
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup-dep
       - uses: ./.github/actions/setup-solana
+      - uses: ./.github/actions/setup-anchor-cli
       # Install rust + toolchain
       - uses: actions-rs/toolchain@v1
         with:
@@ -60,3 +64,7 @@ jobs:
       - name: Cargo test
         run: cargo test -- --nocapture
         shell: bash
+      - name: Anchor build
+        run: anchor build
+      - name: Cargo build
+        run: cargo build --package rust-client

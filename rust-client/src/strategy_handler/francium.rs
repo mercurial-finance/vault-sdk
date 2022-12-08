@@ -1,7 +1,7 @@
 use crate::strategy_handler::base::StrategyHandler;
+use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_client::Program;
 use anyhow::Result;
-use solana_sdk::pubkey::Pubkey;
 pub struct FranciumHandler {}
 
 impl StrategyHandler for FranciumHandler {

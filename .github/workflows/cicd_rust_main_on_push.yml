@@ -3,15 +3,15 @@ name: CICD on main
 on:
   push:
     paths-ignore:
-      - 'docs/**'
-      - 'README.md'
-      - 'LICENSE'
-      - '.editorconfig'
+      - "docs/**"
+      - "README.md"
+      - "LICENSE"
+      - ".editorconfig"
     branches:
       - main
 
 env:
-  SOLANA_CLI_VERSION: 1.9.17
+  SOLANA_CLI_VERSION: 1.14.6
 
 jobs:
   changed_files_rust:
@@ -33,6 +33,7 @@ jobs:
   rust-test-publish:
     needs: changed_files_rust
     runs-on: ubuntu-latest
+    if: needs.changed_files_rust.outputs.program == 'true'
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup-dep
