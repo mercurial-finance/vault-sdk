@@ -45,7 +45,12 @@ const getVaultState = async (
     new PublicKey(program.programId),
   );
   const vaultState = (await program.account.vault.fetchNullable(vaultPda)) as VaultState;
-  console.log(await program.account.vault.all());
+  console.log(
+    (await program.account.vault.all()).map((v) => ({
+      pubkey: v.publicKey.toBase58(),
+      tokenMint: v.account.tokenMint.toBase58(),
+    })),
+  );
 
   if (!vaultState) {
     throw 'Cannot get vault state';
