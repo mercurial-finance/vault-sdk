@@ -45,11 +45,14 @@ const getVaultState = async (
     new PublicKey(program.programId),
   );
   const vaultState = (await program.account.vault.fetchNullable(vaultPda)) as VaultState;
-  const lpSupply = await getLpSupply(program.provider.connection, vaultState.lpMint);
+  console.log(program.account.vault.all());
 
   if (!vaultState) {
     throw 'Cannot get vault state';
   }
+
+  const lpSupply = await getLpSupply(program.provider.connection, vaultState.lpMint);
+
   return { vaultPda, tokenVaultPda, vaultState, lpSupply };
 };
 
