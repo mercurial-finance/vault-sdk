@@ -125,6 +125,7 @@ export default class VaultImpl implements VaultImplementation {
   ): Promise<VaultImpl> {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
+    console.log(opt?.cluster, opt?.programId);
 
     const { vaultPda, tokenVaultPda, vaultState, lpSupply } = await getVaultState(tokenInfo, program);
     return new VaultImpl(
