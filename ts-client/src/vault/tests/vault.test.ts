@@ -66,7 +66,7 @@ describe('Interact with Vault in devnet', () => {
     expect(Number(userBalanceDeposit)).toBeGreaterThan(0);
 
     // Withdraw all lp
-    const withdrawTx = await vault.withdraw(mockWallet.publicKey, new BN(userBalanceDeposit));
+    const withdrawTx = await vault.withdraw(mockWallet.publicKey, userBalanceDeposit);
     const withdrawResult = await provider.sendAndConfirm(withdrawTx);
     console.log('Withdraw result', withdrawResult);
     expect(typeof withdrawResult).toBe('string');

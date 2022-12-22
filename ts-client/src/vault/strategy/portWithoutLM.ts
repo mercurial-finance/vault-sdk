@@ -56,6 +56,8 @@ export default class PortWithoutLMHandler implements StrategyHandler {
 
     const { collateral: portCollateral, lendingMarket, liquidity } = state as port.ReserveData;
 
+    const oraclePubkey = liquidity.oracleOption === 0 ? null : liquidity.oraclePubkey;
+
     const [lendingMarketAuthority] = await PublicKey.findProgramAddress(
       [lendingMarket.toBuffer()],
       this.strategyProgram,
@@ -104,7 +106,7 @@ export default class PortWithoutLMHandler implements StrategyHandler {
         .remainingAccounts(remainingAccounts)
         .preInstructions(
           preInstructions.concat([
-            port.refreshReserveInstruction(strategy.state.reserve, liquidity.oraclePubkey, this.strategyProgram),
+            port.refreshReserveInstruction(strategy.state.reserve, oraclePubkey, this.strategyProgram),
           ]),
         )
         .postInstructions(postInstructions)
@@ -123,7 +125,7 @@ export default class PortWithoutLMHandler implements StrategyHandler {
       .remainingAccounts(remainingAccounts)
       .preInstructions(
         preInstructions.concat([
-          port.refreshReserveInstruction(strategy.state.reserve, liquidity.oraclePubkey, this.strategyProgram),
+          port.refreshReserveInstruction(strategy.state.reserve, oraclePubkey, this.strategyProgram),
         ]),
       )
       .postInstructions(postInstructions)
