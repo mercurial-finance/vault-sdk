@@ -24,7 +24,10 @@ specifiers:
   '@types/mocha': ^9.1.1
   bn.js: 5.2.1
   chai: ^4.3.6
+  cross-fetch: ^3.1.5
+  decimal.js: 10.3.1
   jest: ^28.1.0
+  jsbi: 4.3.0
   mocha: ^10.0.0
   ts-jest: ^28.0.2
   ts-mocha: ^10.0.0
@@ -39,17 +42,20 @@ dependencies:
   '@mercurial-finance/solend-sdk': 0.6.5
   '@mercurial-finance/tulip-platform-sdk': 2.0.30
   '@project-serum/anchor': 0.24.2
-  '@quarryprotocol/quarry-sdk': 5.0.2_qonsxbiqvuiwowpv2gglrlngci
+  '@quarryprotocol/quarry-sdk': 5.0.2_inco7xtcqmnpuratvq3uyfxtvm
   '@saberhq/anchor-contrib': 1.14.11_zd2m6gebao25dqvjtwaxtekaxm
   '@solana/buffer-layout': 4.0.0
   '@solana/spl-token': 0.1.8
   '@solana/spl-token-registry': 0.2.1105
   '@solana/web3.js': 1.42.0
   bn.js: 5.2.1
+  cross-fetch: 3.1.5
+  decimal.js: 10.3.1
+  jsbi: 4.3.0
 
 devDependencies:
   '@saberhq/solana-contrib': 1.13.6_x7hnsalv3tkefoyaeyocjyrlb4
-  '@saberhq/token-utils': 1.13.6_x7hnsalv3tkefoyaeyocjyrlb4
+  '@saberhq/token-utils': 1.13.6_plgy3gj3erzt3dml53exhfwqni
   '@tsconfig/recommended': 1.0.1
   '@types/bn.js': 5.1.0
   '@types/chai': 4.3.1
@@ -943,7 +949,7 @@ packages:
       eventemitter3: 4.0.7
     dev: false
 
-  /@quarryprotocol/quarry-sdk/5.0.2_qonsxbiqvuiwowpv2gglrlngci:
+  /@quarryprotocol/quarry-sdk/5.0.2_inco7xtcqmnpuratvq3uyfxtvm:
     resolution: {integrity: sha512-wczlmNfb8fk6WCZsLLR7ysSjgxl6ZdEJ7cNDhgvFpU9E1YMSN1f2l2NK9yw+VksuLxWCightFsBrHSqqIftDzQ==}
     peerDependencies:
       '@project-serum/anchor': '>=0.19'
@@ -957,9 +963,10 @@ packages:
       '@project-serum/anchor': 0.24.2
       '@saberhq/anchor-contrib': 1.14.11_zd2m6gebao25dqvjtwaxtekaxm
       '@saberhq/solana-contrib': 1.13.6_x7hnsalv3tkefoyaeyocjyrlb4
-      '@saberhq/token-utils': 1.13.6_x7hnsalv3tkefoyaeyocjyrlb4
+      '@saberhq/token-utils': 1.13.6_plgy3gj3erzt3dml53exhfwqni
       '@solana/web3.js': 1.42.0
       bn.js: 5.2.1
+      jsbi: 4.3.0
       superstruct: 0.15.4
       tiny-invariant: 1.2.0
       tslib: 2.4.0
@@ -1022,7 +1029,7 @@ packages:
       tslib: 2.4.0
     dev: false
 
-  /@saberhq/token-utils/1.13.6_x7hnsalv3tkefoyaeyocjyrlb4:
+  /@saberhq/token-utils/1.13.6_plgy3gj3erzt3dml53exhfwqni:
     resolution: {integrity: sha512-ekJSwB300Rjr/+FXpHFkDvdSOpaJxrYBQ8q8qiAACWwxDxpsbApRI+RQ+P9fZreHScbN80Hqcf8QM40WcmelLw==}
     peerDependencies:
       '@solana/web3.js': ^1.29.2
@@ -1033,8 +1040,9 @@ packages:
       '@solana/buffer-layout': 4.0.0
       '@solana/spl-token': 0.1.8
       '@solana/web3.js': 1.42.0
-      '@ubeswap/token-math': 5.2.1
+      '@ubeswap/token-math': 5.2.1_jsbi@4.3.0
       bn.js: 5.2.1
+      jsbi: 4.3.0
       tiny-invariant: 1.2.0
       tslib: 2.4.0
     transitivePeerDependencies:
@@ -1302,7 +1310,7 @@ packages:
       '@types/yargs-parser': 21.0.0
     dev: true
 
-  /@ubeswap/token-math/5.2.1:
+  /@ubeswap/token-math/5.2.1_jsbi@4.3.0:
     resolution: {integrity: sha512-wkIKDKIl6rml4CVK3fvjjLVk55Z8qEYTgjxZx7MnrTwECazyhiDuekb9WAaDPXcW5QNffCu8uv4Ba8wE96CJsg==}
     engines: {node: '>=10'}
     peerDependencies:
@@ -1311,6 +1319,7 @@ packages:
       '@types/big.js': 6.1.6
       big.js: 6.2.1
       decimal.js-light: 2.5.1
+      jsbi: 4.3.0
       tiny-invariant: 1.2.0
       tslib: 2.4.0
 
@@ -2764,6 +2773,9 @@ packages:
     dependencies:
       argparse: 2.0.1
     dev: true
+
+  /jsbi/4.3.0:
+    resolution: {integrity: sha512-SnZNcinB4RIcnEyZqFPdGPVgrg2AcnykiBy0sHVJQKHYeaLUvi3Exj+iaPpLnFVkDPZIV4U0yvgC9/R4uEAZ9g==}
 
   /jsesc/2.5.2:
     resolution: {integrity: sha512-OYu7XEzjkCQ3C5Ps3QIZsQfNpqoJyZZA99wd9aWd05NCtC5pWOkShK2mkL6HXQR6/Cy2lbNdPlZBpuQHXE63gA==}
