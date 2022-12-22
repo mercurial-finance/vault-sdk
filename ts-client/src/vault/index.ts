@@ -439,7 +439,7 @@ export default class VaultImpl implements VaultImplementation {
     ) {
       return this.withdrawFromVaultReserve(
         owner,
-        amountToWithdraw,
+        baseTokenAmount,
         userToken,
         userLpToken,
         preInstructions,

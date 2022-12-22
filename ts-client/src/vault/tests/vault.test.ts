@@ -66,18 +66,14 @@ describe('Interact with Vault in devnet', () => {
     expect(Number(userBalanceDeposit)).toBeGreaterThan(0);
 
     // Withdraw all lp
-    const unlockedAmount = await vault.getWithdrawableAmount();
-    const withdrawTx = await vault.withdraw(
-      mockWallet.publicKey,
-      new BN(userBalanceDeposit).mul(vault.lpSupply).div(unlockedAmount),
-    );
+    const withdrawTx = await vault.withdraw(mockWallet.publicKey, userBalanceDeposit);
     const withdrawResult = await provider.sendAndConfirm(withdrawTx);
     console.log('Withdraw result', withdrawResult);
     expect(typeof withdrawResult).toBe('string');
 
     // Check balance
     const userBalanceWithdraw = await vault.getUserBalance(mockWallet.publicKey);
-    expect(Number(userBalanceWithdraw)).toBeLessThan(5); // slight price impact for virtual price calculation
+    expect(Number(userBalanceWithdraw)).toEqual(0);
   });
 
   test('Vault Withdraw SOL from all strategy', async () => {
