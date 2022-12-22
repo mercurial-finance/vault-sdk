@@ -431,12 +431,11 @@ export default class VaultImpl implements VaultImplementation {
     }
 
     const unlockedAmount = await this.getWithdrawableAmount();
-    const virtualPrice = new BN(unlockedAmount).div(new BN(this.lpSupply));
-    const amountToUnmint = new BN(baseTokenAmount).mul(virtualPrice);
-    const vaultLiquidty = new BN((await getVaultLiquidity(this.connection, this.tokenVaultPda)) || 0);
+    const amountToUnmint = baseTokenAmount.mul(unlockedAmount).div(this.lpSupply);
+    const vaultLiquidity = new BN((await getVaultLiquidity(this.connection, this.tokenVaultPda)) || 0);
 
     if (
-      amountToUnmint.lt(vaultLiquidty) // If withdraw amount lesser than vault reserve
+      amountToUnmint.lt(vaultLiquidity) // If withdraw amount lesser than vault reserve
     ) {
       return this.withdrawFromVaultReserve(owner, amountToUnmint, userToken, userLpToken, preInstructions, withdrawOpt);
     }
@@ -445,16 +444,8 @@ export default class VaultImpl implements VaultImplementation {
     // opt.strategy reserved for testing
     const selectedStrategy = await this.getStrategyWithHighestLiquidity(opt?.strategy);
 
-    if (
-      !selectedStrategy || // If there's no strategy deployed to the vault, use Vault Reserves instead
-      selectedStrategy.publicKey.toString() === VAULT_STRATEGY_ADDRESS || // If opt.strategy specified Vault Reserves
-      !selectedStrategy.strategyState // If opt.strategy specified Vault Reserves
-    ) {
-      return this.withdrawFromVaultReserve(owner, amountToUnmint, userToken, userLpToken, preInstructions, withdrawOpt);
-    }
-
     const currentLiquidity = new BN(selectedStrategy.strategyState.currentLiquidity);
-    const availableAmount = currentLiquidity.add(vaultLiquidty);
+    const availableAmount = currentLiquidity.add(vaultLiquidity);
 
     if (amountToUnmint.gt(availableAmount)) {
       throw new Error('Selected strategy does not have enough liquidity.');

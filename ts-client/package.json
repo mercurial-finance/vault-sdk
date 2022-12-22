@@ -29,12 +29,8 @@
     "@solana/buffer-layout": "^4.0.0",
     "@solana/spl-token": "0.1.8",
     "@solana/spl-token-registry": "0.2.1105",
-    "@solana/wallet-adapter-base": "^0.9.5",
     "@solana/web3.js": "^1.42.0",
-    "bn.js": "5.2.1",
-    "cross-fetch": "^3.1.5",
-    "decimal.js": "10.3.1",
-    "jsbi": "4.3.0"
+    "bn.js": "5.2.1"
   },
   "devDependencies": {
     "@saberhq/solana-contrib": "1.13.6",
