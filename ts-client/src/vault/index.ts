@@ -431,13 +431,20 @@ export default class VaultImpl implements VaultImplementation {
     }
 
     const unlockedAmount = await this.getWithdrawableAmount();
-    const amountToUnmint = baseTokenAmount.mul(unlockedAmount).div(this.lpSupply);
+    const amountToWithdraw = baseTokenAmount.mul(unlockedAmount).div(this.lpSupply);
     const vaultLiquidity = new BN((await getVaultLiquidity(this.connection, this.tokenVaultPda)) || 0);
 
     if (
-      amountToUnmint.lt(vaultLiquidity) // If withdraw amount lesser than vault reserve
+      amountToWithdraw.lt(vaultLiquidity) // If withdraw amount lesser than vault reserve
     ) {
-      return this.withdrawFromVaultReserve(owner, amountToUnmint, userToken, userLpToken, preInstructions, withdrawOpt);
+      return this.withdrawFromVaultReserve(
+        owner,
+        amountToWithdraw,
+        userToken,
+        userLpToken,
+        preInstructions,
+        withdrawOpt,
+      );
     }
 
     // Get strategy with highest liquidity
@@ -447,7 +454,7 @@ export default class VaultImpl implements VaultImplementation {
     const currentLiquidity = new BN(selectedStrategy.strategyState.currentLiquidity);
     const availableAmount = currentLiquidity.add(vaultLiquidity);
 
-    if (amountToUnmint.gt(availableAmount)) {
+    if (amountToWithdraw.gt(availableAmount)) {
       throw new Error('Selected strategy does not have enough liquidity.');
     }
 
