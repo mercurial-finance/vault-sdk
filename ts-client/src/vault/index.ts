@@ -36,6 +36,15 @@ type VaultDetails = {
   lpSupply: BN;
 };
 
+type WithdrawOpt = {
+  affiliate: {
+    affiliateId: PublicKey;
+    affiliateProgram: AffiliateVaultProgram;
+    partner: PublicKey;
+    user: PublicKey;
+  };
+};
+
 const getVaultState = async (
   vaultParams: TokenInfo,
   program: VaultProgram,
@@ -373,57 +382,17 @@ export default class VaultImpl implements VaultImplementation {
     const highestLiquidity = settledVaultStrategiesState.sort((a, b) =>
       b.strategyState.currentLiquidity.sub(a.strategyState.currentLiquidity).toNumber(),
     )[0];
-    return highestLiquidity
-      ? highestLiquidity
-      : {
-          publicKey: new PublicKey(VAULT_STRATEGY_ADDRESS),
-          strategyState: null,
-        };
+    return highestLiquidity;
   }
 
   public async withdraw(owner: PublicKey, baseTokenAmount: BN, opt?: { strategy?: PublicKey }): Promise<Transaction> {
     // Refresh vault state
     await this.refreshVaultState();
 
-    // Get strategy with highest liquidity
-    // opt.strategy reserved for testing
-    const selectedStrategy = await this.getStrategyWithHighestLiquidity(opt?.strategy);
-    if (
-      !selectedStrategy || // If there's no strategy deployed to the vault, use Vault Reserves instead
-      selectedStrategy.publicKey.toString() === VAULT_STRATEGY_ADDRESS || // If opt.strategy specified Vault Reserves
-      !selectedStrategy.strategyState // If opt.strategy specified Vault Reserves
-    ) {
-      return this.withdrawFromVaultReserve(owner, baseTokenAmount);
-    }
-
-    const currentLiquidity = new BN(selectedStrategy.strategyState.currentLiquidity);
-    const vaultLiquidty = new BN((await getVaultLiquidity(this.connection, this.tokenVaultPda)) || 0);
-    const unlockedAmount = await this.getWithdrawableAmount();
-    const virtualPrice = new BN(unlockedAmount).div(new BN(this.lpSupply));
-
-    const availableAmount = currentLiquidity.add(vaultLiquidty);
-    const amountToUnmint = new BN(baseTokenAmount).mul(virtualPrice);
-
-    // If withdraw amount less than reserve amount, withdraw from reserve
-    if (amountToUnmint.lt(vaultLiquidty)) {
-      return this.withdrawFromVaultReserve(owner, baseTokenAmount);
-    }
-
-    if (amountToUnmint.gt(availableAmount)) {
-      throw new Error('Selected strategy does not have enough liquidity.');
-    }
-
-    const strategyType = getStrategyType(selectedStrategy.strategyState.strategyType);
-    const strategyHandler = getStrategyHandler(strategyType, this.cluster);
-
-    if (!strategyType || !strategyHandler) {
-      throw new Error('Cannot find strategy handler');
-    }
-
     let preInstructions: TransactionInstruction[] = [];
-    let withdrawOpt = {};
     let userToken: PublicKey | undefined;
     let userLpToken: PublicKey | undefined;
+    let withdrawOpt: WithdrawOpt | undefined;
 
     // Withdraw with Affiliate
     if (this.affiliateId && this.affiliateProgram) {
@@ -434,17 +403,21 @@ export default class VaultImpl implements VaultImplementation {
         userToken: userTokenATA,
         userLpToken: userLpTokenATA,
       } = await this.createAffiliateATAPreInstructions(owner);
+
       preInstructions = preInstructionsATA;
-      withdrawOpt = {
-        affiliate: {
-          affiliateId: this.affiliateId,
-          affiliateProgram: this.affiliateProgram,
-          partner: partnerAddress,
-          user: userAddress,
-        },
-      };
       userToken = userTokenATA;
       userLpToken = userLpTokenATA;
+      withdrawOpt =
+        this.affiliateId && this.affiliateProgram
+          ? {
+              affiliate: {
+                affiliateId: this.affiliateId,
+                affiliateProgram: this.affiliateProgram,
+                partner: partnerAddress,
+                user: userAddress,
+              },
+            }
+          : undefined;
     } else {
       // Without affiliate
       const {
@@ -455,6 +428,43 @@ export default class VaultImpl implements VaultImplementation {
       preInstructions = preInstructionsATA;
       userToken = userTokenATA;
       userLpToken = userLpTokenATA;
+    }
+
+    const unlockedAmount = await this.getWithdrawableAmount();
+    const virtualPrice = new BN(unlockedAmount).div(new BN(this.lpSupply));
+    const amountToUnmint = new BN(baseTokenAmount).mul(virtualPrice);
+    const vaultLiquidty = new BN((await getVaultLiquidity(this.connection, this.tokenVaultPda)) || 0);
+
+    if (
+      amountToUnmint.lt(vaultLiquidty) // If withdraw amount lesser than vault reserve
+    ) {
+      return this.withdrawFromVaultReserve(owner, amountToUnmint, userToken, userLpToken, preInstructions, withdrawOpt);
+    }
+
+    // Get strategy with highest liquidity
+    // opt.strategy reserved for testing
+    const selectedStrategy = await this.getStrategyWithHighestLiquidity(opt?.strategy);
+
+    if (
+      !selectedStrategy || // If there's no strategy deployed to the vault, use Vault Reserves instead
+      selectedStrategy.publicKey.toString() === VAULT_STRATEGY_ADDRESS || // If opt.strategy specified Vault Reserves
+      !selectedStrategy.strategyState // If opt.strategy specified Vault Reserves
+    ) {
+      return this.withdrawFromVaultReserve(owner, amountToUnmint, userToken, userLpToken, preInstructions, withdrawOpt);
+    }
+
+    const currentLiquidity = new BN(selectedStrategy.strategyState.currentLiquidity);
+    const availableAmount = currentLiquidity.add(vaultLiquidty);
+
+    if (amountToUnmint.gt(availableAmount)) {
+      throw new Error('Selected strategy does not have enough liquidity.');
+    }
+
+    const strategyType = getStrategyType(selectedStrategy.strategyState.strategyType);
+    const strategyHandler = getStrategyHandler(strategyType, this.cluster);
+
+    if (!strategyType || !strategyHandler) {
+      throw new Error('Cannot find strategy handler');
     }
 
     // Unwrap SOL
@@ -488,33 +498,20 @@ export default class VaultImpl implements VaultImplementation {
     const tx = new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(
       withdrawFromStrategyTx,
     );
-    const ts = await this.program?.provider?.connection?.simulateTransaction?.(tx);
-    console.log('🚀 ~ file: index.ts:486 ~ VaultImpl ~ withdraw ~ ts', ts);
 
     return tx;
   }
 
   // Reserved code to withdraw from Vault Reserves directly.
   // The only situation this piece of code will be required, is when a single Vault have no other strategy, and only have its own reserve.
-  private async withdrawFromVaultReserve(owner: PublicKey, baseTokenAmount: BN): Promise<Transaction> {
-    let preInstructions: TransactionInstruction[] = [];
-    const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
-      new PublicKey(this.tokenInfo.address),
-      owner,
-      this.connection,
-    );
-    const [userLpToken, createUserLpTokenIx] = await getOrCreateATAInstruction(
-      this.vaultState.lpMint,
-      owner,
-      this.connection,
-    );
-    if (createUserTokenIx) {
-      preInstructions.push(createUserTokenIx);
-    }
-    if (createUserLpTokenIx) {
-      preInstructions.push(createUserLpTokenIx);
-    }
-
+  private async withdrawFromVaultReserve(
+    owner: PublicKey,
+    baseTokenAmount: BN,
+    userToken: PublicKey,
+    userLpToken: PublicKey,
+    preInstructions: Array<TransactionInstruction>,
+    withdrawOpt?: WithdrawOpt,
+  ): Promise<Transaction> {
     // Unwrap SOL
     const postInstruction: Array<TransactionInstruction> = [];
     if (this.tokenInfo.address === SOL_MINT.toString()) {
@@ -524,20 +521,41 @@ export default class VaultImpl implements VaultImplementation {
       }
     }
 
-    const withdrawTx = await this.program.methods
-      .withdraw(baseTokenAmount, new BN(0)) // Vault does not have slippage, second parameter is ignored.
-      .accounts({
-        vault: this.vaultPda,
-        tokenVault: this.tokenVaultPda,
-        lpMint: this.vaultState.lpMint,
-        userToken,
-        userLp: userLpToken,
-        user: owner,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .preInstructions(preInstructions)
-      .postInstructions(postInstruction)
-      .transaction();
+    let withdrawTx;
+    if (withdrawOpt?.affiliate) {
+      withdrawTx = await withdrawOpt.affiliate.affiliateProgram.methods
+        .withdraw(baseTokenAmount, new BN(0))
+        .accounts({
+          vault: this.vaultPda,
+          tokenVault: this.tokenVaultPda,
+          vaultLpMint: this.vaultState.lpMint,
+          partner: withdrawOpt.affiliate.partner,
+          owner,
+          userToken,
+          vaultProgram: this.program.programId,
+          userLp: userLpToken,
+          user: withdrawOpt.affiliate.user,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .preInstructions(preInstructions)
+        .postInstructions(postInstruction)
+        .transaction();
+    } else {
+      withdrawTx = await this.program.methods
+        .withdraw(baseTokenAmount, new BN(0)) // Vault does not have slippage, second parameter is ignored.
+        .accounts({
+          vault: this.vaultPda,
+          tokenVault: this.tokenVaultPda,
+          lpMint: this.vaultState.lpMint,
+          userToken,
+          userLp: userLpToken,
+          user: owner,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .preInstructions(preInstructions)
+        .postInstructions(postInstruction)
+        .transaction();
+    }
 
     return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(withdrawTx);
   }

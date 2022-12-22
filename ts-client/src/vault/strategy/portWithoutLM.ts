@@ -7,7 +7,7 @@ import * as port from '@mercurial-finance/port-sdk';
 
 import { ReserveState, Strategy, StrategyHandler } from '.';
 import { AffiliateVaultProgram, VaultProgram } from '../types';
-import { ORACLE_DEFAULT_PUBKEY, SEEDS } from '../constants';
+import { SEEDS } from '../constants';
 
 export default class PortWithoutLMHandler implements StrategyHandler {
   constructor(public strategyProgram: PublicKey) {}
@@ -56,7 +56,7 @@ export default class PortWithoutLMHandler implements StrategyHandler {
 
     const { collateral: portCollateral, lendingMarket, liquidity } = state as port.ReserveData;
 
-    const oraclePubkey = liquidity.oraclePubkey.toBase58() == ORACLE_DEFAULT_PUBKEY ? null : liquidity.oraclePubkey;
+    const oraclePubkey = liquidity.oracleOption === 0 ? null : liquidity.oraclePubkey;
 
     const [lendingMarketAuthority] = await PublicKey.findProgramAddress(
       [lendingMarket.toBuffer()],

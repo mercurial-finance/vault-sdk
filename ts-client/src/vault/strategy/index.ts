@@ -44,6 +44,7 @@ export type ReserveState = {
   };
   state: unknown;
 };
+
 export interface StrategyHandler {
   strategyProgram?: PublicKey;
   withdraw(

@@ -66,6 +66,7 @@ describe('Interact with Vault in devnet', () => {
 
     // Withdraw
     const withdrawTx = await vaultImpl.withdraw(mockWallet.publicKey, new BN(userBalanceDeposit2));
+    console.log(await provider.connection.simulateTransaction(withdrawTx));
     const withdrawResult = await provider.sendAndConfirm(withdrawTx);
     console.log('Withdraw result', withdrawResult);
     expect(typeof withdrawResult).toBe('string');
