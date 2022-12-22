@@ -65,14 +65,18 @@ describe('Interact with Vault in devnet', () => {
     expect(Number(userBalanceDeposit2)).toBeGreaterThan(Number(userBalanceDeposit));
 
     // Withdraw
-    const withdrawTx = await vaultImpl.withdraw(mockWallet.publicKey, new BN(userBalanceDeposit2));
+    const unlockedAmount = await vaultImpl.getWithdrawableAmount();
+    const withdrawTx = await vaultImpl.withdraw(
+      mockWallet.publicKey,
+      new BN(userBalanceDeposit2).mul(vaultImpl.lpSupply).div(unlockedAmount),
+    );
     const withdrawResult = await provider.sendAndConfirm(withdrawTx);
     console.log('Withdraw result', withdrawResult);
     expect(typeof withdrawResult).toBe('string');
 
     // Check final balance to be zero
     const userBalanceDeposit3 = await vaultImpl.getUserBalance(mockWallet.publicKey);
-    expect(Number(userBalanceDeposit3)).toEqual(0);
+    expect(Number(userBalanceDeposit3)).toBeLessThan(5); // slight price impact for virtual price calculation
   });
 
   test('Get affiliate partner info', async () => {
