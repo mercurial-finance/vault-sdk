@@ -1,4 +1,5 @@
 use crate::strategy_handler::apricot_without_lm::ApricotWithoutLMHandler;
+use crate::strategy_handler::drift::DriftHandler;
 use crate::strategy_handler::port_finance_without_lm::PortFinanceWithoutLMHandler;
 use crate::strategy_handler::solend_with_lm::SolendWithLMHandler;
 use crate::strategy_handler::solend_without_lm::SolendWithoutLMHandler;
@@ -17,6 +18,10 @@ pub fn get_strategy_handler(strategy_type: StrategyType) -> Box<dyn StrategyHand
         StrategyType::ApricotWithoutLM => Box::new(ApricotWithoutLMHandler {}),
         StrategyType::Francium => panic!("Not implemented yet"),
         StrategyType::Tulip => Box::new(TulipHandler {}),
+        StrategyType::Vault => {
+            panic!("This is for compatibility with some administrative endpoint")
+        }
+        StrategyType::Drift => Box::new(DriftHandler {}),
         _ => panic!(),
     }
 }

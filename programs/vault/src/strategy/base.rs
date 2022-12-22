@@ -14,6 +14,9 @@ pub enum StrategyType {
     ApricotWithoutLM,
     Francium,
     Tulip,
+    // This is for compatibility with some administrative endpoint
+    Vault,
+    Drift,
 }
 
 pub fn get_tulip_program_id() -> Pubkey {
