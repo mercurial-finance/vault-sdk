@@ -74,12 +74,7 @@ export const getStrategyType = (strategyResponse: any) => {
   return Object.keys(strategyResponse)[0] as StrategyType;
 };
 
-export const getStrategyHandler = (
-  strategyType: StrategyType,
-  cluster: Cluster,
-  connection: Connection,
-  allowOwnerOffCurve?: boolean,
-): StrategyHandler | null => {
+export const getStrategyHandler = (strategyType: StrategyType, cluster: Cluster): StrategyHandler | null => {
   const strategyProgramAddresses = StrategyProgram[cluster ?? 'mainnet-beta'];
 
   switch (strategyType) {

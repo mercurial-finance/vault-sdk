@@ -7,7 +7,7 @@ import * as port from '@mercurial-finance/port-sdk';
 
 import { ReserveState, Strategy, StrategyHandler } from '.';
 import { AffiliateVaultProgram, VaultProgram } from '../types';
-import { SEEDS } from '../constants';
+import { ORACLE_DEFAULT_PUBKEY, SEEDS } from '../constants';
 
 export default class PortWithoutLMHandler implements StrategyHandler {
   constructor(public strategyProgram: PublicKey) {}
@@ -55,6 +55,8 @@ export default class PortWithoutLMHandler implements StrategyHandler {
     );
 
     const { collateral: portCollateral, lendingMarket, liquidity } = state as port.ReserveData;
+
+    const oraclePubkey = liquidity.oraclePubkey.toBase58() == ORACLE_DEFAULT_PUBKEY ? null : liquidity.oraclePubkey;
 
     const [lendingMarketAuthority] = await PublicKey.findProgramAddress(
       [lendingMarket.toBuffer()],
@@ -104,7 +106,7 @@ export default class PortWithoutLMHandler implements StrategyHandler {
         .remainingAccounts(remainingAccounts)
         .preInstructions(
           preInstructions.concat([
-            port.refreshReserveInstruction(strategy.state.reserve, liquidity.oraclePubkey, this.strategyProgram),
+            port.refreshReserveInstruction(strategy.state.reserve, oraclePubkey, this.strategyProgram),
           ]),
         )
         .postInstructions(postInstructions)
@@ -123,7 +125,7 @@ export default class PortWithoutLMHandler implements StrategyHandler {
       .remainingAccounts(remainingAccounts)
       .preInstructions(
         preInstructions.concat([
-          port.refreshReserveInstruction(strategy.state.reserve, liquidity.oraclePubkey, this.strategyProgram),
+          port.refreshReserveInstruction(strategy.state.reserve, oraclePubkey, this.strategyProgram),
         ]),
       )
       .postInstructions(postInstructions)

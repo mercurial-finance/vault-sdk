@@ -45,11 +45,13 @@ const getVaultState = async (
     new PublicKey(program.programId),
   );
   const vaultState = (await program.account.vault.fetchNullable(vaultPda)) as VaultState;
-  const lpSupply = await getLpSupply(program.provider.connection, vaultState.lpMint);
 
   if (!vaultState) {
     throw 'Cannot get vault state';
   }
+
+  const lpSupply = await getLpSupply(program.provider.connection, vaultState.lpMint);
+
   return { vaultPda, tokenVaultPda, vaultState, lpSupply };
 };
 
@@ -364,15 +366,13 @@ export default class VaultImpl implements VaultImplementation {
         return { publicKey: strat, strategyState };
       });
     const vaultStrategiesState = await Promise.allSettled(vaultStrategiesStatePromise);
-
-    const highestLiquidity = vaultStrategiesState
+    const settledVaultStrategiesState = vaultStrategiesState
       .map((item) => (item.status === 'fulfilled' ? item.value : undefined))
-      .sort((a, b) => {
-        if (a && b) {
-          return b.strategyState.currentLiquidity.sub(a.strategyState.currentLiquidity).toNumber();
-        }
-        return 0;
-      })[0];
+      .filter(Boolean);
+
+    const highestLiquidity = settledVaultStrategiesState.sort((a, b) =>
+      b.strategyState.currentLiquidity.sub(a.strategyState.currentLiquidity).toNumber(),
+    )[0];
     return highestLiquidity
       ? highestLiquidity
       : {
@@ -403,12 +403,18 @@ export default class VaultImpl implements VaultImplementation {
 
     const availableAmount = currentLiquidity.add(vaultLiquidty);
     const amountToUnmint = new BN(baseTokenAmount).mul(virtualPrice);
+
+    // If withdraw amount less than reserve amount, withdraw from reserve
+    if (amountToUnmint.lt(vaultLiquidty)) {
+      return this.withdrawFromVaultReserve(owner, baseTokenAmount);
+    }
+
     if (amountToUnmint.gt(availableAmount)) {
       throw new Error('Selected strategy does not have enough liquidity.');
     }
 
     const strategyType = getStrategyType(selectedStrategy.strategyState.strategyType);
-    const strategyHandler = getStrategyHandler(strategyType, this.cluster, this.connection, this.allowOwnerOffCurve);
+    const strategyHandler = getStrategyHandler(strategyType, this.cluster);
 
     if (!strategyType || !strategyHandler) {
       throw new Error('Cannot find strategy handler');
@@ -482,6 +488,8 @@ export default class VaultImpl implements VaultImplementation {
     const tx = new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(
       withdrawFromStrategyTx,
     );
+    const ts = await this.program?.provider?.connection?.simulateTransaction?.(tx);
+    console.log('🚀 ~ file: index.ts:486 ~ VaultImpl ~ withdraw ~ ts', ts);
 
     return tx;
   }
