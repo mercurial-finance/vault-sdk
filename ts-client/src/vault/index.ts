@@ -432,14 +432,11 @@ export default class VaultImpl implements VaultImplementation {
 
     const unlockedAmount = await this.getWithdrawableAmount();
     const amountToWithdraw = baseTokenAmount.mul(unlockedAmount).div(this.lpSupply);
-    console.log('🚀 ~ file: index.ts:435 ~ VaultImpl ~ withdraw ~ amountToWithdraw', amountToWithdraw.toNumber());
     const vaultLiquidity = new BN((await getVaultLiquidity(this.connection, this.tokenVaultPda)) || 0);
-    console.log('🚀 ~ file: index.ts:437 ~ VaultImpl ~ withdraw ~ vaultLiquidity', vaultLiquidity.toNumber());
 
     if (
       amountToWithdraw.lt(vaultLiquidity) // If withdraw amount lesser than vault reserve
     ) {
-      console.log('test', withdrawOpt);
       return this.withdrawFromVaultReserve(
         owner,
         amountToWithdraw,
@@ -513,8 +510,6 @@ export default class VaultImpl implements VaultImplementation {
     preInstructions: Array<TransactionInstruction>,
     withdrawOpt?: WithdrawOpt,
   ): Promise<Transaction> {
-    console.log('🚀 ~ file: index.ts:516 ~ VaultImpl ~ userLpToken', userLpToken.toBase58());
-    console.log('🚀 ~ file: index.ts:516 ~ VaultImpl ~ baseTokenAmount', baseTokenAmount.toNumber());
     // Unwrap SOL
     const postInstruction: Array<TransactionInstruction> = [];
     if (this.tokenInfo.address === SOL_MINT.toString()) {
