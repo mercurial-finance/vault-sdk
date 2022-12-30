@@ -48,10 +48,12 @@ type WithdrawOpt = {
 const getVaultState = async (
   vaultParams: TokenInfo,
   program: VaultProgram,
+  seedBaseKey?: PublicKey,
 ): Promise<{ vaultPda: PublicKey; tokenVaultPda: PublicKey; vaultState: VaultState; lpSupply: BN }> => {
   const { vaultPda, tokenVaultPda } = await getVaultPdas(
     new PublicKey(vaultParams.address),
     new PublicKey(program.programId),
+    seedBaseKey,
   );
   const vaultState = (await program.account.vault.fetchNullable(vaultPda)) as VaultState;
 
@@ -82,6 +84,7 @@ export default class VaultImpl implements VaultImplementation {
   private affiliateProgram: AffiliateVaultProgram | undefined;
 
   private allowOwnerOffCurve?: boolean;
+  public seedBaseKey?: PublicKey;
 
   public tokenInfo: TokenInfo;
   public vaultPda: PublicKey;
@@ -93,6 +96,7 @@ export default class VaultImpl implements VaultImplementation {
     program: VaultProgram,
     vaultDetails: VaultDetails,
     opt?: {
+      seedBaseKey?: PublicKey;
       allowOwnerOffCurve?: boolean;
       cluster?: Cluster;
       affiliateId?: PublicKey;
@@ -119,6 +123,7 @@ export default class VaultImpl implements VaultImplementation {
     connection: Connection,
     tokenInfo: TokenInfo,
     opt?: {
+      seedBaseKey?: PublicKey;
       allowOwnerOffCurve?: boolean;
       cluster?: Cluster;
       programId?: string;
