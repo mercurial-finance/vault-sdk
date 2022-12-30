@@ -102,9 +102,9 @@ export const getOrCreateATAInstruction = async (
   }
 };
 
-export const getVaultPdas = async (tokenMint: PublicKey, programId: PublicKey) => {
+export const getVaultPdas = async (tokenMint: PublicKey, programId: PublicKey, seedBaseKey?: PublicKey) => {
   const [vault, _vaultBump] = await PublicKey.findProgramAddress(
-    [Buffer.from('vault'), tokenMint.toBuffer(), VAULT_BASE_KEY.toBuffer()],
+    [Buffer.from('vault'), tokenMint.toBuffer(), (seedBaseKey ?? VAULT_BASE_KEY).toBuffer()],
     programId,
   );
 
