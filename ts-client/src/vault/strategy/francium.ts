@@ -1,6 +1,7 @@
 import { PublicKey, TransactionInstruction, SYSVAR_CLOCK_PUBKEY, AccountMeta, Transaction } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { LENDING_CONFIG } from '@mercurial-finance/francium-sdk';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { TokenInfo } from '@solana/spl-token-registry';
 import { BN } from '@project-serum/anchor';
 
 import { StrategyHandler, Strategy } from '.';
@@ -9,6 +10,7 @@ import { SEEDS } from '../constants';
 
 export default class FranciumHandler implements StrategyHandler {
   async withdraw(
+    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,
@@ -32,7 +34,6 @@ export default class FranciumHandler implements StrategyHandler {
   ): Promise<Transaction> {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
-    const vaultState = await program.account.vault.fetch(vault);
     // https://github.com/Francium-DeFi/francium-sdk/blob/master/src/constants/lend/pools.ts#L59
     const lendingPools = LENDING_CONFIG;
     const lendingPool = Object.values(lendingPools).find((lendingPool) =>

@@ -1,6 +1,6 @@
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-
+import { TokenInfo } from '@solana/spl-token-registry';
 import * as anchor from '@project-serum/anchor';
 
 import { StrategyHandler, Strategy } from '.';
@@ -8,6 +8,7 @@ import { AffiliateVaultProgram, VaultProgram } from '../types';
 
 export default class VaultHandler implements StrategyHandler {
   async withdraw(
+    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     _strategy: Strategy,
