@@ -19,7 +19,7 @@ import {
   getDriftSignerPublicKey,
   getSpotMarketPublicKey,
 } from '@mercurial-finance/drift-sdk';
-import { Wallet } from '@project-serum/anchor';
+import { AnchorError, Wallet } from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
 import BN from 'bn.js';
@@ -81,7 +81,10 @@ export default class DriftHandler implements StrategyHandler {
       program.programId,
     );
 
-    const userPubKey = getUserAccountPublicKeySync(this.programId, vault);
+    // subAccountId is 16 bytes, therefore we slice 2 bytes only
+    const subAccountId = new BN(strategy.state.bumps.slice(0, 2), 'le');
+
+    const userPubKey = getUserAccountPublicKeySync(this.programId, vault, subAccountId.toNumber());
     const userStatsPubKey = getUserStatsAccountPublicKey(this.programId, vault);
     const spotMarketPubKey = await getSpotMarketPublicKey(this.programId, spotMarket.marketIndex);
     const driftState = await getDriftStateAccountPublicKey(this.programId);
