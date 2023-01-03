@@ -1,16 +1,10 @@
-import {
-  PublicKey,
-  AccountMeta,
-  SYSVAR_CLOCK_PUBKEY,
-  Cluster,
-  TransactionInstruction,
-  Transaction,
-} from '@solana/web3.js';
+import { PublicKey, AccountMeta, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import * as anchor from '@project-serum/anchor';
 import * as quarry from '@quarryprotocol/quarry-sdk';
 import { Token } from '@solana/spl-token';
 import * as port from '@mercurial-finance/port-sdk';
+import { TokenInfo } from '@solana/spl-token-registry';
 
 import { ReserveState, Strategy, StrategyHandler } from '.';
 import { AffiliateVaultProgram, VaultProgram } from '../types';
@@ -37,6 +31,7 @@ export default class PortWithLMHandler implements StrategyHandler {
   }
 
   async withdraw(
+    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,

@@ -1,14 +1,50 @@
-import { PublicKey, TransactionInstruction, SYSVAR_CLOCK_PUBKEY, AccountMeta, Transaction } from '@solana/web3.js';
-import { LENDING_CONFIG } from '@mercurial-finance/francium-sdk';
+import {
+  AccountMeta,
+  Cluster,
+  Keypair,
+  PublicKey,
+  SYSVAR_CLOCK_PUBKEY,
+  Transaction,
+  TransactionInstruction,
+} from '@solana/web3.js';
+import {
+  DriftClient,
+  DriftConfig,
+  initialize,
+  MainnetSpotMarkets,
+  DevnetSpotMarkets,
+  getUserStatsAccountPublicKey,
+  getUserAccountPublicKeySync,
+  getDriftStateAccountPublicKey,
+  getDriftSignerPublicKey,
+  getSpotMarketPublicKey,
+} from '@mercurial-finance/drift-sdk';
+import { Wallet } from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
-import { BN } from '@project-serum/anchor';
+import BN from 'bn.js';
 
-import { StrategyHandler, Strategy } from '.';
-import { AffiliateVaultProgram, VaultProgram } from '../types';
 import { SEEDS } from '../constants';
+import { AffiliateVaultProgram, VaultProgram } from '../types';
+import { Strategy, StrategyHandler } from '.';
 
-export default class FranciumHandler implements StrategyHandler {
+export default class DriftHandler implements StrategyHandler {
+  private sdkConfig: DriftConfig;
+  private driftClient: DriftClient;
+  private cluster: Cluster;
+  private programId: PublicKey;
+
+  constructor(cluster: Cluster, program: VaultProgram) {
+    this.sdkConfig = initialize({ env: cluster === 'testnet' ? 'mainnet-beta' : cluster });
+    this.cluster = cluster;
+    this.driftClient = new DriftClient({
+      connection: program.provider.connection,
+      programID: new PublicKey(this.sdkConfig.DRIFT_PROGRAM_ID),
+      wallet: new Wallet(Keypair.generate()),
+    });
+    this.programId = new PublicKey(this.sdkConfig.DRIFT_PROGRAM_ID);
+  }
+
   async withdraw(
     tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
@@ -34,26 +70,29 @@ export default class FranciumHandler implements StrategyHandler {
   ): Promise<Transaction> {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
-    // https://github.com/Francium-DeFi/francium-sdk/blob/master/src/constants/lend/pools.ts#L59
-    const lendingPools = LENDING_CONFIG;
-    const lendingPool = Object.values(lendingPools).find((lendingPool) =>
-      lendingPool.lendingPoolInfoAccount.equals(new PublicKey(strategy.state.reserve)),
-    );
-    if (!lendingPool) throw new Error('Cannot find francium lending pool');
+    const spotMarkets = this.cluster === 'devnet' ? DevnetSpotMarkets : MainnetSpotMarkets;
+    const spotMarket = spotMarkets.find((market) => market.mint.toBase58() === tokenInfo.address);
 
-    const collateralMint = lendingPool.lendingPoolShareMint;
+    if (!spotMarket) throw new Error('Spot market not found');
+
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
     const [collateralVault] = await PublicKey.findProgramAddress(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId,
     );
 
+    const userPubKey = getUserAccountPublicKeySync(this.programId, vault);
+    const userStatsPubKey = getUserStatsAccountPublicKey(this.programId, vault);
+    const spotMarketPubKey = await getSpotMarketPublicKey(this.programId, spotMarket.marketIndex);
+    const driftState = await getDriftStateAccountPublicKey(this.programId);
+    const driftSigner = getDriftSignerPublicKey(this.programId);
+
     const accounts = [
-      { pubkey: lendingPool.lendingPoolTknAccount, isWritable: true },
-      { pubkey: lendingPool.marketInfoAccount, isWritable: true },
-      { pubkey: lendingPool.lendingMarketAuthority },
-      { pubkey: collateralMint, isWritable: true },
-      { pubkey: SYSVAR_CLOCK_PUBKEY },
+      { pubkey: userPubKey, isWritable: true },
+      { pubkey: userStatsPubKey, isWritable: true },
+      { pubkey: spotMarketPubKey, isWritable: true },
+      { pubkey: driftState },
+      { pubkey: driftSigner },
     ];
 
     const remainingAccounts: Array<AccountMeta> = [];
@@ -65,11 +104,18 @@ export default class FranciumHandler implements StrategyHandler {
       });
     }
 
+    const driftRemainingAccounts = this.driftClient.getRemainingAccounts({
+      userAccounts: [],
+      writableSpotMarketIndexes: [spotMarket.marketIndex],
+    });
+
+    remainingAccounts.push(...driftRemainingAccounts);
+
     const txAccounts = {
       vault,
       strategy: new PublicKey(strategy.pubkey),
       reserve: new PublicKey(strategy.state.reserve),
-      strategyProgram: lendingPool.programId,
+      strategyProgram: this.sdkConfig.DRIFT_PROGRAM_ID,
       collateralVault,
       feeVault,
       tokenVault,

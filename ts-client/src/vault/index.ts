@@ -464,7 +464,7 @@ export default class VaultImpl implements VaultImplementation {
     }
 
     const strategyType = getStrategyType(selectedStrategy.strategyState.strategyType);
-    const strategyHandler = getStrategyHandler(strategyType, this.cluster);
+    const strategyHandler = getStrategyHandler(strategyType, this.cluster, this.program);
 
     if (!strategyType || !strategyHandler) {
       throw new Error('Cannot find strategy handler');
@@ -480,6 +480,7 @@ export default class VaultImpl implements VaultImplementation {
     }
 
     const withdrawFromStrategyTx = await strategyHandler.withdraw(
+      this.tokenInfo,
       owner,
       this.program,
       {

@@ -1,11 +1,14 @@
 import { BN } from '@project-serum/anchor';
-import { Cluster, Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { Cluster, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { TokenInfo } from '@solana/spl-token-registry';
+
 import { StrategyProgram } from '../constants';
 import type { AffiliateVaultProgram, VaultProgram } from '../types';
 import ApricotWithoutLMHandler from './apricotWithoutLM';
 import FranciumHandler from './francium';
 import MangoHandler from './mango';
 import TulipHandler from './tulip';
+import DriftHandler from './drift';
 import PortWithLMHandler from './portWithLM';
 import PortWithoutLMHandler from './portWithoutLM';
 import SolendWithLMHandler from './solendWithLM';
@@ -21,7 +24,8 @@ export type StrategyType =
   | 'apricotWithoutLM'
   | 'mango'
   | 'tulip'
-  | 'vault';
+  | 'vault'
+  | 'drift';
 
 export type StrategyState = {
   reserve: PublicKey;
@@ -48,6 +52,7 @@ export type ReserveState = {
 export interface StrategyHandler {
   strategyProgram?: PublicKey;
   withdraw(
+    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: any,
@@ -75,7 +80,11 @@ export const getStrategyType = (strategyResponse: any) => {
   return Object.keys(strategyResponse)[0] as StrategyType;
 };
 
-export const getStrategyHandler = (strategyType: StrategyType, cluster: Cluster): StrategyHandler | null => {
+export const getStrategyHandler = (
+  strategyType: StrategyType,
+  cluster: Cluster,
+  program: VaultProgram,
+): StrategyHandler | null => {
   const strategyProgramAddresses = StrategyProgram[cluster ?? 'mainnet-beta'];
 
   switch (strategyType) {
@@ -97,6 +106,8 @@ export const getStrategyHandler = (strategyType: StrategyType, cluster: Cluster)
       return new TulipHandler();
     case 'vault':
       return new VaultHandler();
+    case 'drift':
+      return new DriftHandler(cluster, program);
     default:
       return null;
   }

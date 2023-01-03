@@ -1,4 +1,5 @@
-import { AccountMeta, Cluster, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { AccountMeta, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { TokenInfo } from '@solana/spl-token-registry';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import * as apricot from '@mercurial-finance/apricot-sdk';
 import * as anchor from '@project-serum/anchor';
@@ -15,6 +16,7 @@ export default class ApricotWithoutLMHandler implements StrategyHandler {
   }
 
   async withdraw(
+    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,

@@ -2,6 +2,7 @@ import * as mango from '@blockworks-foundation/mango-client';
 import * as anchor from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { AccountMeta, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { TokenInfo } from '@solana/spl-token-registry';
 
 import { StrategyHandler, Strategy } from '.';
 import { SEEDS } from '../constants';
@@ -12,6 +13,7 @@ export default class MangoHandler implements StrategyHandler {
   static MangoGrouPK = new PublicKey('98pjRuQjK3qA6gXts96PqZT4Ze5QmnCmt3QYjhbUSPue');
 
   async withdraw(
+    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,

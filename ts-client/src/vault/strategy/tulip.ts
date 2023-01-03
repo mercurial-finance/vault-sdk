@@ -1,5 +1,6 @@
 import { PublicKey, TransactionInstruction, SYSVAR_CLOCK_PUBKEY, AccountMeta, Transaction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { TokenInfo } from '@solana/spl-token-registry';
 import * as tulip from '@mercurial-finance/tulip-platform-sdk';
 import * as anchor from '@project-serum/anchor';
 
@@ -9,6 +10,7 @@ import { SEEDS } from '../constants';
 
 export default class TulipHandler implements StrategyHandler {
   async withdraw(
+    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,
