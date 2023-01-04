@@ -1,12 +1,4 @@
-import {
-  AccountMeta,
-  Cluster,
-  Keypair,
-  PublicKey,
-  SYSVAR_CLOCK_PUBKEY,
-  Transaction,
-  TransactionInstruction,
-} from '@solana/web3.js';
+import { AccountMeta, Cluster, Keypair, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import {
   DriftClient,
   DriftConfig,
@@ -19,8 +11,8 @@ import {
   getDriftSignerPublicKey,
   getSpotMarketPublicKey,
   getSpotMarketVaultPublicKey,
+  Wallet,
 } from '@mercurial-finance/drift-sdk';
-import { AnchorError, Wallet } from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
 import BN from 'bn.js';
@@ -71,10 +63,14 @@ export default class DriftHandler implements StrategyHandler {
   ): Promise<Transaction> {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
+    await this.driftClient.subscribe();
+
     const spotMarkets = this.cluster === 'devnet' ? DevnetSpotMarkets : MainnetSpotMarkets;
     const spotMarket = spotMarkets.find((market) => market.mint.toBase58() === tokenInfo.address);
 
     if (!spotMarket) throw new Error('Spot market not found');
+
+    await this.driftClient.accountSubscriber.addSpotMarket(spotMarket.marketIndex);
 
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
     const [collateralVault] = await PublicKey.findProgramAddress(
@@ -111,9 +107,15 @@ export default class DriftHandler implements StrategyHandler {
     const driftRemainingAccounts = this.driftClient.getRemainingAccounts({
       userAccounts: [],
       writableSpotMarketIndexes: [spotMarket.marketIndex],
+      useMarketLastSlotCache: false,
     });
 
     remainingAccounts.push(...driftRemainingAccounts);
+
+    // prevent duplicate as spot market account pubkey will be add on program side
+    const remainingAccountsWithoutReserve = remainingAccounts.filter(
+      ({ pubkey }) => !pubkey.equals(strategy.state.reserve),
+    );
 
     const txAccounts = {
       vault,
@@ -139,7 +141,7 @@ export default class DriftHandler implements StrategyHandler {
           vaultLpMint: lpMint,
           owner: walletPubKey,
         })
-        .remainingAccounts(remainingAccounts)
+        .remainingAccounts(remainingAccountsWithoutReserve)
         .preInstructions(preInstructions)
         .postInstructions(postInstructions)
         .transaction();
@@ -154,7 +156,7 @@ export default class DriftHandler implements StrategyHandler {
         lpMint,
         user: walletPubKey,
       })
-      .remainingAccounts(remainingAccounts)
+      .remainingAccounts(remainingAccountsWithoutReserve)
       .preInstructions(preInstructions)
       .postInstructions(postInstructions)
       .transaction();
