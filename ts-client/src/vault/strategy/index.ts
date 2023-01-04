@@ -33,6 +33,7 @@ export type StrategyState = {
   strategyType: object;
   bumps: Uint8Array;
   currentLiquidity: BN;
+  vault: PublicKey;
 };
 
 export type Strategy = {
