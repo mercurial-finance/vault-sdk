@@ -112,6 +112,7 @@ export default class DriftHandler implements StrategyHandler {
 
     remainingAccounts.push(...driftRemainingAccounts);
 
+    // prevent duplicate as spot market account pubkey will be add on program side
     const remainingAccountsWithoutReserve = remainingAccounts.filter(
       ({ pubkey }) => !pubkey.equals(strategy.state.reserve),
     );
