@@ -17,6 +17,7 @@ pub enum StrategyType {
     // This is for compatibility with some administrative endpoint
     Vault,
     Drift,
+    Frakt,
 }
 
 pub fn get_tulip_program_id() -> Pubkey {
