@@ -19,6 +19,7 @@
     "@blockworks-foundation/mango-client": "^3.4.7",
     "@mercurial-finance/apricot-sdk": "0.17.6",
     "@mercurial-finance/drift-sdk": "1.0.3",
+    "@mercurial-finance/frakt-sdk": "0.0.2",
     "@mercurial-finance/francium-sdk": "1.4.3",
     "@mercurial-finance/optimist": "^0.1.4",
     "@mercurial-finance/port-sdk": "0.2.69",

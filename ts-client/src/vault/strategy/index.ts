@@ -14,6 +14,7 @@ import PortWithoutLMHandler from './portWithoutLM';
 import SolendWithLMHandler from './solendWithLM';
 import SolendWithoutLMHandler from './solendWithoutLM';
 import VaultHandler from './vault';
+import FraktHandler from './frakt';
 
 export type StrategyType =
   | 'portFinanceWithoutLm'
@@ -25,7 +26,8 @@ export type StrategyType =
   | 'mango'
   | 'tulip'
   | 'vault'
-  | 'drift';
+  | 'drift'
+  | 'frakt';
 
 export type StrategyState = {
   reserve: PublicKey;
@@ -109,6 +111,8 @@ export const getStrategyHandler = (
       return new VaultHandler();
     case 'drift':
       return new DriftHandler(cluster, program);
+    case 'frakt':
+      return new FraktHandler(program);
     default:
       return null;
   }
