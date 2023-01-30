@@ -4,6 +4,7 @@ specifiers:
   '@blockworks-foundation/mango-client': ^3.4.7
   '@mercurial-finance/apricot-sdk': 0.17.6
   '@mercurial-finance/drift-sdk': 1.0.3
+  '@mercurial-finance/frakt-sdk': 0.0.2
   '@mercurial-finance/francium-sdk': 1.4.3
   '@mercurial-finance/optimist': ^0.1.4
   '@mercurial-finance/port-sdk': 0.2.69
@@ -38,6 +39,7 @@ dependencies:
   '@blockworks-foundation/mango-client': 3.4.7
   '@mercurial-finance/apricot-sdk': 0.17.6
   '@mercurial-finance/drift-sdk': 1.0.3
+  '@mercurial-finance/frakt-sdk': 0.0.2
   '@mercurial-finance/francium-sdk': 1.4.3
   '@mercurial-finance/optimist': 0.1.4_uaddxilqje56gbevckaobszugi
   '@mercurial-finance/port-sdk': 0.2.69_x7hnsalv3tkefoyaeyocjyrlb4
@@ -735,6 +737,18 @@ packages:
       uuid: 8.3.2
     transitivePeerDependencies:
       - bufferutil
+      - encoding
+      - utf-8-validate
+    dev: false
+
+  /@mercurial-finance/frakt-sdk/0.0.2:
+    resolution: {integrity: sha512-x/3W7BMyUzMigkeJMLXNCnZunGw6JFSaG5hx4oaioDy9qT3MxT05OhaoKLs9zMl3RPLjy/xm1Y79eoDdz8qxEQ==}
+    dependencies:
+      '@project-serum/anchor': 0.24.2
+      axios: 1.2.5
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
       - encoding
       - utf-8-validate
     dev: false
@@ -1586,6 +1600,16 @@ packages:
     engines: {node: '>= 0.4'}
     dev: false
 
+  /axios/1.2.5:
+    resolution: {integrity: sha512-9pU/8mmjSSOb4CXVsvGIevN+MlO/t9OWtKadTaLuN85Gge3HGorUckgp8A/2FH4V4hJ7JuQ3LIeI7KAV9ITZrQ==}
+    dependencies:
+      follow-redirects: 1.15.2
+      form-data: 4.0.0
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+    dev: false
+
   /babel-jest/28.1.0_@babel+core@7.17.12:
     resolution: {integrity: sha512-zNKk0yhDZ6QUwfxh9k07GII6siNGMJWVUU49gmFj5gfdqDKLqa2RArXOF2CODp4Dr7dLxN2cvAV+667dGJ4b4w==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
@@ -2262,6 +2286,16 @@ packages:
     resolution: {integrity: sha512-b6suED+5/3rTpUBdG1gupIl8MPFCAMA0QXwmljLhvCUKcUvdE4gWky9zpuGCcXHOsz4J9wPGNWq6OKpmIzz3hQ==}
     hasBin: true
     dev: true
+
+  /follow-redirects/1.15.2:
+    resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+    dev: false
 
   /for-each/0.3.3:
     resolution: {integrity: sha512-jqYfLp7mo9vIyQf8ykW2v7A+2N4QjeCeI5+Dz9XraiO1ign81wjiH7Fb9vSOWvQfNtmSa4H2RoQTrrXivdUZmw==}
@@ -3601,6 +3635,10 @@ packages:
       '@types/long': 4.0.2
       '@types/node': 18.11.18
       long: 4.0.0
+    dev: false
+
+  /proxy-from-env/1.1.0:
+    resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
     dev: false
 
   /randombytes/2.1.0:
