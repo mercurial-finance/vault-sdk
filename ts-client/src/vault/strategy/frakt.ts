@@ -7,11 +7,11 @@ import {
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { TokenInfo, loans } from '@mercurial-finance/frakt-sdk';
+import { TokenInfo } from '@mercurial-finance/frakt-sdk';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import BN from 'bn.js';
 
-import { SEEDS, SOL_MINT } from '../constants';
+import { PROGRAM_ID, SEEDS, SOL_MINT } from '../constants';
 import { AffiliateVaultProgram, VaultProgram } from '../types';
 import { getOrCreateATAInstruction } from '../utils';
 import { Strategy, StrategyHandler } from '.';
@@ -51,22 +51,10 @@ export default class FraktHandler implements StrategyHandler {
   ): Promise<Transaction> {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
-    const { timeBasedLiquidityPools, priceBasedLiquidityPools } = await loans.getAllProgramAccounts(
+    const [liqOwner] = await PublicKey.findProgramAddress(
+      [Buffer.from(SEEDS.FRAKT_LENDING), strategy.state.reserve.toBuffer()],
       FRAKT_PROGRAM_ID,
-      this.connection,
     );
-
-    let liquidityPool;
-    liquidityPool = timeBasedLiquidityPools.find(
-      (pool) => pool.liquidityPoolPubkey === strategy.state.reserve.toBase58(),
-    );
-
-    if (!liquidityPool)
-      liquidityPool = priceBasedLiquidityPools.find(
-        (pool) => pool.liquidityPoolPubkey === strategy.state.reserve.toBase58(),
-      );
-
-    if (!liquidityPool) throw new Error('No liquidity pool found');
 
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
     const strategyReserveBuffer = new PublicKey(strategy.state.reserve).toBuffer();
@@ -98,7 +86,7 @@ export default class FraktHandler implements StrategyHandler {
     const accounts = [
       { pubkey: strategyOwner, isWritable: true },
       { pubkey: tokenAccount, isWritable: true },
-      { pubkey: new PublicKey(liquidityPool.liqOwner), isWritable: true },
+      { pubkey: liqOwner, isWritable: true },
       { pubkey: deposit, isWritable: true },
       { pubkey: FRAKT_ADMIN_FEE_PUBKEY, isWritable: true },
       { pubkey: SystemProgram.programId },

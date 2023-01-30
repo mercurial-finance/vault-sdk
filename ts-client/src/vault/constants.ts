@@ -26,6 +26,7 @@ export const SEEDS = Object.freeze({
   APRICOT_USER_INFO_SIGNER_PREFIX: 'apricot_user_info_signer',
   FRAKT: 'frakt',
   DEPOSIT: 'deposit',
+  FRAKT_LENDING: 'nftlendingv2',
 });
 
 export const StrategyProgram: Record<
