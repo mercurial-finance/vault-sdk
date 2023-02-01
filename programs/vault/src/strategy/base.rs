@@ -3,7 +3,16 @@ use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
 #[derive(
-    AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Serialize, Deserialize,
+    AnchorSerialize,
+    AnchorDeserialize,
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    Eq,
+    Hash,
 )]
 pub enum StrategyType {
     PortFinanceWithoutLM,
@@ -18,6 +27,14 @@ pub enum StrategyType {
     Vault,
     Drift,
     Frakt,
+}
+
+impl std::fmt::Display for StrategyType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+        // or, alternatively:
+        // fmt::Debug::fmt(self, f)
+    }
 }
 
 pub fn get_tulip_program_id() -> Pubkey {
@@ -51,3 +68,5 @@ pub fn get_solend_program_id() -> Pubkey {
 pub fn get_solend_program_id() -> Pubkey {
     Pubkey::from_str("So1endDq2YkqhipRh3WViPa8hdiSpxWy6z3Z6tMCpAo").unwrap()
 }
+
+
