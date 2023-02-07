@@ -30,8 +30,15 @@ describe('Get Mainnet vault state', () => {
   });
 
   test('Get LP Supply', async () => {
-    vaults.forEach((vault) => {
-      expect(Number(vault.lpSupply)).toBeGreaterThan(0);
+    const vaultLpSupplies = await Promise.all(
+      vaults.map(async (vault) => {
+        const lpSupply = await vault.getVaultSupply();
+
+        return lpSupply;
+      }),
+    );
+    vaultLpSupplies.forEach((lpSupply) => {
+      expect(Number(lpSupply)).toBeGreaterThan(0);
     });
   });
 
