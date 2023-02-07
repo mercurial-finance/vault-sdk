@@ -158,7 +158,7 @@ export default class VaultImpl implements VaultImplementation {
     });
   }
 
-  public static async createAll(
+  public static async createMultiple(
     connection: Connection,
     tokenInfos: Array<TokenInfo>,
     opt?: {

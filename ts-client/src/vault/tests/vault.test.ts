@@ -21,12 +21,7 @@ describe('Get Mainnet vault state', () => {
 
   // Make sure all vaults can be initialized
   beforeAll(async () => {
-    const allVaults = await Promise.all([
-      await VaultImpl.create(mainnetConnection, SOL_TOKEN_INFO),
-      await VaultImpl.create(mainnetConnection, USDC_TOKEN_INFO),
-      await VaultImpl.create(mainnetConnection, USDT_TOKEN_INFO),
-    ]);
-    vaults = vaults.concat(allVaults);
+    vaults = await VaultImpl.createMultiple(mainnetConnection, [SOL_TOKEN_INFO, USDC_TOKEN_INFO, USDT_TOKEN_INFO]);
   });
 
   test('Get LP Supply', async () => {
