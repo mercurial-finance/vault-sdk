@@ -33,6 +33,7 @@ type VaultDetails = {
   vaultPda: PublicKey;
   tokenVaultPda: PublicKey;
   vaultState: VaultState;
+  lpSupply: BN;
 };
 
 type WithdrawOpt = {
@@ -48,7 +49,7 @@ const getVaultState = async (
   vaultParams: TokenInfo,
   program: VaultProgram,
   seedBaseKey?: PublicKey,
-): Promise<{ vaultPda: PublicKey; tokenVaultPda: PublicKey; vaultState: VaultState }> => {
+): Promise<{ vaultPda: PublicKey; tokenVaultPda: PublicKey; vaultState: VaultState; lpSupply: BN }> => {
   const { vaultPda, tokenVaultPda } = await getVaultPdas(
     new PublicKey(vaultParams.address),
     new PublicKey(program.programId),
@@ -60,7 +61,9 @@ const getVaultState = async (
     throw 'Cannot get vault state';
   }
 
-  return { vaultPda, tokenVaultPda, vaultState };
+  const lpSupply = await getLpSupply(program.provider.connection, vaultState.lpMint);
+
+  return { vaultPda, tokenVaultPda, vaultState, lpSupply };
 };
 
 const getVaultLiquidity = async (connection: Connection, tokenVaultPda: PublicKey): Promise<string | null> => {
@@ -87,6 +90,7 @@ export default class VaultImpl implements VaultImplementation {
   public vaultPda: PublicKey;
   public tokenVaultPda: PublicKey;
   public vaultState: VaultState;
+  public lpSupply: BN;
 
   private constructor(
     program: VaultProgram,
@@ -112,6 +116,7 @@ export default class VaultImpl implements VaultImplementation {
     this.vaultPda = vaultDetails.vaultPda;
     this.tokenVaultPda = vaultDetails.tokenVaultPda;
     this.vaultState = vaultDetails.vaultState;
+    this.lpSupply = vaultDetails.lpSupply;
   }
 
   public static async fetchMultipleUserBalance(
@@ -148,10 +153,10 @@ export default class VaultImpl implements VaultImplementation {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
 
-    const { vaultPda, tokenVaultPda, vaultState } = await getVaultState(tokenInfo, program);
+    const { vaultPda, tokenVaultPda, vaultState, lpSupply } = await getVaultState(tokenInfo, program);
     return new VaultImpl(
       program,
-      { tokenInfo, vaultPda, tokenVaultPda, vaultState },
+      { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply },
       {
         ...opt,
         affiliateId: opt?.affiliateId,
@@ -197,6 +202,7 @@ export default class VaultImpl implements VaultImplementation {
   /** Use vaultImpl.lpSupply to use cached result */
   public async getVaultSupply(): Promise<BN> {
     const lpSupply = await getLpSupply(this.connection, this.vaultState.lpMint);
+    this.lpSupply = lpSupply;
     return lpSupply;
   }
 
@@ -207,8 +213,9 @@ export default class VaultImpl implements VaultImplementation {
   }
 
   public async refreshVaultState() {
-    const { vaultState } = await getVaultState(this.tokenInfo, this.program);
+    const { vaultState, lpSupply } = await getVaultState(this.tokenInfo, this.program);
     this.vaultState = vaultState;
+    this.lpSupply = lpSupply;
   }
 
   private async createATAPreInstructions(owner: PublicKey) {
