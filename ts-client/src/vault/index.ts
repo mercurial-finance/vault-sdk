@@ -179,26 +179,24 @@ export default class VaultImpl implements VaultImplementation {
 
     const vaultsStateInfo = await getAllVaultState(tokenInfos, program);
 
-    return Promise.all(
-      vaultsStateInfo.map(({ vaultPda, tokenVaultPda, vaultState, lpSupply }, index) => {
-        const tokenInfo = tokenInfos[index];
-        return new VaultImpl(
-          program,
-          { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply },
-          {
-            ...opt,
-            affiliateId: opt?.affiliateId,
-            affiliateProgram: opt?.affiliateId
-              ? new Program<AffiliateVaultIdl>(
-                  AffiliateIDL as AffiliateVaultIdl,
-                  opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
-                  provider,
-                )
-              : undefined,
-          },
-        );
-      }),
-    );
+    return vaultsStateInfo.map(({ vaultPda, tokenVaultPda, vaultState, lpSupply }, index) => {
+      const tokenInfo = tokenInfos[index];
+      return new VaultImpl(
+        program,
+        { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply },
+        {
+          ...opt,
+          affiliateId: opt?.affiliateId,
+          affiliateProgram: opt?.affiliateId
+            ? new Program<AffiliateVaultIdl>(
+                AffiliateIDL as AffiliateVaultIdl,
+                opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
+                provider,
+              )
+            : undefined,
+        },
+      );
+    });
   }
 
   public static async create(
