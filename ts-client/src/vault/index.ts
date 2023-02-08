@@ -8,7 +8,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   SystemProgram,
 } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { MintLayout, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
 
 import { AffiliateInfo, AffiliateVaultProgram, VaultImplementation, VaultProgram, VaultState } from './types';
@@ -59,14 +59,18 @@ const getAllVaultState = async (tokenInfos: Array<TokenInfo>, program: VaultProg
     throw new Error('Some of the vault state cannot be fetched');
   }
 
-  return await Promise.all(
-    vaultsState.map(async (vaultState, index) => {
-      const vaultAccountPda = vaultAccountPdas[index];
-      const lpSupply = await getLpSupply(program.provider.connection, vaultState.lpMint);
+  const vaultLpMints = vaultsState.map((vaultState) => vaultState.lpMint);
+  const vaultLpAccounts = await program.provider.connection.getMultipleAccountsInfo(vaultLpMints);
 
-      return { ...vaultAccountPda, vaultState, lpSupply };
-    }),
-  );
+  return vaultsState.map((vaultState, index) => {
+    const vaultAccountPda = vaultAccountPdas[index];
+    if (!vaultAccountPda) throw new Error('Missing vault account pda');
+    const vaultLpAccount = vaultLpAccounts[index];
+    if (!vaultLpAccount) throw new Error('Missing vault lp account');
+    const lpSupply = new BN(u64.fromBuffer(MintLayout.decode(vaultLpAccount.data).supply));
+
+    return { ...vaultAccountPda, vaultState, lpSupply };
+  });
 };
 
 const getVaultState = async (vaultParams: TokenInfo, program: VaultProgram, seedBaseKey?: PublicKey) => {
