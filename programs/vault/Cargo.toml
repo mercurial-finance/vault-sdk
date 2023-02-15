@@ -1,6 +1,6 @@
 [package]
 name = "mercurial-vault"
-version = "0.4.4"
+version = "0.4.5"
 description = "Created with Anchor"
 edition = "2018"
 license = "MIT"
