@@ -100,11 +100,6 @@ export default class CypherHandler implements StrategyHandler {
       });
     }
 
-    // prevent duplicate as spot market account pubkey will be add on program side
-    const remainingAccountsWithoutReserve = remainingAccounts.filter(
-      ({ pubkey }) => !pubkey.equals(strategy.state.reserve),
-    );
-
     const txAccounts = {
       vault,
       strategy: new PublicKey(strategy.pubkey),
