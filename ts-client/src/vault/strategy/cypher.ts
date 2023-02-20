@@ -124,7 +124,7 @@ export default class CypherHandler implements StrategyHandler {
           vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
-        .remainingAccounts(remainingAccountsWithoutReserve)
+        .remainingAccounts(remainingAccounts)
         .preInstructions(preInstructions)
         .postInstructions(postInstructions)
         .transaction();
@@ -139,7 +139,7 @@ export default class CypherHandler implements StrategyHandler {
         lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
-      .remainingAccounts(remainingAccountsWithoutReserve)
+      .remainingAccounts(remainingAccounts)
       .preInstructions(preInstructions)
       .postInstructions(postInstructions)
       .transaction();
