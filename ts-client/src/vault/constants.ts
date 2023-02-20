@@ -27,6 +27,7 @@ export const SEEDS = Object.freeze({
   FRAKT: 'frakt',
   DEPOSIT: 'deposit',
   FRAKT_LENDING: 'nftlendingv2',
+  CYPHER: 'cypher',
 });
 
 export const StrategyProgram: Record<
