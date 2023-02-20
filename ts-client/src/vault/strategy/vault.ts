@@ -4,18 +4,17 @@ import { TokenInfo } from '@solana/spl-token-registry';
 import * as anchor from '@project-serum/anchor';
 
 import { StrategyHandler, Strategy } from '.';
-import { AffiliateVaultProgram, VaultProgram } from '../types';
+import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 
 export default class VaultHandler implements StrategyHandler {
   async withdraw(
-    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     _strategy: Strategy,
     vault: PublicKey,
     tokenVault: PublicKey,
-    _feeVault: PublicKey,
-    lpMint: PublicKey,
+    _tokenInfo: TokenInfo,
+    vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,
     amount: anchor.BN,
@@ -46,7 +45,7 @@ export default class VaultHandler implements StrategyHandler {
           partner: opt.affiliate.partner,
           user: opt.affiliate.user,
           vaultProgram: program.programId,
-          vaultLpMint: lpMint,
+          vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
         .preInstructions(preInstructions)
@@ -60,7 +59,7 @@ export default class VaultHandler implements StrategyHandler {
       .withdraw(amount, new anchor.BN(0))
       .accounts({
         ...txAccounts,
-        lpMint,
+        lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
       .preInstructions(preInstructions)

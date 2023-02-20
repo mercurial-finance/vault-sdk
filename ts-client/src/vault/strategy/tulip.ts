@@ -5,19 +5,18 @@ import * as tulip from '@mercurial-finance/tulip-platform-sdk';
 import * as anchor from '@project-serum/anchor';
 
 import { StrategyHandler, Strategy } from '.';
-import { AffiliateVaultProgram, VaultProgram } from '../types';
+import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { SEEDS } from '../constants';
 
 export default class TulipHandler implements StrategyHandler {
   async withdraw(
-    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,
     vault: PublicKey,
     tokenVault: PublicKey,
-    feeVault: PublicKey,
-    lpMint: PublicKey,
+    _tokenInfo: TokenInfo,
+    vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,
     amount: anchor.BN,
@@ -75,7 +74,7 @@ export default class TulipHandler implements StrategyHandler {
       reserve: new PublicKey(strategy.state.reserve),
       strategyProgram: tulip.LENDING_PROGRAM_ID,
       collateralVault,
-      feeVault,
+      feeVault: vaultState.feeVault,
       tokenVault,
       userToken,
       userLp,
@@ -90,7 +89,7 @@ export default class TulipHandler implements StrategyHandler {
           partner: opt.affiliate.partner,
           user: opt.affiliate.user,
           vaultProgram: program.programId,
-          vaultLpMint: lpMint,
+          vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
         .remainingAccounts(remainingAccounts)
@@ -112,7 +111,7 @@ export default class TulipHandler implements StrategyHandler {
       .withdrawDirectlyFromStrategy(new anchor.BN(amount), new anchor.BN(0))
       .accounts({
         ...txAccounts,
-        lpMint,
+        lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
       .remainingAccounts(remainingAccounts)

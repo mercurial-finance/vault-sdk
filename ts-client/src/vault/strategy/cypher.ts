@@ -15,27 +15,29 @@ import { TokenInfo } from '@solana/spl-token-registry';
 import BN from 'bn.js';
 
 import { SEEDS } from '../constants';
-import { AffiliateVaultProgram, VaultProgram } from '../types';
+import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { Strategy, StrategyHandler } from '.';
+import { getOrCreateATAInstruction } from '../utils';
 
 export default class CypherHandler implements StrategyHandler {
   private cypherClient: CypherClient;
   private cluster: CypherCluster;
+  private program: VaultProgram;
 
   constructor(cluster: Cluster, program: VaultProgram) {
     this.cluster = cluster as CypherCluster;
+    this.program = program;
     this.cypherClient = new CypherClient(cluster as CypherCluster, program.provider.connection.rpcEndpoint);
   }
 
   async withdraw(
-    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,
     vault: PublicKey,
     tokenVault: PublicKey,
-    feeVault: PublicKey,
-    lpMint: PublicKey,
+    tokenInfo: TokenInfo,
+    vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,
     amount: BN,
@@ -63,6 +65,12 @@ export default class CypherHandler implements StrategyHandler {
       program.programId,
     );
 
+    const [strategyOwnerATA] = await getOrCreateATAInstruction(
+      vaultState.tokenMint,
+      strategyOwnerPubkey,
+      this.program.provider.connection,
+    );
+
     const [clearingPubkey] = derivePublicClearingAddress(this.cypherClient.cypherPID);
     const [masterAccPubkey] = deriveAccountAddress(strategyOwnerPubkey, 0, this.cypherClient.cypherPID);
     const [subAccPubkey] = deriveSubAccountAddress(masterAccPubkey, 0, this.cypherClient.cypherPID);
@@ -77,9 +85,9 @@ export default class CypherHandler implements StrategyHandler {
       { pubkey: subAccPubkey, isWritable: true },
       { pubkey: poolNodePubKey, isWritable: true },
       { pubkey: poolTokenVaultPubkey, isWritable: true },
-      { pubkey: tokenVault },
+      { pubkey: vaultState.tokenMint },
       { pubkey: strategyOwnerPubkey, isWritable: true },
-      { pubkey: userToken, isWritable: true },
+      { pubkey: strategyOwnerATA, isWritable: true },
       { pubkey: vaultSigner, isWritable: true },
     ];
 
@@ -103,7 +111,7 @@ export default class CypherHandler implements StrategyHandler {
       reserve: new PublicKey(strategy.state.reserve),
       strategyProgram: this.cypherClient.cypherPID,
       collateralVault,
-      feeVault,
+      feeVault: vaultState.feeVault,
       tokenVault,
       userToken,
       userLp,
@@ -118,7 +126,7 @@ export default class CypherHandler implements StrategyHandler {
           partner: opt.affiliate.partner,
           user: opt.affiliate.user,
           vaultProgram: program.programId,
-          vaultLpMint: lpMint,
+          vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
         .remainingAccounts(remainingAccountsWithoutReserve)
@@ -133,7 +141,7 @@ export default class CypherHandler implements StrategyHandler {
       .withdrawDirectlyFromStrategy(new BN(amount), new BN(0))
       .accounts({
         ...txAccounts,
-        lpMint,
+        lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
       .remainingAccounts(remainingAccountsWithoutReserve)

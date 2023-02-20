@@ -561,7 +561,6 @@ export default class VaultImpl implements VaultImplementation {
     }
 
     const withdrawFromStrategyTx = await strategyHandler.withdraw(
-      this.tokenInfo,
       owner,
       this.program,
       {
@@ -570,8 +569,8 @@ export default class VaultImpl implements VaultImplementation {
       },
       this.vaultPda,
       this.tokenVaultPda,
-      this.vaultState.feeVault,
-      this.vaultState.lpMint,
+      this.tokenInfo,
+      this.vaultState,
       userToken,
       userLpToken,
       baseTokenAmount,

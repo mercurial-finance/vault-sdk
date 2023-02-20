@@ -3,7 +3,7 @@ import { Cluster, PublicKey, Transaction, TransactionInstruction } from '@solana
 import { TokenInfo } from '@solana/spl-token-registry';
 
 import { StrategyProgram } from '../constants';
-import type { AffiliateVaultProgram, VaultProgram } from '../types';
+import type { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import ApricotWithoutLMHandler from './apricotWithoutLM';
 import FranciumHandler from './francium';
 import MangoHandler from './mango';
@@ -15,6 +15,7 @@ import SolendWithLMHandler from './solendWithLM';
 import SolendWithoutLMHandler from './solendWithoutLM';
 import VaultHandler from './vault';
 import FraktHandler from './frakt';
+import CypherHandler from './cypher';
 
 export type StrategyType =
   | 'portFinanceWithoutLm'
@@ -27,7 +28,8 @@ export type StrategyType =
   | 'tulip'
   | 'vault'
   | 'drift'
-  | 'frakt';
+  | 'frakt'
+  | 'cypher';
 
 export type StrategyState = {
   reserve: PublicKey;
@@ -55,14 +57,13 @@ export type ReserveState = {
 export interface StrategyHandler {
   strategyProgram?: PublicKey;
   withdraw(
-    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: any,
     vault: PublicKey,
     tokenVault: PublicKey,
-    feeVault: PublicKey,
-    lpMint: PublicKey,
+    tokenInfo: TokenInfo,
+    vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,
     amount: BN,
@@ -113,6 +114,8 @@ export const getStrategyHandler = (
       return new DriftHandler(cluster, program);
     case 'frakt':
       return new FraktHandler(program);
+    case 'cypher':
+      return new CypherHandler(cluster, program);
     default:
       return null;
   }

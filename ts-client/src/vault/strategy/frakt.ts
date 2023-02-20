@@ -12,7 +12,7 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import BN from 'bn.js';
 
 import { PROGRAM_ID, SEEDS, SOL_MINT } from '../constants';
-import { AffiliateVaultProgram, VaultProgram } from '../types';
+import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { getOrCreateATAInstruction } from '../utils';
 import { Strategy, StrategyHandler } from '.';
 
@@ -27,14 +27,13 @@ export default class FraktHandler implements StrategyHandler {
   }
 
   async withdraw(
-    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,
     vault: PublicKey,
     tokenVault: PublicKey,
-    feeVault: PublicKey,
-    lpMint: PublicKey,
+    _tokenInfo: TokenInfo,
+    vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,
     amount: BN,
@@ -113,7 +112,7 @@ export default class FraktHandler implements StrategyHandler {
       reserve: new PublicKey(strategy.state.reserve),
       strategyProgram: FRAKT_PROGRAM_ID,
       collateralVault,
-      feeVault,
+      feeVault: vaultState.feeVault,
       tokenVault,
       userToken,
       userLp,
@@ -128,7 +127,7 @@ export default class FraktHandler implements StrategyHandler {
           partner: opt.affiliate.partner,
           user: opt.affiliate.user,
           vaultProgram: program.programId,
-          vaultLpMint: lpMint,
+          vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
         .remainingAccounts(remainingAccountsWithoutReserve)
@@ -143,7 +142,7 @@ export default class FraktHandler implements StrategyHandler {
       .withdrawDirectlyFromStrategy(new BN(amount), new BN(0))
       .accounts({
         ...txAccounts,
-        lpMint,
+        lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
       .remainingAccounts(remainingAccountsWithoutReserve)

@@ -6,21 +6,20 @@ import { TokenInfo } from '@solana/spl-token-registry';
 
 import { StrategyHandler, Strategy } from '.';
 import { SEEDS } from '../constants';
-import { AffiliateVaultProgram, VaultProgram } from '../types';
+import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 
 export default class MangoHandler implements StrategyHandler {
   static MangoProgramId = new PublicKey('mv3ekLzLbnVPNxjSKvqBpU3ZeZXPQdEC3bp5MDEBG68');
   static MangoGrouPK = new PublicKey('98pjRuQjK3qA6gXts96PqZT4Ze5QmnCmt3QYjhbUSPue');
 
   async withdraw(
-    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,
     vault: PublicKey,
     tokenVault: PublicKey,
-    feeVault: PublicKey,
-    lpMint: PublicKey,
+    tokenInfo: TokenInfo,
+    vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,
     amount: anchor.BN,
@@ -82,7 +81,7 @@ export default class MangoHandler implements StrategyHandler {
       reserve: strategy.state.reserve,
       strategyProgram: MangoHandler.MangoProgramId,
       collateralVault,
-      feeVault,
+      feeVault: vaultState.feeVault,
       tokenVault,
       userToken,
       userLp,
@@ -100,7 +99,7 @@ export default class MangoHandler implements StrategyHandler {
           partner: opt.affiliate.partner,
           user: opt.affiliate.user,
           vaultProgram: program.programId,
-          vaultLpMint: lpMint,
+          vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
         .transaction();
@@ -114,7 +113,7 @@ export default class MangoHandler implements StrategyHandler {
       .remainingAccounts(remainingAccounts)
       .accounts({
         ...txAccounts,
-        lpMint,
+        lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
       .transaction();

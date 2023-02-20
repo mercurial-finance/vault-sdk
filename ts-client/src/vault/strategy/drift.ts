@@ -18,7 +18,7 @@ import { TokenInfo } from '@solana/spl-token-registry';
 import BN from 'bn.js';
 
 import { SEEDS } from '../constants';
-import { AffiliateVaultProgram, VaultProgram } from '../types';
+import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { Strategy, StrategyHandler } from '.';
 
 export default class DriftHandler implements StrategyHandler {
@@ -39,14 +39,13 @@ export default class DriftHandler implements StrategyHandler {
   }
 
   async withdraw(
-    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,
     vault: PublicKey,
     tokenVault: PublicKey,
-    feeVault: PublicKey,
-    lpMint: PublicKey,
+    tokenInfo: TokenInfo,
+    vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,
     amount: BN,
@@ -123,7 +122,7 @@ export default class DriftHandler implements StrategyHandler {
       reserve: new PublicKey(strategy.state.reserve),
       strategyProgram: this.sdkConfig.DRIFT_PROGRAM_ID,
       collateralVault,
-      feeVault,
+      feeVault: vaultState.feeVault,
       tokenVault,
       userToken,
       userLp,
@@ -138,7 +137,7 @@ export default class DriftHandler implements StrategyHandler {
           partner: opt.affiliate.partner,
           user: opt.affiliate.user,
           vaultProgram: program.programId,
-          vaultLpMint: lpMint,
+          vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
         .remainingAccounts(remainingAccountsWithoutReserve)
@@ -153,7 +152,7 @@ export default class DriftHandler implements StrategyHandler {
       .withdrawDirectlyFromStrategy(new BN(amount), new BN(0))
       .accounts({
         ...txAccounts,
-        lpMint,
+        lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
       .remainingAccounts(remainingAccountsWithoutReserve)
