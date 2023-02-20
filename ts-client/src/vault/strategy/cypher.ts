@@ -1,29 +1,33 @@
+import { AccountMeta, Cluster, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import {
-  AccountMeta,
-  Connection,
-  PublicKey,
-  SYSVAR_CLOCK_PUBKEY,
-  SystemProgram,
-  Transaction,
-  TransactionInstruction,
-} from '@solana/web3.js';
-import { TokenInfo } from '@mercurial-finance/frakt-sdk';
+  CypherClient,
+  Cluster as CypherCluster,
+  derivePublicClearingAddress,
+  deriveAccountAddress,
+  deriveSubAccountAddress,
+  derivePoolNodeAddress,
+  derivePoolNodeVaultAddress,
+  derivePoolNodeVaultSigner,
+  CONFIGS,
+} from '@mercurial-finance/cypher-client';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { TokenInfo } from '@solana/spl-token-registry';
 import BN from 'bn.js';
 
-import { PROGRAM_ID, SEEDS, SOL_MINT } from '../constants';
+import { SEEDS } from '../constants';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
-import { getOrCreateATAInstruction } from '../utils';
 import { Strategy, StrategyHandler } from '.';
+import { getOrCreateATAInstruction } from '../utils';
 
-const FRAKT_PROGRAM_ID = new PublicKey('A66HabVL3DzNzeJgcHYtRRNW1ZRMKwBfrdSR4kLsZ9DJ');
-const FRAKT_ADMIN_FEE_PUBKEY = new PublicKey('9aTtUqAnuSMndCpjcPosRNf3fCkrTQAV8C8GERf3tZi3');
+export default class CypherHandler implements StrategyHandler {
+  private cypherClient: CypherClient;
+  private cluster: CypherCluster;
+  private program: VaultProgram;
 
-export default class FraktHandler implements StrategyHandler {
-  private connection: Connection;
-
-  constructor(program: VaultProgram) {
-    this.connection = program.provider.connection;
+  constructor(cluster: Cluster, program: VaultProgram) {
+    this.cluster = cluster as CypherCluster;
+    this.program = program;
+    this.cypherClient = new CypherClient(cluster as CypherCluster, program.provider.connection.rpcEndpoint);
   }
 
   async withdraw(
@@ -49,46 +53,41 @@ export default class FraktHandler implements StrategyHandler {
   ): Promise<Transaction> {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
-    const [liqOwner] = await PublicKey.findProgramAddress(
-      [Buffer.from(SEEDS.FRAKT_LENDING), strategy.state.reserve.toBuffer()],
-      FRAKT_PROGRAM_ID,
-    );
-
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
-    const strategyReserveBuffer = new PublicKey(strategy.state.reserve).toBuffer();
     const [collateralVault] = await PublicKey.findProgramAddress(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId,
     );
 
-    const [strategyOwner] = await PublicKey.findProgramAddress(
-      [Buffer.from(SEEDS.FRAKT), strategyBuffer],
+    const [strategyOwnerPubkey] = await PublicKey.findProgramAddress(
+      [Buffer.from(SEEDS.CYPHER), strategyBuffer],
       program.programId,
     );
 
-    const [tokenAccount, createTokenAccountIx] = await getOrCreateATAInstruction(
-      SOL_MINT,
-      strategyOwner,
-      this.connection,
-      {
-        payer: walletPubKey,
-      },
+    const [strategyOwnerATA] = await getOrCreateATAInstruction(
+      vaultState.tokenMint,
+      strategyOwnerPubkey,
+      this.program.provider.connection,
     );
-    createTokenAccountIx && preInstructions.push(createTokenAccountIx);
 
-    const [deposit] = await PublicKey.findProgramAddress(
-      [Buffer.from(SEEDS.DEPOSIT), strategyReserveBuffer, new PublicKey(strategyOwner).toBuffer()],
-      FRAKT_PROGRAM_ID,
-    );
+    const [clearingPubkey] = derivePublicClearingAddress(this.cypherClient.cypherPID);
+    const [masterAccPubkey] = deriveAccountAddress(strategyOwnerPubkey, 0, this.cypherClient.cypherPID);
+    const [subAccPubkey] = deriveSubAccountAddress(masterAccPubkey, 0, this.cypherClient.cypherPID);
+    const [poolNodePubKey] = derivePoolNodeAddress(strategy.state.reserve, 0, this.cypherClient.cypherPID);
+    const [poolTokenVaultPubkey] = derivePoolNodeVaultAddress(poolNodePubKey, this.cypherClient.cypherPID);
+    const [vaultSigner] = derivePoolNodeVaultSigner(poolNodePubKey, this.cypherClient.cypherPID);
 
     const accounts = [
-      { pubkey: strategyOwner, isWritable: true },
-      { pubkey: tokenAccount, isWritable: true },
-      { pubkey: liqOwner, isWritable: true },
-      { pubkey: deposit, isWritable: true },
-      { pubkey: FRAKT_ADMIN_FEE_PUBKEY, isWritable: true },
-      { pubkey: SystemProgram.programId },
-      { pubkey: SYSVAR_CLOCK_PUBKEY },
+      { pubkey: clearingPubkey },
+      { pubkey: CONFIGS[this.cluster].CACHE },
+      { pubkey: masterAccPubkey, isWritable: true },
+      { pubkey: subAccPubkey, isWritable: true },
+      { pubkey: poolNodePubKey, isWritable: true },
+      { pubkey: poolTokenVaultPubkey, isWritable: true },
+      { pubkey: vaultState.tokenMint },
+      { pubkey: strategyOwnerPubkey, isWritable: true },
+      { pubkey: strategyOwnerATA, isWritable: true },
+      { pubkey: vaultSigner, isWritable: true },
     ];
 
     const remainingAccounts: Array<AccountMeta> = [];
@@ -100,16 +99,11 @@ export default class FraktHandler implements StrategyHandler {
       });
     }
 
-    // prevent duplicate as spot market account pubkey will be add on program side
-    const remainingAccountsWithoutReserve = remainingAccounts.filter(
-      ({ pubkey }) => !pubkey.equals(strategy.state.reserve),
-    );
-
     const txAccounts = {
       vault,
       strategy: new PublicKey(strategy.pubkey),
       reserve: new PublicKey(strategy.state.reserve),
-      strategyProgram: FRAKT_PROGRAM_ID,
+      strategyProgram: this.cypherClient.cypherPID,
       collateralVault,
       feeVault: vaultState.feeVault,
       tokenVault,
@@ -129,7 +123,7 @@ export default class FraktHandler implements StrategyHandler {
           vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
-        .remainingAccounts(remainingAccountsWithoutReserve)
+        .remainingAccounts(remainingAccounts)
         .preInstructions(preInstructions)
         .postInstructions(postInstructions)
         .transaction();
@@ -144,7 +138,7 @@ export default class FraktHandler implements StrategyHandler {
         lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
-      .remainingAccounts(remainingAccountsWithoutReserve)
+      .remainingAccounts(remainingAccounts)
       .preInstructions(preInstructions)
       .postInstructions(postInstructions)
       .transaction();

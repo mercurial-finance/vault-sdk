@@ -968,6 +968,9 @@ export type Vault = {
           {
             name: 'Frakt';
           },
+          {
+            name: 'Cypher';
+          },
         ];
       };
     },
@@ -2158,6 +2161,9 @@ export const IDL: Vault = {
           },
           {
             name: 'Frakt',
+          },
+          {
+            name: 'Cypher',
           },
         ],
       },

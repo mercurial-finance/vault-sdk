@@ -446,6 +446,14 @@ export default class VaultImpl implements VaultImplementation {
     return new Transaction({ feePayer: owner, ...(await this.connection.getLatestBlockhash()) }).add(depositTx);
   }
 
+  public async getStrategiesState(): Promise<Array<StrategyState>> {
+    return (
+      await this.program.account.strategy.fetchMultiple(
+        this.vaultState.strategies.filter((address) => address.toString() !== VAULT_STRATEGY_ADDRESS),
+      )
+    ).filter(Boolean);
+  }
+
   private async getStrategyWithHighestLiquidity(strategy?: PublicKey) {
     // Reserved for testing
     if (strategy) {
@@ -561,7 +569,6 @@ export default class VaultImpl implements VaultImplementation {
     }
 
     const withdrawFromStrategyTx = await strategyHandler.withdraw(
-      this.tokenInfo,
       owner,
       this.program,
       {
@@ -570,8 +577,7 @@ export default class VaultImpl implements VaultImplementation {
       },
       this.vaultPda,
       this.tokenVaultPda,
-      this.vaultState.feeVault,
-      this.vaultState.lpMint,
+      this.vaultState,
       userToken,
       userLpToken,
       baseTokenAmount,

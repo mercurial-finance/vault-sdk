@@ -5,7 +5,7 @@ import * as apricot from '@mercurial-finance/apricot-sdk';
 import * as anchor from '@project-serum/anchor';
 
 import { StrategyHandler, Strategy } from '.';
-import { AffiliateVaultProgram, VaultProgram } from '../types';
+import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { SEEDS } from '../constants';
 
 export default class ApricotWithoutLMHandler implements StrategyHandler {
@@ -16,14 +16,12 @@ export default class ApricotWithoutLMHandler implements StrategyHandler {
   }
 
   async withdraw(
-    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,
     vault: PublicKey,
     tokenVault: PublicKey,
-    feeVault: PublicKey,
-    lpMint: PublicKey,
+    vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,
     amount: anchor.BN,
@@ -40,7 +38,6 @@ export default class ApricotWithoutLMHandler implements StrategyHandler {
   ): Promise<Transaction> {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
-    const vaultState = await program.account.vault.fetch(vault);
     const [[collateralVault], [userInfoSignerPda]] = await Promise.all(
       [SEEDS.COLLATERAL_VAULT_PREFIX, SEEDS.APRICOT_USER_INFO_SIGNER_PREFIX].map(
         async (seed) =>
@@ -84,7 +81,7 @@ export default class ApricotWithoutLMHandler implements StrategyHandler {
       strategyProgram: this.address.getProgramKey(),
       collateralVault,
       tokenVault,
-      feeVault,
+      feeVault: vaultState.feeVault,
       userToken,
       userLp,
       tokenProgram: TOKEN_PROGRAM_ID,
@@ -98,7 +95,7 @@ export default class ApricotWithoutLMHandler implements StrategyHandler {
           partner: opt.affiliate.partner,
           user: opt.affiliate.user,
           vaultProgram: program.programId,
-          vaultLpMint: lpMint,
+          vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
         .remainingAccounts(remainingAccounts)
@@ -126,7 +123,7 @@ export default class ApricotWithoutLMHandler implements StrategyHandler {
       .withdrawDirectlyFromStrategy(new anchor.BN(amount), new anchor.BN(0))
       .accounts({
         ...txAccounts,
-        lpMint,
+        lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
       .remainingAccounts(remainingAccounts)

@@ -5,19 +5,17 @@ import { TokenInfo } from '@solana/spl-token-registry';
 import { BN } from '@project-serum/anchor';
 
 import { StrategyHandler, Strategy } from '.';
-import { AffiliateVaultProgram, VaultProgram } from '../types';
+import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { SEEDS } from '../constants';
 
 export default class FranciumHandler implements StrategyHandler {
   async withdraw(
-    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,
     vault: PublicKey,
     tokenVault: PublicKey,
-    feeVault: PublicKey,
-    lpMint: PublicKey,
+    vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,
     amount: BN,
@@ -71,7 +69,7 @@ export default class FranciumHandler implements StrategyHandler {
       reserve: new PublicKey(strategy.state.reserve),
       strategyProgram: lendingPool.programId,
       collateralVault,
-      feeVault,
+      feeVault: vaultState.feeVault,
       tokenVault,
       userToken,
       userLp,
@@ -86,7 +84,7 @@ export default class FranciumHandler implements StrategyHandler {
           partner: opt.affiliate.partner,
           user: opt.affiliate.user,
           vaultProgram: program.programId,
-          vaultLpMint: lpMint,
+          vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
         .remainingAccounts(remainingAccounts)
@@ -101,7 +99,7 @@ export default class FranciumHandler implements StrategyHandler {
       .withdrawDirectlyFromStrategy(new BN(amount), new BN(0))
       .accounts({
         ...txAccounts,
-        lpMint,
+        lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
       .remainingAccounts(remainingAccounts)

@@ -6,7 +6,7 @@ import * as anchor from '@project-serum/anchor';
 
 import { ReserveState, StrategyHandler, Strategy } from '.';
 import { SEEDS } from '../constants';
-import { AffiliateVaultProgram, VaultProgram } from '../types';
+import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 
 export default class SolendWithoutLMHandler implements StrategyHandler {
   constructor(public strategyProgram: PublicKey) {}
@@ -30,14 +30,12 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
   }
 
   async withdraw(
-    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,
     vault: PublicKey,
     tokenVault: PublicKey,
-    feeVault: PublicKey,
-    lpMint: PublicKey,
+    vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,
     amount: anchor.BN,
@@ -95,7 +93,7 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
       reserve: strategy.state.reserve,
       strategyProgram: this.strategyProgram,
       collateralVault,
-      feeVault,
+      feeVault: vaultState.feeVault,
       tokenVault,
       userToken,
       userLp,
@@ -110,7 +108,7 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
           partner: opt.affiliate.partner,
           user: opt.affiliate.user,
           vaultProgram: program.programId,
-          vaultLpMint: lpMint,
+          vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
         .remainingAccounts(remainingAccounts)
@@ -133,7 +131,7 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
       .withdrawDirectlyFromStrategy(amount, new anchor.BN(0))
       .accounts({
         ...txAccounts,
-        lpMint,
+        lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
       .remainingAccounts(remainingAccounts)

@@ -7,7 +7,7 @@ import * as port from '@mercurial-finance/port-sdk';
 import { TokenInfo } from '@solana/spl-token-registry';
 
 import { ReserveState, Strategy, StrategyHandler } from '.';
-import { AffiliateVaultProgram, VaultProgram } from '../types';
+import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { REWARDER, SEEDS } from '../constants';
 
 export default class PortWithLMHandler implements StrategyHandler {
@@ -31,14 +31,12 @@ export default class PortWithLMHandler implements StrategyHandler {
   }
 
   async withdraw(
-    tokenInfo: TokenInfo,
     walletPubKey: PublicKey,
     program: VaultProgram,
     strategy: Strategy,
     vault: PublicKey,
     tokenVault: PublicKey,
-    feeVault: PublicKey,
-    lpMint: PublicKey,
+    vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,
     amount: anchor.BN,
@@ -125,7 +123,7 @@ export default class PortWithLMHandler implements StrategyHandler {
       reserve: strategy.state.reserve,
       strategyProgram: this.strategyProgram,
       collateralVault,
-      feeVault,
+      feeVault: vaultState.feeVault,
       tokenVault,
       userToken,
       userLp,
@@ -140,7 +138,7 @@ export default class PortWithLMHandler implements StrategyHandler {
           partner: opt.affiliate.partner,
           user: opt.affiliate.user,
           vaultProgram: program.programId,
-          vaultLpMint: lpMint,
+          vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
         .remainingAccounts(remainingAccounts)
@@ -160,7 +158,7 @@ export default class PortWithLMHandler implements StrategyHandler {
       .withdrawDirectlyFromStrategy(new anchor.BN(amount), new anchor.BN(0))
       .accounts({
         ...txAccounts,
-        lpMint,
+        lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
       .remainingAccounts(remainingAccounts)
