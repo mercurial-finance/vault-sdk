@@ -11,7 +11,6 @@ import {
   CONFIGS,
 } from '@mercurial-finance/cypher-client';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { TokenInfo } from '@solana/spl-token-registry';
 import BN from 'bn.js';
 
 import { SEEDS } from '../constants';
