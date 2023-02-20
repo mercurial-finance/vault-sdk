@@ -44,7 +44,6 @@ export default class DriftHandler implements StrategyHandler {
     strategy: Strategy,
     vault: PublicKey,
     tokenVault: PublicKey,
-    tokenInfo: TokenInfo,
     vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,
@@ -65,7 +64,7 @@ export default class DriftHandler implements StrategyHandler {
     await this.driftClient.subscribe();
 
     const spotMarkets = this.cluster === 'devnet' ? DevnetSpotMarkets : MainnetSpotMarkets;
-    const spotMarket = spotMarkets.find((market) => market.mint.toBase58() === tokenInfo.address);
+    const spotMarket = spotMarkets.find((market) => market.mint.equals(vaultState.tokenMint));
 
     if (!spotMarket) throw new Error('Spot market not found');
 

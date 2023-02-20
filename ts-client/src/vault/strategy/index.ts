@@ -62,7 +62,6 @@ export interface StrategyHandler {
     strategy: any,
     vault: PublicKey,
     tokenVault: PublicKey,
-    tokenInfo: TokenInfo,
     vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,

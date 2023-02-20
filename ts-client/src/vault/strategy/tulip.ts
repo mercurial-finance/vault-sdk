@@ -15,7 +15,6 @@ export default class TulipHandler implements StrategyHandler {
     strategy: Strategy,
     vault: PublicKey,
     tokenVault: PublicKey,
-    _tokenInfo: TokenInfo,
     vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,

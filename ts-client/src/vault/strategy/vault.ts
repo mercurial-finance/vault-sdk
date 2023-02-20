@@ -13,7 +13,6 @@ export default class VaultHandler implements StrategyHandler {
     _strategy: Strategy,
     vault: PublicKey,
     tokenVault: PublicKey,
-    _tokenInfo: TokenInfo,
     vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,

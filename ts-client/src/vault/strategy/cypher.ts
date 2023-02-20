@@ -36,7 +36,6 @@ export default class CypherHandler implements StrategyHandler {
     strategy: Strategy,
     vault: PublicKey,
     tokenVault: PublicKey,
-    tokenInfo: TokenInfo,
     vaultState: VaultState,
     userToken: PublicKey,
     userLp: PublicKey,

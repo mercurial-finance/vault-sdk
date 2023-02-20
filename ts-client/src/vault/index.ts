@@ -569,7 +569,6 @@ export default class VaultImpl implements VaultImplementation {
       },
       this.vaultPda,
       this.tokenVaultPda,
-      this.tokenInfo,
       this.vaultState,
       userToken,
       userLpToken,
