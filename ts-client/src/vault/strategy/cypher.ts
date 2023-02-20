@@ -8,6 +8,7 @@ import {
   derivePoolNodeAddress,
   derivePoolNodeVaultAddress,
   derivePoolNodeVaultSigner,
+  CONFIGS,
 } from '@mercurial-finance/cypher-client';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
@@ -17,13 +18,12 @@ import { SEEDS } from '../constants';
 import { AffiliateVaultProgram, VaultProgram } from '../types';
 import { Strategy, StrategyHandler } from '.';
 
-const PROGRAM_ID = 'CYPH3o83JX6jY6NkbproSpdmQ5VWJtxjfJ5P8veyYVu3';
-const CACHE = new PublicKey('6x5U4c41tfUYGEbTXofFiHcfyx3rqJZsT4emrLisNGGL');
-
 export default class CypherHandler implements StrategyHandler {
   private cypherClient: CypherClient;
+  private cluster: CypherCluster;
 
   constructor(cluster: Cluster, program: VaultProgram) {
+    this.cluster = cluster as CypherCluster;
     this.cypherClient = new CypherClient(cluster as CypherCluster, program.provider.connection.rpcEndpoint);
   }
 
@@ -72,7 +72,7 @@ export default class CypherHandler implements StrategyHandler {
 
     const accounts = [
       { pubkey: clearingPubkey },
-      { pubkey: CACHE },
+      { pubkey: CONFIGS[this.cluster].CACHE },
       { pubkey: masterAccPubkey, isWritable: true },
       { pubkey: subAccPubkey, isWritable: true },
       { pubkey: poolNodePubKey, isWritable: true },
@@ -101,7 +101,7 @@ export default class CypherHandler implements StrategyHandler {
       vault,
       strategy: new PublicKey(strategy.pubkey),
       reserve: new PublicKey(strategy.state.reserve),
-      strategyProgram: PROGRAM_ID,
+      strategyProgram: this.cypherClient.cypherPID,
       collateralVault,
       feeVault,
       tokenVault,
