@@ -77,7 +77,7 @@ export default class CypherHandler implements StrategyHandler {
       { pubkey: subAccPubkey, isWritable: true },
       { pubkey: poolNodePubKey, isWritable: true },
       { pubkey: poolTokenVaultPubkey, isWritable: true },
-      { pubkey: new PublicKey(tokenInfo.address) },
+      { pubkey: tokenVault },
       { pubkey: strategyOwnerPubkey, isWritable: true },
       { pubkey: userToken, isWritable: true },
       { pubkey: vaultSigner, isWritable: true },
