@@ -178,21 +178,13 @@ impl StrategyHandler for DriftHandler {
         base: Pubkey,
         amount: u64,
     ) -> Result<()> {
-        let (vault, _vault_bump) = Pubkey::find_program_address(
-            &[b"vault".as_ref(), token_mint.as_ref(), base.as_ref()],
-            &program_client.id(),
-        );
+        let (vault, _vault_bump) = mercurial_vault::utils::derive_vault_address(token_mint, base);
 
         let vault_state: mercurial_vault::state::Vault = program_client.account(vault)?;
         let strategy_state: mercurial_vault::state::Strategy = program_client.account(strategy)?;
 
-        let (collateral_vault, _bump) = Pubkey::find_program_address(
-            &[
-                mercurial_vault::seed::COLLATERAL_VAULT_PREFIX.as_ref(),
-                strategy.as_ref(),
-            ],
-            &mercurial_vault::id(),
-        );
+        let (collateral_vault, _bump) =
+            mercurial_vault::utils::derive_collateral_vault_address(strategy);
 
         let lp_mint = vault_state.lp_mint;
 

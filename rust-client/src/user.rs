@@ -15,15 +15,10 @@ pub fn deposit(
 ) -> Result<()> {
     println!("deposit {}", token_amount);
 
-    let (vault, _vault_bump) = Pubkey::find_program_address(
-        &[b"vault".as_ref(), token_mint.as_ref(), base.as_ref()],
-        &program_client.id(),
-    );
+    let (vault, _vault_bump) = mercurial_vault::utils::derive_vault_address(token_mint, base);
 
-    let (token_vault, _token_vault_bump) = Pubkey::find_program_address(
-        &[b"token_vault".as_ref(), vault.as_ref()],
-        &program_client.id(),
-    );
+    let (token_vault, _token_vault_bump) =
+        mercurial_vault::utils::derive_token_vault_address(vault);
 
     let vault_state: mercurial_vault::state::Vault = program_client.account(vault)?;
     let lp_mint = vault_state.lp_mint;
@@ -61,15 +56,10 @@ pub fn withdraw(
 ) -> Result<()> {
     println!("withdraw {} lp token", unmint_amount);
 
-    let (vault, _vault_bump) = Pubkey::find_program_address(
-        &[b"vault".as_ref(), token_mint.as_ref(), base.as_ref()],
-        &program_client.id(),
-    );
+    let (vault, _vault_bump) = mercurial_vault::utils::derive_vault_address(token_mint, base);
 
-    let (token_vault, _token_vault_bump) = Pubkey::find_program_address(
-        &[b"token_vault".as_ref(), vault.as_ref()],
-        &program_client.id(),
-    );
+    let (token_vault, _token_vault_bump) =
+        mercurial_vault::utils::derive_token_vault_address(vault);
 
     let vault_state: mercurial_vault::state::Vault = program_client.account(vault)?;
     let lp_mint = vault_state.lp_mint;
