@@ -33,7 +33,7 @@ pub fn deposit(
 
     let builder = program_client
         .request()
-        .accounts(mercurial_vault::accounts::DepositWithdrawLiquidity {
+        .accounts(mercurial_vault::accounts::Deposit {
             vault: vault,
             token_vault: token_vault,
             lp_mint: lp_mint,
@@ -43,8 +43,8 @@ pub fn deposit(
             token_program: spl_token::id(),
         })
         .args(mercurial_vault::instruction::Deposit {
-            token_amount,
-            minimum_lp_token_amount: 0,
+            _token_amount: token_amount,
+            _minimum_lp_token_amount: 0,
         });
 
     let signature = builder.send()?;
@@ -79,7 +79,7 @@ pub fn withdraw(
 
     let builder = program_client
         .request()
-        .accounts(mercurial_vault::accounts::DepositWithdrawLiquidity {
+        .accounts(mercurial_vault::accounts::Withdraw {
             vault: vault,
             token_vault: token_vault,
             lp_mint: lp_mint,
@@ -89,8 +89,8 @@ pub fn withdraw(
             token_program: spl_token::id(),
         })
         .args(mercurial_vault::instruction::Withdraw {
-            unmint_amount,
-            min_out_amount: 0,
+            _unmint_amount: unmint_amount,
+            _min_out_amount: 0,
         });
 
     let signature = builder.send()?;
