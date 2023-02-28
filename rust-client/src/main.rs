@@ -1,19 +1,22 @@
+mod admin;
 mod strategy_handler;
 mod user;
 mod utils;
 use anchor_client::solana_sdk::commitment_config::CommitmentConfig;
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_client::solana_sdk::signature::{read_keypair_file, Keypair};
+use anchor_client::solana_sdk::signer::Signer;
 use anchor_client::Client;
 use anchor_client::Cluster;
 use anchor_lang::solana_program::clock::Clock;
 use anchor_lang::solana_program::sysvar;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use bincode::deserialize;
 use clap::Parser;
 use mercurial_vault::get_base_key;
 use strategy_handler::base::get_strategy_handler;
 
+use admin::initialize_vault;
 use user::*;
 
 use std::convert::TryFrom;
@@ -47,6 +50,16 @@ pub enum Command {
     GetUnlockedAmount {},
     #[clap(flatten)]
     User(UserCommand),
+    #[clap(flatten)]
+    Admin(AdminCommand),
+}
+
+#[derive(Debug, Parser)]
+pub enum AdminCommand {
+    Initialize {
+        #[clap(long)]
+        base_keypair: String,
+    },
 }
 
 #[derive(Debug, Parser)]
@@ -141,6 +154,14 @@ fn main() -> Result<()> {
                     base,
                     unmint_amount,
                 )?
+            }
+        },
+        Command::Admin(admin) => match admin {
+            AdminCommand::Initialize { base_keypair } => {
+                let base_keypair = read_keypair_file(base_keypair)
+                    .map_err(|e| anyhow!("err: {:?}", e.to_string()))?;
+
+                initialize_vault(&program_client, token_mint, payer.pubkey(), base_keypair)?
             }
         },
     };

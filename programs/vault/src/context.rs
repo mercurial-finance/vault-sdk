@@ -1,3 +1,5 @@
+use crate::get_treasury_address;
+use crate::seed;
 use crate::state::{Strategy, Vault, MAX_BUMPS};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -102,4 +104,51 @@ pub struct RebalanceStrategy<'info> {
 
     #[account(constraint = vault.admin == operator.key() || vault.operator == operator.key())]
     pub operator: Signer<'info>,
+}
+
+#[derive(Accounts)]
+pub struct Initialize<'info> {
+    /// This is base account for all vault
+    pub base: Signer<'info>,
+
+    /// Vault account
+    #[account(
+        init,
+        seeds = [
+            seed::VAULT_PREFIX.as_ref(), token_mint.key().as_ref(), base.key().as_ref()
+        ],
+        bump,
+        payer = admin,
+        space = 10240,
+    )]
+    pub vault: Box<Account<'info, Vault>>,
+
+    /// Admin of the vault
+    #[account(mut)]
+    pub admin: Signer<'info>,
+
+    /// Token vault account
+    #[account(
+        init,
+        seeds = [seed::TOKEN_VAULT_PREFIX.as_ref(), vault.key().as_ref()],
+        bump,
+        payer = admin,
+        token::mint = token_mint,
+        token::authority = vault,
+    )]
+    pub token_vault: Box<Account<'info, TokenAccount>>,
+    /// Token mint account
+    pub token_mint: Box<Account<'info, Mint>>,
+    /// Fee vault account
+    #[account(constraint = fee_vault.owner == get_treasury_address() && fee_vault.mint == lp_mint.key())]
+    pub fee_vault: Box<Account<'info, TokenAccount>>,
+    /// Lp mint account, need to init lp mint beforehand
+    #[account(constraint = lp_mint.mint_authority.unwrap() == vault.key() && lp_mint.supply == 0 && lp_mint.decimals == token_mint.decimals )]
+    pub lp_mint: Box<Account<'info, Mint>>,
+    /// rent
+    pub rent: Sysvar<'info, Rent>,
+    /// token_program
+    pub token_program: Program<'info, Token>,
+    /// system_program
+    pub system_program: Program<'info, System>,
 }

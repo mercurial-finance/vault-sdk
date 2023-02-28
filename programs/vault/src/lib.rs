@@ -28,9 +28,18 @@ pub fn get_base_key() -> Pubkey {
     Pubkey::from_str("HWzXGcGHy4tcpYfaRDCyLNzXqBTv3E6BttpCH2vJxArv").unwrap()
 }
 
+/// Treasury address
+pub fn get_treasury_address() -> Pubkey {
+    Pubkey::from_str("9kZeN47U2dubGbbzMrzzoRAUvpuxVLRcjW9XiFpYjUo4").unwrap()
+}
+
 #[program]
 pub mod vault {
     use super::*;
+
+    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        Ok(())
+    }
 
     pub fn deposit(
         ctx: Context<DepositWithdrawLiquidity>,
