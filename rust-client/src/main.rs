@@ -105,10 +105,7 @@ fn main() -> Result<()> {
         None => get_base_key(),
     };
 
-    let (vault, _) = Pubkey::find_program_address(
-        &[b"vault".as_ref(), token_mint.as_ref(), base.as_ref()],
-        &program_id,
-    );
+    let (vault, _) = mercurial_vault::utils::derive_vault_address(token_mint, base);
 
     println!("ProgramID {}", program_id.to_string());
     println!("TOKEN MINT {}", token_mint);

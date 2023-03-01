@@ -22,14 +22,7 @@ impl StrategyHandler for SolendWithoutLMHandler {
         base: Pubkey,
         amount: u64,
     ) -> Result<()> {
-        let (vault, _vault_bump) = Pubkey::find_program_address(
-            &[
-                mercurial_vault::seed::VAULT_PREFIX.as_ref(),
-                token_mint.as_ref(),
-                base.as_ref(),
-            ],
-            &program_client.id(),
-        );
+        let (vault, _vault_bump) = mercurial_vault::utils::derive_vault_address(token_mint, base);
 
         let vault_state: mercurial_vault::state::Vault = program_client.account(vault)?;
         let strategy_state: mercurial_vault::state::Strategy = program_client.account(strategy)?;
@@ -38,13 +31,8 @@ impl StrategyHandler for SolendWithoutLMHandler {
         let reserve_state: SolendReserve = program_client.account(strategy_state.reserve)?;
 
         let collateral_mint = reserve_state.collateral.mint_pubkey;
-        let (collateral_vault, _collateral_vault_bump) = Pubkey::find_program_address(
-            &[
-                mercurial_vault::seed::COLLATERAL_VAULT_PREFIX.as_ref(),
-                strategy.as_ref(),
-            ],
-            &mercurial_vault::id(),
-        );
+        let (collateral_vault, _collateral_vault_bump) =
+            mercurial_vault::utils::derive_collateral_vault_address(strategy);
 
         let (lending_market_authority, _bump_seed) = Pubkey::find_program_address(
             &[&reserve_state.lending_market.as_ref()],
@@ -90,8 +78,8 @@ impl StrategyHandler for SolendWithoutLMHandler {
                 program_id: mercurial_vault::id(),
                 accounts,
                 data: mercurial_vault::instruction::WithdrawDirectlyFromStrategy {
-                    unmint_amount: amount,
-                    min_out_amount: 0,
+                    _unmint_amount: amount,
+                    _min_out_amount: 0,
                 }
                 .data(),
             },
