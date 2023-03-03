@@ -9,7 +9,7 @@ pub struct PortObligation(Obligation);
 
 impl PortObligation {
     pub fn get_obligation(&self) -> Obligation {
-        return self.0.clone();
+        self.0.clone()
     }
 }
 

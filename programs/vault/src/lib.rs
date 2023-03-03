@@ -38,10 +38,12 @@ pub fn get_treasury_address() -> Pubkey {
 pub mod vault {
     use super::*;
 
+    #[allow(unused_variables)]
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
         Ok(())
     }
 
+    #[allow(unused_variables)]
     pub fn deposit(
         ctx: Context<DepositWithdrawLiquidity>,
         token_amount: u64,
@@ -50,6 +52,7 @@ pub mod vault {
         Ok(())
     }
 
+    #[allow(unused_variables)]
     pub fn withdraw(
         ctx: Context<DepositWithdrawLiquidity>,
         unmint_amount: u64,
@@ -58,6 +61,7 @@ pub mod vault {
         Ok(())
     }
 
+    #[allow(unused_variables)]
     pub fn withdraw_directly_from_strategy<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, WithdrawDirectlyFromStrategy<'info>>,
         unmint_amount: u64,
@@ -81,6 +85,7 @@ pub mod vault {
         Ok(())
     }
 
+    #[allow(unused_variables)]
     pub fn deposit_strategy<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, RebalanceStrategy<'info>>,
         amount: u64,
@@ -88,6 +93,7 @@ pub mod vault {
         Ok(())
     }
 
+    #[allow(unused_variables)]
     pub fn withdraw_strategy<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, RebalanceStrategy<'info>>,
         amount: u64,

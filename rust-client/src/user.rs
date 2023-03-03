@@ -5,7 +5,6 @@ use anchor_lang::solana_program::program_pack::Pack;
 use anchor_lang::solana_program::pubkey::Pubkey;
 use anchor_spl::token::spl_token;
 use anyhow::Result;
-use spl_associated_token_account;
 
 pub fn deposit(
     program_client: &anchor_client::Program,
@@ -29,9 +28,9 @@ pub fn deposit(
     let builder = program_client
         .request()
         .accounts(mercurial_vault::accounts::DepositWithdrawLiquidity {
-            vault: vault,
-            token_vault: token_vault,
-            lp_mint: lp_mint,
+            vault,
+            token_vault,
+            lp_mint,
             user_token,
             user_lp,
             user: program_client.payer(),
@@ -70,9 +69,9 @@ pub fn withdraw(
     let builder = program_client
         .request()
         .accounts(mercurial_vault::accounts::DepositWithdrawLiquidity {
-            vault: vault,
-            token_vault: token_vault,
-            lp_mint: lp_mint,
+            vault,
+            token_vault,
+            lp_mint,
             user_token,
             user_lp,
             user: program_client.payer(),

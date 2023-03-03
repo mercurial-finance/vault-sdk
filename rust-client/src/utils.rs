@@ -11,7 +11,7 @@ pub fn parse_event_log<
 >(
     logs: &Vec<String>,
 ) -> Option<T> {
-    for log in logs.into_iter() {
+    for log in logs.iter() {
         if log.starts_with("Program data:") {
             // Skip the prefix "Program data: "
             // Event logged has been changed to Program data: instead of Program log:

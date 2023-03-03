@@ -48,7 +48,7 @@ impl StrategyHandler for SolendWithLMHandler {
         );
 
         let (lending_market_authority, _bump_seed) = Pubkey::find_program_address(
-            &[&reserve_state.lending_market.as_ref()],
+            &[(reserve_state.lending_market.as_ref())],
             &get_solend_program_id(),
         );
 

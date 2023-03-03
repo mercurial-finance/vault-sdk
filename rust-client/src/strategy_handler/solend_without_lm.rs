@@ -35,7 +35,7 @@ impl StrategyHandler for SolendWithoutLMHandler {
             mercurial_vault::utils::derive_collateral_vault_address(strategy);
 
         let (lending_market_authority, _bump_seed) = Pubkey::find_program_address(
-            &[&reserve_state.lending_market.as_ref()],
+            &[(reserve_state.lending_market.as_ref())],
             &get_solend_program_id(),
         );
 
