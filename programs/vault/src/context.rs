@@ -3,11 +3,13 @@ use crate::seed;
 use crate::state::{Strategy, Vault, MAX_BUMPS};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, Debug)]
 pub struct VaultBumps {
     pub vault_bump: u8,
     pub token_vault_bump: u8,
 }
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, Debug)]
 pub struct StrategyBumps {
     pub strategy_index: u8,
@@ -15,6 +17,7 @@ pub struct StrategyBumps {
     pub collateral_vault_bump: u8,
     pub other_bumps: [u8; MAX_BUMPS],
 }
+
 #[derive(Accounts)]
 pub struct DepositWithdrawLiquidity<'info> {
     #[account(
@@ -34,6 +37,7 @@ pub struct DepositWithdrawLiquidity<'info> {
     pub user: Signer<'info>,
     pub token_program: Program<'info, Token>,
 }
+
 #[derive(Accounts)]
 pub struct WithdrawDirectlyFromStrategy<'info> {
     #[account(
@@ -65,10 +69,12 @@ pub struct WithdrawDirectlyFromStrategy<'info> {
     pub user: Signer<'info>,
     pub token_program: Program<'info, Token>,
 }
+
 #[derive(Accounts)]
 pub struct GetUnlockedAmount<'info> {
     pub vault: Box<Account<'info, Vault>>,
 }
+
 #[derive(Accounts)]
 pub struct RebalanceStrategy<'info> {
     #[account(
@@ -139,11 +145,11 @@ pub struct Initialize<'info> {
     )]
     pub token_vault: Box<Account<'info, TokenAccount>>,
     /// Token mint account
-    pub token_mint: Box<Account<'info, Mint>>, // allocate some accounts in heap to avoid stack frame size limit
+    pub token_mint: Box<Account<'info, Mint>>,
     /// Fee vault account
     #[account(constraint = fee_vault.owner == get_treasury_address() && fee_vault.mint == lp_mint.key())]
     pub fee_vault: Box<Account<'info, TokenAccount>>,
-    /// Lp mint account, need to init lp mint firstly
+    /// Lp mint account. It need to be created firstly before initialize vault
     #[account(constraint = lp_mint.mint_authority.unwrap() == vault.key() && lp_mint.supply == 0 && lp_mint.decimals == token_mint.decimals )]
     pub lp_mint: Box<Account<'info, Mint>>,
     /// rent
