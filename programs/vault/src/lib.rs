@@ -2,6 +2,7 @@ pub mod context;
 pub mod seed;
 pub mod state;
 pub mod strategy;
+pub mod utils;
 
 use crate::strategy::base::StrategyType;
 use anchor_lang::prelude::*;
@@ -157,7 +158,7 @@ pub struct AddLiquidity {
 
 #[event]
 pub struct RemoveLiquidity {
-    pub lp_unmint_amount: u64,
+    pub lpunmint_amount: u64,
     pub token_amount: u64,
 }
 #[event]

@@ -91,7 +91,7 @@ impl Vault {
         .ok()
     }
 
-    pub fn get_unmint_amount(
+    pub fn getunmint_amount(
         &self,
         current_time: u64,
         out_token: u64,

@@ -79,8 +79,8 @@ impl StrategyHandler for ApricotWithoutLMHandler {
                 program_id: mercurial_vault::id(),
                 accounts,
                 data: mercurial_vault::instruction::WithdrawDirectlyFromStrategy {
-                    _unmint_amount: amount,
-                    _min_out_amount: 0,
+                    unmint_amount: amount,
+                    min_out_amount: 0,
                 }
                 .data(),
             },
