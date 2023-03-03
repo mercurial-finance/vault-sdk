@@ -1,5 +1,42 @@
 use anchor_lang::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::str::FromStr;
+
+#[derive(
+    AnchorSerialize,
+    AnchorDeserialize,
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Serialize,
+    Deserialize,
+    Eq,
+    Hash,
+)]
+pub enum StrategyType {
+    PortFinanceWithoutLM,
+    PortFinanceWithLM,
+    SolendWithoutLM,
+    Mango, // Mango is no longer supported
+    SolendWithLM,
+    ApricotWithoutLM,
+    Francium,
+    Tulip,
+    // This is for compatibility with some administrative endpoint
+    Vault,
+    Drift,
+    Frakt,
+    Cypher,
+}
+
+impl std::fmt::Display for StrategyType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+        // or, alternatively:
+        // fmt::Debug::fmt(self, f)
+    }
+}
 
 pub fn get_cypher_program_id() -> Pubkey {
     Pubkey::from_str("CYPH3o83JX6jY6NkbproSpdmQ5VWJtxjfJ5P8veyYVu3").unwrap()
