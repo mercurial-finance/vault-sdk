@@ -107,7 +107,7 @@ fn main() -> Result<()> {
 
     let (vault, _) = mercurial_vault::utils::derive_vault_address(token_mint, base);
 
-    println!("ProgramID {}", program_id.to_string());
+    println!("ProgramID {}", program_id);
     println!("TOKEN MINT {}", token_mint);
     println!("Base {}", base);
     println!("VAULT {}", vault);
@@ -165,7 +165,7 @@ fn show(program_client: &anchor_client::Program, vault: Pubkey) -> Result<()> {
     println!("TOKEN AMOUNT: {}", token_data.amount);
 
     let mut strategy_amount = 0u64;
-    for (i, &strategy_pubkey) in vault_data.strategies.iter().enumerate() {
+    for (_i, &strategy_pubkey) in vault_data.strategies.iter().enumerate() {
         if strategy_pubkey != Pubkey::default() {
             let strategy_state: mercurial_vault::state::Strategy =
                 program_client.account(strategy_pubkey)?;
@@ -198,7 +198,7 @@ fn get_unlocked_amount(
         .accounts(mercurial_vault::accounts::GetUnlockedAmount { vault })
         .args(mercurial_vault::instruction::GetUnlockedAmount {});
 
-    let simulation = utils::simulate_transaction(&builder, &program_client, &vec![payer]).unwrap();
+    let simulation = utils::simulate_transaction(&builder, program_client, &vec![payer]).unwrap();
     let logs = simulation.value.logs.expect("No log in simulation found");
     let unlocked_amount: mercurial_vault::TotalAmount =
         utils::parse_event_log(&logs).expect("Event log not found");

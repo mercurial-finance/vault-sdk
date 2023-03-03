@@ -35,7 +35,7 @@ impl StrategyHandler for PortFinanceWithoutLMHandler {
             mercurial_vault::utils::derive_collateral_vault_address(strategy);
 
         let (lending_market_authority, _bump_seed) = Pubkey::find_program_address(
-            &[&reserve_state.lending_market.as_ref()],
+            &[(reserve_state.lending_market.as_ref())],
             &get_port_finance_program_id(),
         );
         let user_token = get_or_create_ata(program_client, token_mint, program_client.payer())?;
@@ -76,8 +76,8 @@ impl StrategyHandler for PortFinanceWithoutLMHandler {
                 program_id: mercurial_vault::id(),
                 accounts,
                 data: mercurial_vault::instruction::WithdrawDirectlyFromStrategy {
-                    _unmint_amount: amount,
-                    _min_out_amount: 0,
+                    unmint_amount: amount,
+                    min_out_amount: 0,
                 }
                 .data(),
             },

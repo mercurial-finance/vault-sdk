@@ -6,7 +6,7 @@ use crate::strategy_handler::solend_without_lm::SolendWithoutLMHandler;
 use crate::strategy_handler::tulip::TulipHandler;
 use anchor_lang::solana_program::pubkey::Pubkey;
 use anyhow::Result;
-use mercurial_vault::StrategyType;
+use mercurial_vault::strategy::base::StrategyType;
 
 pub fn get_strategy_handler(strategy_type: StrategyType) -> Box<dyn StrategyHandler> {
     match strategy_type {

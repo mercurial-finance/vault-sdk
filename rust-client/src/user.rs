@@ -5,7 +5,6 @@ use anchor_lang::solana_program::program_pack::Pack;
 use anchor_lang::solana_program::pubkey::Pubkey;
 use anchor_spl::token::spl_token;
 use anyhow::Result;
-use spl_associated_token_account;
 
 pub fn deposit(
     program_client: &anchor_client::Program,
@@ -28,18 +27,18 @@ pub fn deposit(
 
     let builder = program_client
         .request()
-        .accounts(mercurial_vault::accounts::Deposit {
-            vault: vault,
-            token_vault: token_vault,
-            lp_mint: lp_mint,
+        .accounts(mercurial_vault::accounts::DepositWithdrawLiquidity {
+            vault,
+            token_vault,
+            lp_mint,
             user_token,
             user_lp,
             user: program_client.payer(),
             token_program: spl_token::id(),
         })
         .args(mercurial_vault::instruction::Deposit {
-            _token_amount: token_amount,
-            _minimum_lp_token_amount: 0,
+            token_amount,
+            minimum_lp_token_amount: 0,
         });
 
     let signature = builder.send()?;
@@ -69,18 +68,18 @@ pub fn withdraw(
 
     let builder = program_client
         .request()
-        .accounts(mercurial_vault::accounts::Withdraw {
-            vault: vault,
-            token_vault: token_vault,
-            lp_mint: lp_mint,
+        .accounts(mercurial_vault::accounts::DepositWithdrawLiquidity {
+            vault,
+            token_vault,
+            lp_mint,
             user_token,
             user_lp,
             user: program_client.payer(),
             token_program: spl_token::id(),
         })
         .args(mercurial_vault::instruction::Withdraw {
-            _unmint_amount: unmint_amount,
-            _min_out_amount: 0,
+            unmint_amount,
+            min_out_amount: 0,
         });
 
     let signature = builder.send()?;

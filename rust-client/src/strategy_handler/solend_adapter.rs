@@ -9,7 +9,7 @@ pub struct SolendObligation(Obligation);
 
 impl SolendObligation {
     pub fn get_obligation(&self) -> Obligation {
-        return self.0.clone();
+        self.0.clone()
     }
 }
 
