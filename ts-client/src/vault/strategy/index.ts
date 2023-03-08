@@ -6,7 +6,7 @@ import { StrategyProgram } from '../constants';
 import type { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import ApricotWithoutLMHandler from './apricotWithoutLM';
 import FranciumHandler from './francium';
-import MangoHandler from './mango';
+import MangoHandler from './mangoV4';
 import TulipHandler from './tulip';
 import DriftHandler from './drift';
 import PortWithLMHandler from './portWithLM';
@@ -104,7 +104,7 @@ export const getStrategyHandler = (
     case 'apricotWithoutLM':
       return new ApricotWithoutLMHandler();
     case 'mango':
-      return new MangoHandler();
+      return new MangoHandler(cluster, program);
     case 'tulip':
       return new TulipHandler();
     case 'vault':
