@@ -1,12 +1,13 @@
-import { MangoClient } from '@mercurial-finance/mango-v4';
+import { MangoAccount, MangoClient } from '@mercurial-finance/mango-v4';
 import * as anchor from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { AccountMeta, Cluster, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { AccountMeta, Cluster, Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 
 import { StrategyHandler, Strategy } from '.';
 import { SEEDS } from '../constants';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { getOrCreateATAInstruction } from '../utils';
+import { BN } from 'bn.js';
 
 const MANGO_PROGRAM_ID = new PublicKey('4MangoMjqJ2firMokCjjGgoK8d4MXcrgL7XJaL3w6fVg');
 const MANGO_GROUP_PK = new PublicKey('78b8f4cGCwmZ9ysPFMWLaLTkkaYnUjwMJYStWe5RTSSX');
@@ -43,26 +44,20 @@ export default class MangoHandler implements StrategyHandler {
       };
     },
   ) {
-    const [mangoAccountPK] = await PublicKey.findProgramAddress(
-      [MANGO_GROUP_PK.toBuffer(), vault.toBuffer(), Buffer.from([0, 0, 0, 0, 0, 0, 0, 0])],
-      MANGO_PROGRAM_ID,
-    );
-
-    const rootBankPK = strategy.state.reserve;
     const group = await this.mangoClient.getGroup(MANGO_GROUP_PK);
     await group.reloadAll(this.mangoClient);
 
-    const bank = await group.getFirstBankByMint(rootBankPK);
-
-    const [account] = PublicKey.findProgramAddressSync(
-      [Buffer.from(SEEDS.MANGO_ACCOUNT), bank.group.toBuffer()],
-      program.programId,
-    );
+    const bank = await group.getFirstBankByMint(vaultState.tokenMint);
 
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
     const [strategyOwner] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.MANGO), strategyBuffer],
       program.programId,
+    );
+
+    const [mangoAccountPK] = PublicKey.findProgramAddressSync(
+      [Buffer.from(SEEDS.MANGO_ACCOUNT), bank.group.toBuffer(), strategyOwner.toBuffer(), Buffer.from([0, 0, 0, 0])],
+      MANGO_PROGRAM_ID,
     );
 
     const [tokenAccount, createTokenAccountIx] = await getOrCreateATAInstruction(
@@ -75,17 +70,20 @@ export default class MangoHandler implements StrategyHandler {
     );
     createTokenAccountIx && preInstructions.push(createTokenAccountIx);
 
-    const mangoAccount = await this.mangoClient.getMangoAccountForOwner(group, walletPubKey, 0);
-    if (!mangoAccount) throw new Error('Could not find mango account');
+    const mangoAccount = await this.mangoClient.getMangoAccount(mangoAccountPK);
 
-    const healthRemainingAccounts = this.mangoClient.buildHealthRemainingAccounts(1, group, [mangoAccount], [bank]);
+    const healthRemainingAccounts = await this.mangoClient.buildHealthRemainingAccounts(
+      1,
+      group,
+      [mangoAccount],
+      [bank],
+    );
 
     const accountData = [
       { pubkey: bank.group },
       { pubkey: mangoAccountPK, isWritable: true },
-      { pubkey: account, isWritable: true },
       { pubkey: strategyOwner },
-      { pubkey: bank.publicKey, isWritable: true },
+      { pubkey: bank.vault, isWritable: true },
       { pubkey: bank.oracle },
       { pubkey: tokenAccount, isWritable: true },
       ...healthRemainingAccounts.map((accountPK) => ({
@@ -97,12 +95,12 @@ export default class MangoHandler implements StrategyHandler {
     for (const account of accountData) {
       remainingAccounts.push({
         pubkey: account.pubkey,
-        isWritable: !!account.isWritable,
+        isWritable: !!account?.isWritable,
         isSigner: false,
       });
     }
 
-    const [collateralVault] = await PublicKey.findProgramAddress(
+    const [collateralVault] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), new PublicKey(strategy.pubkey).toBuffer()],
       program.programId,
     );
@@ -149,6 +147,7 @@ export default class MangoHandler implements StrategyHandler {
         user: walletPubKey,
       })
       .transaction();
+
     return tx;
   }
 }
