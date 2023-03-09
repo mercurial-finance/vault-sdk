@@ -1,13 +1,12 @@
-import { MangoAccount, MangoClient } from '@mercurial-finance/mango-v4';
+import { MangoClient } from '@mercurial-finance/mango-v4';
 import * as anchor from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { AccountMeta, Cluster, Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { AccountMeta, Cluster, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
 import { StrategyHandler, Strategy } from '.';
 import { SEEDS } from '../constants';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { getOrCreateATAInstruction } from '../utils';
-import { BN } from 'bn.js';
 
 const MANGO_PROGRAM_ID = new PublicKey('4MangoMjqJ2firMokCjjGgoK8d4MXcrgL7XJaL3w6fVg');
 const MANGO_GROUP_PK = new PublicKey('78b8f4cGCwmZ9ysPFMWLaLTkkaYnUjwMJYStWe5RTSSX');
@@ -56,7 +55,7 @@ export default class MangoHandler implements StrategyHandler {
     );
 
     const [mangoAccountPK] = PublicKey.findProgramAddressSync(
-      [Buffer.from(SEEDS.MANGO_ACCOUNT), bank.group.toBuffer(), strategyOwner.toBuffer(), Buffer.from([0, 0, 0, 0])],
+      [Buffer.from(SEEDS.MANGO_ACCOUNT), bank.group.toBuffer(), strategyOwner.toBuffer(), Buffer.from([0, 0, 0, 0])], // Mango account number (0u32)
       MANGO_PROGRAM_ID,
     );
 
