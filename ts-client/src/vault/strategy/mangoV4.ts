@@ -1,4 +1,5 @@
-import { MangoClient } from '@mercurial-finance/mango-v4';
+import { MangoClient, MANGO_V4_ID } from '@mercurial-finance/mango-v4';
+import { AccountRetriever } from '@mercurial-finance/mango-v4/dist/client';
 import * as anchor from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { AccountMeta, Cluster, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
@@ -8,7 +9,6 @@ import { SEEDS } from '../constants';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { getOrCreateATAInstruction } from '../utils';
 
-const MANGO_PROGRAM_ID = new PublicKey('4MangoMjqJ2firMokCjjGgoK8d4MXcrgL7XJaL3w6fVg');
 const MANGO_GROUP_PK = new PublicKey('78b8f4cGCwmZ9ysPFMWLaLTkkaYnUjwMJYStWe5RTSSX');
 
 export default class MangoHandler implements StrategyHandler {
@@ -18,7 +18,7 @@ export default class MangoHandler implements StrategyHandler {
 
   constructor(cluster: Cluster, program: VaultProgram) {
     this.cluster = cluster;
-    this.mangoClient = MangoClient.connect(program.provider, this.cluster, MANGO_PROGRAM_ID);
+    this.mangoClient = MangoClient.connect(program.provider, this.cluster, MANGO_V4_ID[cluster]);
     this.connection = program.provider.connection;
   }
 
@@ -56,7 +56,7 @@ export default class MangoHandler implements StrategyHandler {
 
     const [mangoAccountPK] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.MANGO_ACCOUNT), bank.group.toBuffer(), strategyOwner.toBuffer(), Buffer.from([0, 0, 0, 0])], // Mango account number (0u32)
-      MANGO_PROGRAM_ID,
+      this.mangoClient.programId,
     );
 
     const [tokenAccount, createTokenAccountIx] = await getOrCreateATAInstruction(
@@ -72,7 +72,7 @@ export default class MangoHandler implements StrategyHandler {
     const mangoAccount = await this.mangoClient.getMangoAccount(mangoAccountPK);
 
     const healthRemainingAccounts = await this.mangoClient.buildHealthRemainingAccounts(
-      1,
+      AccountRetriever.Fixed,
       group,
       [mangoAccount],
       [bank],
@@ -108,7 +108,7 @@ export default class MangoHandler implements StrategyHandler {
       vault,
       strategy: strategy.pubkey,
       reserve: strategy.state.reserve,
-      strategyProgram: MANGO_PROGRAM_ID,
+      strategyProgram: this.mangoClient.programId,
       collateralVault,
       feeVault: vaultState.feeVault,
       tokenVault,
