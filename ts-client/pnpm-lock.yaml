@@ -7,7 +7,7 @@ specifiers:
   '@mercurial-finance/drift-sdk': 1.0.3
   '@mercurial-finance/frakt-sdk': 0.0.2
   '@mercurial-finance/francium-sdk': 1.4.3
-  '@mercurial-finance/mango-v4': 0.5.3
+  '@mercurial-finance/mango-v4': 0.5.4
   '@mercurial-finance/optimist': ^0.1.4
   '@mercurial-finance/port-sdk': 0.2.69
   '@mercurial-finance/solend-sdk': 0.6.5
@@ -44,7 +44,7 @@ dependencies:
   '@mercurial-finance/drift-sdk': 1.0.3
   '@mercurial-finance/frakt-sdk': 0.0.2
   '@mercurial-finance/francium-sdk': 1.4.3
-  '@mercurial-finance/mango-v4': 0.5.3
+  '@mercurial-finance/mango-v4': 0.5.4
   '@mercurial-finance/optimist': 0.1.4_5civ5c77pqoy3zogh3e5smquhq
   '@mercurial-finance/port-sdk': 0.2.69_qh54t4oqtr6naoviur3spgs4ze
   '@mercurial-finance/solend-sdk': 0.6.5
@@ -799,8 +799,8 @@ packages:
     resolution: {integrity: sha512-beFsxFx9WsHsImCSZAPXlitE4kQMugHczATishmJdxXGEHvBfJ3hrncjaWf+znwlMTknx8zYgPFfeP9JzbHHgw==}
     dev: false
 
-  /@mercurial-finance/mango-v4/0.5.3:
-    resolution: {integrity: sha512-xIBMvL8WK1rzfxSH8H36QMSmaWUllLAQdhjRKdoTc8TrTsC1ncWAZATvM2k9rFXgCU7x7h8pSo904VKgSjNUww==}
+  /@mercurial-finance/mango-v4/0.5.4:
+    resolution: {integrity: sha512-KD0xdmU5+05F/Or7YYtzyhFGwAXqDD+LmN9fJIp/KJfieQcKq/GnLnFdGA8iTLMydyqcO0ymgSxu5Uky2IpyaA==}
     dependencies:
       '@project-serum/anchor': 0.25.0
       '@project-serum/serum': 0.13.65
