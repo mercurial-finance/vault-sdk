@@ -67,7 +67,7 @@ export default class FraktHandler implements StrategyHandler {
     );
 
     const [tokenAccount, createTokenAccountIx] = await getOrCreateATAInstruction(
-      SOL_MINT,
+      vaultState.tokenMint,
       strategyOwner,
       this.connection,
       {

@@ -28,6 +28,8 @@ export const SEEDS = Object.freeze({
   DEPOSIT: 'deposit',
   FRAKT_LENDING: 'nftlendingv2',
   CYPHER: 'cypher',
+  MANGO_ACCOUNT: 'MangoAccount',
+  MANGO: 'mango',
 });
 
 export const StrategyProgram: Record<

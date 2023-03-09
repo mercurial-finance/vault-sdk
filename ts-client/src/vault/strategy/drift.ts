@@ -9,12 +9,10 @@ import {
   getUserAccountPublicKeySync,
   getDriftStateAccountPublicKey,
   getDriftSignerPublicKey,
-  getSpotMarketPublicKey,
   getSpotMarketVaultPublicKey,
   Wallet,
 } from '@mercurial-finance/drift-sdk';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { TokenInfo } from '@solana/spl-token-registry';
 import BN from 'bn.js';
 
 import { SEEDS } from '../constants';
