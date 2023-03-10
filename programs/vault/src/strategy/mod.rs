@@ -3,3 +3,4 @@ pub mod base;
 pub mod cypher;
 pub mod frakt;
 pub mod mango;
+pub mod psylend;
