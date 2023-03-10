@@ -4,10 +4,10 @@ import * as anchor from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { AccountMeta, Cluster, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
-import { StrategyHandler, Strategy } from '.';
 import { SEEDS } from '../constants';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { getOrCreateATAInstruction } from '../utils';
+import { StrategyHandler, Strategy } from '.';
 
 const MANGO_GROUP_PK = new PublicKey('78b8f4cGCwmZ9ysPFMWLaLTkkaYnUjwMJYStWe5RTSSX');
 

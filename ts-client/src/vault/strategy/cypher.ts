@@ -15,8 +15,8 @@ import BN from 'bn.js';
 
 import { SEEDS } from '../constants';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
-import { Strategy, StrategyHandler } from '.';
 import { getOrCreateATAInstruction } from '../utils';
+import { Strategy, StrategyHandler } from '.';
 
 export default class CypherHandler implements StrategyHandler {
   private cypherClient: CypherClient;

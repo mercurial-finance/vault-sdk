@@ -2,11 +2,10 @@ import { AccountMeta, PublicKey, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } f
 import * as solend from '@mercurial-finance/solend-sdk';
 import * as anchor from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { TokenInfo } from '@solana/spl-token-registry';
 
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
-import { ReserveState, StrategyHandler, Strategy } from '.';
 import { SEEDS } from '../constants';
+import { ReserveState, StrategyHandler, Strategy } from '.';
 
 // not using now
 export default class SolendWithLMHandler implements StrategyHandler {

@@ -30,6 +30,7 @@ export const SEEDS = Object.freeze({
   CYPHER: 'cypher',
   MANGO_ACCOUNT: 'MangoAccount',
   MANGO: 'mango',
+  PSYLEND: 'psylend',
 });
 
 export const StrategyProgram: Record<

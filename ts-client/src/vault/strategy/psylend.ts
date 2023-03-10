@@ -1,28 +1,34 @@
 import {
-  AccountMeta,
-  Connection,
   PublicKey,
-  SYSVAR_CLOCK_PUBKEY,
-  SystemProgram,
-  Transaction,
   TransactionInstruction,
+  SYSVAR_CLOCK_PUBKEY,
+  AccountMeta,
+  Transaction,
+  Connection,
+  Cluster,
 } from '@solana/web3.js';
+import { IDL as PsyLendIDL, Psylend, keys, instructions } from '@mithraic-labs/psylend-utils';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import BN from 'bn.js';
+import { BN, Program, AnchorProvider } from '@project-serum/anchor';
 
-import { SEEDS } from '../constants';
+import { StrategyHandler, Strategy } from '.';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
+import { SEEDS } from '../constants';
 import { getOrCreateATAInstruction } from '../utils';
-import { Strategy, StrategyHandler } from '.';
 
-const FRAKT_PROGRAM_ID = new PublicKey('A66HabVL3DzNzeJgcHYtRRNW1ZRMKwBfrdSR4kLsZ9DJ');
-const FRAKT_ADMIN_FEE_PUBKEY = new PublicKey('9aTtUqAnuSMndCpjcPosRNf3fCkrTQAV8C8GERf3tZi3');
-
-export default class FraktHandler implements StrategyHandler {
+export default class PsyLendHandler implements StrategyHandler {
   private connection: Connection;
+  private cluster: Cluster;
+  private psyLendProgram: Program<Psylend>;
 
-  constructor(program: VaultProgram) {
+  constructor(cluster: Cluster, program: VaultProgram) {
+    this.cluster = cluster;
     this.connection = program.provider.connection;
+    this.psyLendProgram = new Program<Psylend>(
+      PsyLendIDL,
+      keys.psyLendMainnetProgramKey,
+      new AnchorProvider(program.provider.connection, {} as any, AnchorProvider.defaultOptions()),
+    );
   }
 
   async withdraw(
@@ -48,26 +54,35 @@ export default class FraktHandler implements StrategyHandler {
   ): Promise<Transaction> {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
-    const [liqOwner] = await PublicKey.findProgramAddress(
-      [Buffer.from(SEEDS.FRAKT_LENDING), strategy.state.reserve.toBuffer()],
-      FRAKT_PROGRAM_ID,
-    );
-
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
-    const strategyReserveBuffer = new PublicKey(strategy.state.reserve).toBuffer();
-    const [collateralVault] = await PublicKey.findProgramAddress(
+    const [collateralVault] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId,
     );
 
-    const [strategyOwner] = await PublicKey.findProgramAddress(
-      [Buffer.from(SEEDS.FRAKT), strategyBuffer],
+    const { reserve } = strategy.state;
+    const reserveState = await this.psyLendProgram.account.reserve.fetchNullable(reserve);
+    if (!reserveState) throw new Error('No user reserve account');
+    const { market, depositNoteMint, pythOraclePrice, feeNoteVault, vault: reserveVault } = reserveState;
+
+    const marketState = await this.psyLendProgram.account.reserve.fetchNullable(market);
+    if (!marketState) throw new Error('No user reserve market account');
+    const { marketAuthority } = marketState;
+
+    const [strategyOwnerPubkey] = await PublicKey.findProgramAddress(
+      [Buffer.from(SEEDS.PSYLEND), strategyBuffer],
       program.programId,
+    );
+
+    const [strategyOwnerATA] = await getOrCreateATAInstruction(
+      vaultState.tokenMint,
+      strategyOwnerPubkey,
+      this.connection,
     );
 
     const [tokenAccount, createTokenAccountIx] = await getOrCreateATAInstruction(
       vaultState.tokenMint,
-      strategyOwner,
+      strategyOwnerPubkey,
       this.connection,
       {
         payer: walletPubKey,
@@ -75,40 +90,30 @@ export default class FraktHandler implements StrategyHandler {
     );
     createTokenAccountIx && preInstructions.push(createTokenAccountIx);
 
-    const [deposit] = await PublicKey.findProgramAddress(
-      [Buffer.from(SEEDS.DEPOSIT), strategyReserveBuffer, new PublicKey(strategyOwner).toBuffer()],
-      FRAKT_PROGRAM_ID,
-    );
-
     const accounts = [
-      { pubkey: strategyOwner, isWritable: true },
+      { pubkey: market, isWritable: true },
+      { pubkey: marketAuthority, isWritable: true },
+      { pubkey: strategyOwnerATA, isWritable: true },
+      { pubkey: strategyOwnerPubkey, isWritable: true },
+      { pubkey: reserveVault, isWritable: true },
+      { pubkey: depositNoteMint, isWritable: true },
       { pubkey: tokenAccount, isWritable: true },
-      { pubkey: liqOwner, isWritable: true },
-      { pubkey: deposit, isWritable: true },
-      { pubkey: FRAKT_ADMIN_FEE_PUBKEY, isWritable: true },
-      { pubkey: SystemProgram.programId },
-      { pubkey: SYSVAR_CLOCK_PUBKEY },
     ];
 
     const remainingAccounts: Array<AccountMeta> = [];
     for (const account of accounts) {
       remainingAccounts.push({
         pubkey: account.pubkey,
-        isWritable: !!account.isWritable,
+        isWritable: true,
         isSigner: false,
       });
     }
-
-    // prevent duplicate as spot market account pubkey will be add on program side
-    const remainingAccountsWithoutReserve = remainingAccounts.filter(
-      ({ pubkey }) => !pubkey.equals(strategy.state.reserve),
-    );
 
     const txAccounts = {
       vault,
       strategy: new PublicKey(strategy.pubkey),
       reserve: new PublicKey(strategy.state.reserve),
-      strategyProgram: FRAKT_PROGRAM_ID,
+      strategyProgram: keys.psyLendMainnetProgramKey,
       collateralVault,
       feeVault: vaultState.feeVault,
       tokenVault,
@@ -116,6 +121,19 @@ export default class FraktHandler implements StrategyHandler {
       userLp,
       tokenProgram: TOKEN_PROGRAM_ID,
     };
+
+    const accrueInterestIx = await instructions.accrueInterestIx(
+      this.psyLendProgram,
+      market,
+      marketAuthority,
+      reserve,
+      feeNoteVault,
+      depositNoteMint,
+    );
+    preInstructions.push(accrueInterestIx);
+
+    const refreshReserveIx = await instructions.refreshReserveIx(this.psyLendProgram, market, reserve, pythOraclePrice);
+    preInstructions.push(refreshReserveIx);
 
     if (opt?.affiliate) {
       const tx = await opt.affiliate.affiliateProgram.methods
@@ -128,7 +146,7 @@ export default class FraktHandler implements StrategyHandler {
           vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
-        .remainingAccounts(remainingAccountsWithoutReserve)
+        .remainingAccounts(remainingAccounts)
         .preInstructions(preInstructions)
         .postInstructions(postInstructions)
         .transaction();
@@ -143,7 +161,7 @@ export default class FraktHandler implements StrategyHandler {
         lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
-      .remainingAccounts(remainingAccountsWithoutReserve)
+      .remainingAccounts(remainingAccounts)
       .preInstructions(preInstructions)
       .postInstructions(postInstructions)
       .transaction();

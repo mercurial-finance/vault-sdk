@@ -2,11 +2,10 @@ import { PublicKey, AccountMeta, SYSVAR_CLOCK_PUBKEY, Cluster, TransactionInstru
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import * as anchor from '@project-serum/anchor';
 import * as port from '@mercurial-finance/port-sdk';
-import { TokenInfo } from '@solana/spl-token-registry';
 
-import { ReserveState, Strategy, StrategyHandler } from '.';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { SEEDS } from '../constants';
+import { ReserveState, Strategy, StrategyHandler } from '.';
 
 export default class PortWithoutLMHandler implements StrategyHandler {
   constructor(public strategyProgram: PublicKey) {}
