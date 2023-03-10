@@ -28,6 +28,7 @@ pub enum StrategyType {
     Drift,
     Frakt,
     Cypher,
+    Psylend,
 }
 
 impl std::fmt::Display for StrategyType {
