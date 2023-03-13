@@ -447,6 +447,11 @@ export default class VaultImpl implements VaultImplementation {
   }
 
   public async getStrategiesState(): Promise<Array<StrategyState>> {
+    console.log(
+      this.vaultState.strategies
+        .filter((address) => address.toString() !== VAULT_STRATEGY_ADDRESS)
+        .map((a) => a.toBase58()),
+    );
     return (
       await this.program.account.strategy.fetchMultiple(
         this.vaultState.strategies.filter((address) => address.toString() !== VAULT_STRATEGY_ADDRESS),
