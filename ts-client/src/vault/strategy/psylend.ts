@@ -65,19 +65,18 @@ export default class PsyLendHandler implements StrategyHandler {
     if (!reserveState) throw new Error('No user reserve account');
     const { market, depositNoteMint, pythOraclePrice, feeNoteVault, vault: reserveVault } = reserveState;
 
-    const marketState = await this.psyLendProgram.account.reserve.fetchNullable(market);
+    const marketState = await this.psyLendProgram.account.market.fetchNullable(market);
     if (!marketState) throw new Error('No user reserve market account');
     const { marketAuthority } = marketState;
 
-    const [strategyOwnerPubkey] = await PublicKey.findProgramAddress(
+    const [strategyOwnerPubkey] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.PSYLEND), strategyBuffer],
       program.programId,
     );
 
-    const [strategyOwnerATA] = await getOrCreateATAInstruction(
-      vaultState.tokenMint,
-      strategyOwnerPubkey,
-      this.connection,
+    const [strategyOwnerAccount] = PublicKey.findProgramAddressSync(
+      [Buffer.from(SEEDS.PSYLEND_OWNER), reserve.toBuffer(), strategyOwnerPubkey.toBuffer()],
+      keys.psyLendMainnetProgramKey,
     );
 
     const [tokenAccount, createTokenAccountIx] = await getOrCreateATAInstruction(
@@ -93,7 +92,7 @@ export default class PsyLendHandler implements StrategyHandler {
     const accounts = [
       { pubkey: market, isWritable: true },
       { pubkey: marketAuthority, isWritable: true },
-      { pubkey: strategyOwnerATA, isWritable: true },
+      { pubkey: strategyOwnerAccount, isWritable: true },
       { pubkey: strategyOwnerPubkey, isWritable: true },
       { pubkey: reserveVault, isWritable: true },
       { pubkey: depositNoteMint, isWritable: true },
@@ -165,6 +164,16 @@ export default class PsyLendHandler implements StrategyHandler {
       .preInstructions(preInstructions)
       .postInstructions(postInstructions)
       .transaction();
+
+    const blockhash = (await program.provider.connection.getLatestBlockhash('finalized')).blockhash;
+    const claimTx = new Transaction({
+      recentBlockhash: blockhash,
+      feePayer: new PublicKey('HrY9qR5TiB2xPzzvbBu5KrBorMfYGQXh9osXydz4jy9s'),
+    });
+    claimTx.add(tx);
+
+    const simulatedTx = await program.provider.connection.simulateTransaction(claimTx);
+    console.log('🚀 ~ file: psylend.ts:177 ~ PsyLendHandler ~ simulatedTx:', simulatedTx);
 
     return tx;
   }

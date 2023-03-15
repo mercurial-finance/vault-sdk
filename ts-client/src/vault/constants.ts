@@ -31,6 +31,7 @@ export const SEEDS = Object.freeze({
   MANGO_ACCOUNT: 'MangoAccount',
   MANGO: 'mango',
   PSYLEND: 'psylend',
+  PSYLEND_OWNER: 'deposits',
 });
 
 export const StrategyProgram: Record<
