@@ -165,16 +165,6 @@ export default class PsyLendHandler implements StrategyHandler {
       .postInstructions(postInstructions)
       .transaction();
 
-    const blockhash = (await program.provider.connection.getLatestBlockhash('finalized')).blockhash;
-    const claimTx = new Transaction({
-      recentBlockhash: blockhash,
-      feePayer: new PublicKey('HrY9qR5TiB2xPzzvbBu5KrBorMfYGQXh9osXydz4jy9s'),
-    });
-    claimTx.add(tx);
-
-    const simulatedTx = await program.provider.connection.simulateTransaction(claimTx);
-    console.log('🚀 ~ file: psylend.ts:177 ~ PsyLendHandler ~ simulatedTx:', simulatedTx);
-
     return tx;
   }
 }
