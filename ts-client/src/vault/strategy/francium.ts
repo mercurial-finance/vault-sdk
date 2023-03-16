@@ -1,12 +1,11 @@
 import { PublicKey, TransactionInstruction, SYSVAR_CLOCK_PUBKEY, AccountMeta, Transaction } from '@solana/web3.js';
 import { LENDING_CONFIG } from '@mercurial-finance/francium-sdk';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { TokenInfo } from '@solana/spl-token-registry';
 import { BN } from '@project-serum/anchor';
 
-import { StrategyHandler, Strategy } from '.';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { SEEDS } from '../constants';
+import { StrategyHandler, Strategy } from '.';
 
 export default class FranciumHandler implements StrategyHandler {
   async withdraw(

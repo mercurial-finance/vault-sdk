@@ -4,11 +4,10 @@ import * as anchor from '@project-serum/anchor';
 import * as quarry from '@quarryprotocol/quarry-sdk';
 import { Token } from '@solana/spl-token';
 import * as port from '@mercurial-finance/port-sdk';
-import { TokenInfo } from '@solana/spl-token-registry';
 
-import { ReserveState, Strategy, StrategyHandler } from '.';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { REWARDER, SEEDS } from '../constants';
+import { ReserveState, Strategy, StrategyHandler } from '.';
 
 export default class PortWithLMHandler implements StrategyHandler {
   private quarrySDK: quarry.QuarrySDK;

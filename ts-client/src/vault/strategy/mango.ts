@@ -2,7 +2,6 @@ import * as mango from '@blockworks-foundation/mango-client';
 import * as anchor from '@project-serum/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { AccountMeta, PublicKey, TransactionInstruction } from '@solana/web3.js';
-import { TokenInfo } from '@solana/spl-token-registry';
 
 import { StrategyHandler, Strategy } from '.';
 import { SEEDS } from '../constants';
