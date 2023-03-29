@@ -165,7 +165,7 @@ export default class VaultImpl implements VaultImplementation {
   ): Promise<ResultFunctionType[T]> {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
-    console.log('🚀 ~ file: index.ts:168 ~ VaultImpl ~ program:', program.programId);
+    console.log('🚀 ~ file: index.ts:168 ~ VaultImpl ~ program:', program.programId.toBase58());
 
     const tokenMint = new PublicKey(tokenInfo.address);
     const { vaultPda: vault, vaultPda: tokenVault, lpMintPda: lpMint } = getVaultPdas(tokenMint, program.programId);
