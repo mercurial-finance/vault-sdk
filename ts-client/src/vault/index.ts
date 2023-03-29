@@ -165,20 +165,10 @@ export default class VaultImpl implements VaultImplementation {
   ): Promise<ResultFunctionType[T]> {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
+    console.log('🚀 ~ file: index.ts:168 ~ VaultImpl ~ program:', program.programId);
 
     const tokenMint = new PublicKey(tokenInfo.address);
-    const [vault] = PublicKey.findProgramAddressSync(
-      [Buffer.from(SEEDS.VAULT_PREFIX), tokenMint.toBuffer(), VAULT_BASE_KEY.toBuffer()],
-      program.programId,
-    );
-    const [tokenVault] = PublicKey.findProgramAddressSync(
-      [Buffer.from(SEEDS.TOKEN_VAULT_PREFIX), vault.toBuffer()],
-      program.programId,
-    );
-    const [lpMint] = PublicKey.findProgramAddressSync(
-      [Buffer.from(SEEDS.LP_MINT_PREFIX), vault.toBuffer()],
-      program.programId,
-    );
+    const { vaultPda: vault, vaultPda: tokenVault, lpMintPda: lpMint } = getVaultPdas(tokenMint, program.programId);
 
     return (await program.methods
       .initialize()
