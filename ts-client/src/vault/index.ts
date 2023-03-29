@@ -8,7 +8,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   SystemProgram,
 } from '@solana/web3.js';
-import { MintLayout, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, MintLayout, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
 
 import { AffiliateInfo, AffiliateVaultProgram, VaultImplementation, VaultProgram, VaultState } from './types';
@@ -22,7 +22,15 @@ import {
   unwrapSOLInstruction,
   wrapSOLInstruction,
 } from './utils';
-import { AFFILIATE_PROGRAM_ID, PROGRAM_ID, SOL_MINT, VAULT_STRATEGY_ADDRESS } from './constants';
+import {
+  AFFILIATE_PROGRAM_ID,
+  PROGRAM_ID,
+  SEEDS,
+  SOL_MINT,
+  VAULT_BASE_KEY,
+  VAULT_STRATEGY_ADDRESS,
+  VAULT_TREASURY_ADDRESS,
+} from './constants';
 import { getStrategyHandler, getStrategyType, StrategyState } from './strategy';
 import { IDL, Vault as VaultIdl } from './idl';
 import { IDL as AffiliateIDL, AffiliateVault as AffiliateVaultIdl } from './affiliate-idl';
@@ -141,6 +149,49 @@ export default class VaultImpl implements VaultImplementation {
     this.tokenVaultPda = vaultDetails.tokenVaultPda;
     this.vaultState = vaultDetails.vaultState;
     this.lpSupply = vaultDetails.lpSupply;
+  }
+
+  public static async createPermissionlessVault(
+    connection: Connection,
+    payer: PublicKey,
+    tokenInfo: TokenInfo,
+    opt: {
+      cluster?: Cluster;
+      programId?: string;
+    },
+  ) {
+    const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
+    const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
+
+    const tokenMint = new PublicKey(tokenInfo.address);
+    const [vault] = PublicKey.findProgramAddressSync(
+      [Buffer.from(SEEDS.VAULT_PREFIX), tokenMint.toBuffer(), VAULT_BASE_KEY.toBuffer()],
+      program.programId,
+    );
+    const [tokenVault] = PublicKey.findProgramAddressSync(
+      [Buffer.from(SEEDS.TOKEN_VAULT_PREFIX), vault.toBuffer()],
+      program.programId,
+    );
+    const [lpMint] = PublicKey.findProgramAddressSync(
+      [Buffer.from(SEEDS.LP_MINT_PREFIX), vault.toBuffer()],
+      program.programId,
+    );
+
+    const preInstructions: TransactionInstruction[] = [];
+    return await program.methods
+      .initialize()
+      .accounts({
+        vault,
+        payer,
+        tokenVault,
+        tokenMint,
+        lpMint,
+        systemProgram: program.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+        tokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      })
+      .preInstructions(preInstructions)
+      .transaction();
   }
 
   public static async fetchMultipleUserBalance(

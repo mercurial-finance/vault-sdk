@@ -12,6 +12,7 @@ export const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyT
 export const USDT_MINT = new PublicKey('Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB');
 
 export const VAULT_BASE_KEY = new PublicKey('HWzXGcGHy4tcpYfaRDCyLNzXqBTv3E6BttpCH2vJxArv');
+export const VAULT_TREASURY_ADDRESS = new PublicKey('9kZeN47U2dubGbbzMrzzoRAUvpuxVLRcjW9XiFpYjUo4');
 
 export const SEEDS = Object.freeze({
   VAULT_PREFIX: 'vault',
