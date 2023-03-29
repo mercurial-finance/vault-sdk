@@ -8,7 +8,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   SystemProgram,
 } from '@solana/web3.js';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, MintLayout, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
+import { MintLayout, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
 
 import {
@@ -190,7 +190,7 @@ export default class VaultImpl implements VaultImplementation {
         lpMint,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
-        tokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
       })
       [opt.result === ResultType.TRANSACTION ? 'transaction' : 'instruction']()) as ResultFunctionType[T];
   }
