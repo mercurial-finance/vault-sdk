@@ -60,6 +60,11 @@ type WithdrawOpt = {
   };
 };
 
+type ResultFunctionType = {
+  [ResultType.TRANSACTION]: Transaction;
+  [ResultType.INSTRUCTION]: TransactionInstruction;
+};
+
 const getAllVaultState = async (tokenInfos: Array<TokenInfo>, program: VaultProgram, seedBaseKey?: PublicKey) => {
   const vaultAccountPdas = await Promise.all(
     tokenInfos.map((tokenInfo) =>
@@ -158,16 +163,16 @@ export default class VaultImpl implements VaultImplementation {
     this.lpSupply = vaultDetails.lpSupply;
   }
 
-  public static async createPermissionlessVault(
+  public static async createPermissionlessVault<T extends ResultType>(
     connection: Connection,
     payer: PublicKey,
     tokenInfo: TokenInfo,
     opt: {
       cluster?: Cluster;
       programId?: string;
-      result: ResultType;
+      result: T;
     },
-  ) {
+  ): Promise<ResultFunctionType[T]> {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
 
@@ -185,7 +190,7 @@ export default class VaultImpl implements VaultImplementation {
       program.programId,
     );
 
-    return await program.methods
+    return (await program.methods
       .initialize()
       .accounts({
         vault,
@@ -197,7 +202,7 @@ export default class VaultImpl implements VaultImplementation {
         rent: SYSVAR_RENT_PUBKEY,
         tokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       })
-      [opt.result === ResultType.TRANSACTION ? 'transaction' : 'instruction']();
+      [opt.result === ResultType.TRANSACTION ? 'transaction' : 'instruction']()) as ResultFunctionType[T];
   }
 
   public static async fetchMultipleUserBalance(
