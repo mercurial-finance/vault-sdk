@@ -21,6 +21,6 @@ export {
   calculateWithdrawableAmount,
 };
 
-export type { VaultImplementation, VaultState, AffiliateInfo, ParsedClockState } from './src/vault/types';
+export type { VaultImplementation, VaultState, AffiliateInfo, ParsedClockState, ResultType } from './src/vault/types';
 export type { StrategyType } from './src/vault/strategy';
 export type { Vault as VaultIdl } from './src/vault/idl';
