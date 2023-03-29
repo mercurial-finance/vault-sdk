@@ -11,7 +11,14 @@ import {
 import { ASSOCIATED_TOKEN_PROGRAM_ID, MintLayout, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
 
-import { AffiliateInfo, AffiliateVaultProgram, VaultImplementation, VaultProgram, VaultState } from './types';
+import {
+  AffiliateInfo,
+  AffiliateVaultProgram,
+  ResultType,
+  VaultImplementation,
+  VaultProgram,
+  VaultState,
+} from './types';
 import {
   deserializeAccount,
   getAssociatedTokenAccount,
@@ -158,6 +165,7 @@ export default class VaultImpl implements VaultImplementation {
     opt: {
       cluster?: Cluster;
       programId?: string;
+      result: ResultType;
     },
   ) {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
@@ -177,7 +185,6 @@ export default class VaultImpl implements VaultImplementation {
       program.programId,
     );
 
-    const preInstructions: TransactionInstruction[] = [];
     return await program.methods
       .initialize()
       .accounts({
@@ -190,8 +197,7 @@ export default class VaultImpl implements VaultImplementation {
         rent: SYSVAR_RENT_PUBKEY,
         tokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       })
-      .preInstructions(preInstructions)
-      .transaction();
+      [opt.result === ResultType.TRANSACTION ? 'transaction' : 'instruction']();
   }
 
   public static async fetchMultipleUserBalance(

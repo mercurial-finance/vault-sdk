@@ -9,6 +9,11 @@ import { AffiliateVault as AffiliateVaultIdl } from '../affiliate-idl';
 export type VaultProgram = Program<VaultIdl>;
 export type AffiliateVaultProgram = Program<AffiliateVaultIdl>;
 
+export enum ResultType {
+  TRANSACTION = 'TRANSACTION',
+  INSTRUCTION = 'INSTRUCTION',
+}
+
 export type VaultImplementation = {
   getUserBalance: (owner: PublicKey) => Promise<BN>;
   getVaultSupply: () => Promise<BN>;
