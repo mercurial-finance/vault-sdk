@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, BN, EventParser } from '@project-serum/anchor';
+import { AnchorProvider, Program, BN } from '@project-serum/anchor';
 import {
   PublicKey,
   TransactionInstruction,
@@ -29,15 +29,7 @@ import {
   unwrapSOLInstruction,
   wrapSOLInstruction,
 } from './utils';
-import {
-  AFFILIATE_PROGRAM_ID,
-  PROGRAM_ID,
-  SEEDS,
-  SOL_MINT,
-  VAULT_BASE_KEY,
-  VAULT_STRATEGY_ADDRESS,
-  VAULT_TREASURY_ADDRESS,
-} from './constants';
+import { AFFILIATE_PROGRAM_ID, PROGRAM_ID, SEEDS, SOL_MINT, VAULT_BASE_KEY, VAULT_STRATEGY_ADDRESS } from './constants';
 import { getStrategyHandler, getStrategyType, StrategyState } from './strategy';
 import { IDL, Vault as VaultIdl } from './idl';
 import { IDL as AffiliateIDL, AffiliateVault as AffiliateVaultIdl } from './affiliate-idl';
@@ -66,10 +58,8 @@ type ResultFunctionType = {
 };
 
 const getAllVaultState = async (tokenInfos: Array<TokenInfo>, program: VaultProgram, seedBaseKey?: PublicKey) => {
-  const vaultAccountPdas = await Promise.all(
-    tokenInfos.map((tokenInfo) =>
-      getVaultPdas(new PublicKey(tokenInfo.address), new PublicKey(program.programId), seedBaseKey),
-    ),
+  const vaultAccountPdas = tokenInfos.map((tokenInfo) =>
+    getVaultPdas(new PublicKey(tokenInfo.address), new PublicKey(program.programId), seedBaseKey),
   );
 
   const vaultPdas = vaultAccountPdas.map(({ vaultPda }) => vaultPda);
@@ -94,7 +84,7 @@ const getAllVaultState = async (tokenInfos: Array<TokenInfo>, program: VaultProg
 };
 
 const getVaultState = async (vaultParams: TokenInfo, program: VaultProgram, seedBaseKey?: PublicKey) => {
-  const { vaultPda, tokenVaultPda } = await getVaultPdas(
+  const { vaultPda, tokenVaultPda } = getVaultPdas(
     new PublicKey(vaultParams.address),
     new PublicKey(program.programId),
     seedBaseKey,
@@ -198,7 +188,7 @@ export default class VaultImpl implements VaultImplementation {
         tokenVault,
         tokenMint,
         lpMint,
-        systemProgram: program.programId,
+        systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY,
         tokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       })
