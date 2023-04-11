@@ -153,16 +153,15 @@ export default class VaultImpl implements VaultImplementation {
     this.lpSupply = vaultDetails.lpSupply;
   }
 
-  public static async createPermissionlessVault<T extends ResultType>(
+  public static async createPermissionlessVaultInstruction(
     connection: Connection,
     payer: PublicKey,
     tokenInfo: TokenInfo,
     opt: {
       cluster?: Cluster;
       programId?: string;
-      result: T;
     },
-  ): Promise<ResultFunctionType[T]> {
+  ) {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
 
@@ -173,7 +172,7 @@ export default class VaultImpl implements VaultImplementation {
       lpMintPda: lpMint,
     } = getVaultPdas(tokenMint, program.programId);
 
-    return (await program.methods
+    return program.methods
       .initialize()
       .accounts({
         vault,
@@ -185,7 +184,7 @@ export default class VaultImpl implements VaultImplementation {
         rent: SYSVAR_RENT_PUBKEY,
         tokenProgram: TOKEN_PROGRAM_ID,
       })
-      [opt.result === ResultType.TRANSACTION ? 'transaction' : 'instruction']()) as ResultFunctionType[T];
+      .instruction();
   }
 
   public static async fetchMultipleUserBalance(
