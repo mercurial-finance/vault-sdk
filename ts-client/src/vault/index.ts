@@ -145,7 +145,7 @@ export default class VaultImpl implements VaultImplementation {
     connection: Connection,
     payer: PublicKey,
     tokenInfo: TokenInfo,
-    opt: {
+    opt?: {
       cluster?: Cluster;
       programId?: string;
     },
