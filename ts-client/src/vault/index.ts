@@ -11,14 +11,7 @@ import {
 import { MintLayout, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
 
-import {
-  AffiliateInfo,
-  AffiliateVaultProgram,
-  ResultType,
-  VaultImplementation,
-  VaultProgram,
-  VaultState,
-} from './types';
+import { AffiliateInfo, AffiliateVaultProgram, VaultImplementation, VaultProgram, VaultState } from './types';
 import {
   deserializeAccount,
   getAssociatedTokenAccount,
@@ -50,11 +43,6 @@ type WithdrawOpt = {
     partner: PublicKey;
     user: PublicKey;
   };
-};
-
-type ResultFunctionType = {
-  [ResultType.TRANSACTION]: Transaction;
-  [ResultType.INSTRUCTION]: TransactionInstruction;
 };
 
 const getAllVaultState = async (tokenInfos: Array<TokenInfo>, program: VaultProgram, seedBaseKey?: PublicKey) => {

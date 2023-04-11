@@ -1,5 +1,4 @@
 import { BN, IdlTypes, Program } from '@project-serum/anchor';
-import { TokenInfo } from '@solana/spl-token-registry';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { TypeDef } from '@project-serum/anchor/dist/cjs/program/namespace/types';
 
@@ -8,11 +7,6 @@ import { AffiliateVault as AffiliateVaultIdl } from '../affiliate-idl';
 
 export type VaultProgram = Program<VaultIdl>;
 export type AffiliateVaultProgram = Program<AffiliateVaultIdl>;
-
-export enum ResultType {
-  TRANSACTION = 'TRANSACTION',
-  INSTRUCTION = 'INSTRUCTION',
-}
 
 export type VaultImplementation = {
   getUserBalance: (owner: PublicKey) => Promise<BN>;

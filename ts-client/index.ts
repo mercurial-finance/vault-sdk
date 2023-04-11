@@ -3,7 +3,6 @@ import { PROGRAM_ID, AFFILIATE_PROGRAM_ID, KEEPER_URL } from './src/vault/consta
 import { getVaultPdas, getOnchainTime, getLpSupply } from './src/vault/utils';
 import { getAmountByShare, getUnmintAmount, calculateWithdrawableAmount } from './src/vault/helper';
 import { IDL } from './src/vault/idl';
-import { ResultType } from './src/vault/types';
 
 export default VaultImpl;
 export {
@@ -12,7 +11,6 @@ export {
   PROGRAM_ID,
   AFFILIATE_PROGRAM_ID,
   KEEPER_URL,
-  ResultType,
   // Utils
   getVaultPdas,
   getOnchainTime,
