@@ -10,7 +10,7 @@ import { VaultState } from '../types';
  * @returns
  */
 export function getAmountByShare(share: BN, withdrawableAmount: BN, totalSupply: BN): BN {
-  return share.mul(withdrawableAmount).div(totalSupply);
+  return totalSupply.isZero() ? new BN(0) : share.mul(withdrawableAmount).div(totalSupply);
 }
 
 /**

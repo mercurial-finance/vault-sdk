@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, BN, EventParser } from '@project-serum/anchor';
+import { AnchorProvider, Program, BN } from '@project-serum/anchor';
 import {
   PublicKey,
   TransactionInstruction,
@@ -22,7 +22,7 @@ import {
   unwrapSOLInstruction,
   wrapSOLInstruction,
 } from './utils';
-import { AFFILIATE_PROGRAM_ID, PROGRAM_ID, SOL_MINT, VAULT_STRATEGY_ADDRESS } from './constants';
+import { AFFILIATE_PROGRAM_ID, PROGRAM_ID, SEEDS, SOL_MINT, VAULT_BASE_KEY, VAULT_STRATEGY_ADDRESS } from './constants';
 import { getStrategyHandler, getStrategyType, StrategyState } from './strategy';
 import { IDL, Vault as VaultIdl } from './idl';
 import { IDL as AffiliateIDL, AffiliateVault as AffiliateVaultIdl } from './affiliate-idl';
@@ -46,10 +46,8 @@ type WithdrawOpt = {
 };
 
 const getAllVaultState = async (tokenInfos: Array<TokenInfo>, program: VaultProgram, seedBaseKey?: PublicKey) => {
-  const vaultAccountPdas = await Promise.all(
-    tokenInfos.map((tokenInfo) =>
-      getVaultPdas(new PublicKey(tokenInfo.address), new PublicKey(program.programId), seedBaseKey),
-    ),
+  const vaultAccountPdas = tokenInfos.map((tokenInfo) =>
+    getVaultPdas(new PublicKey(tokenInfo.address), new PublicKey(program.programId), seedBaseKey),
   );
 
   const vaultPdas = vaultAccountPdas.map(({ vaultPda }) => vaultPda);
@@ -74,7 +72,7 @@ const getAllVaultState = async (tokenInfos: Array<TokenInfo>, program: VaultProg
 };
 
 const getVaultState = async (vaultParams: TokenInfo, program: VaultProgram, seedBaseKey?: PublicKey) => {
-  const { vaultPda, tokenVaultPda } = await getVaultPdas(
+  const { vaultPda, tokenVaultPda } = getVaultPdas(
     new PublicKey(vaultParams.address),
     new PublicKey(program.programId),
     seedBaseKey,
@@ -141,6 +139,40 @@ export default class VaultImpl implements VaultImplementation {
     this.tokenVaultPda = vaultDetails.tokenVaultPda;
     this.vaultState = vaultDetails.vaultState;
     this.lpSupply = vaultDetails.lpSupply;
+  }
+
+  public static async createPermissionlessVaultInstruction(
+    connection: Connection,
+    payer: PublicKey,
+    tokenInfo: TokenInfo,
+    opt?: {
+      cluster?: Cluster;
+      programId?: string;
+    },
+  ) {
+    const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
+    const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
+
+    const tokenMint = new PublicKey(tokenInfo.address);
+    const {
+      vaultPda: vault,
+      tokenVaultPda: tokenVault,
+      lpMintPda: lpMint,
+    } = getVaultPdas(tokenMint, program.programId);
+
+    return program.methods
+      .initialize()
+      .accounts({
+        vault,
+        payer,
+        tokenVault,
+        tokenMint,
+        lpMint,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .instruction();
   }
 
   public static async fetchMultipleUserBalance(

@@ -1,5 +1,4 @@
 import { BN, IdlTypes, Program } from '@project-serum/anchor';
-import { TokenInfo } from '@solana/spl-token-registry';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { TypeDef } from '@project-serum/anchor/dist/cjs/program/namespace/types';
 

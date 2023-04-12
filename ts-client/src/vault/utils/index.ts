@@ -10,7 +10,7 @@ import {
 import { AccountInfo, AccountLayout, u64 } from '@solana/spl-token';
 import { BN } from '@project-serum/anchor';
 
-import { SOL_MINT, VAULT_BASE_KEY } from '../constants';
+import { SEEDS, SOL_MINT, VAULT_BASE_KEY } from '../constants';
 import { ParsedClockState } from '../types';
 
 export const getAssociatedTokenAccount = async (
@@ -102,16 +102,17 @@ export const getOrCreateATAInstruction = async (
   }
 };
 
-export const getVaultPdas = async (tokenMint: PublicKey, programId: PublicKey, seedBaseKey?: PublicKey) => {
-  const [vault, _vaultBump] = await PublicKey.findProgramAddress(
-    [Buffer.from('vault'), tokenMint.toBuffer(), (seedBaseKey ?? VAULT_BASE_KEY).toBuffer()],
+export const getVaultPdas = (tokenMint: PublicKey, programId: PublicKey, seedBaseKey?: PublicKey) => {
+  const [vault, _vaultBump] = PublicKey.findProgramAddressSync(
+    [Buffer.from(SEEDS.VAULT_PREFIX), tokenMint.toBuffer(), (seedBaseKey ?? VAULT_BASE_KEY).toBuffer()],
     programId,
   );
 
-  const [tokenVault, lpMint] = await Promise.all([
-    PublicKey.findProgramAddress([Buffer.from('token_vault'), vault.toBuffer()], programId),
-    PublicKey.findProgramAddress([Buffer.from('lp_mint'), vault.toBuffer()], programId),
-  ]);
+  const tokenVault = PublicKey.findProgramAddressSync(
+    [Buffer.from(SEEDS.TOKEN_VAULT_PREFIX), vault.toBuffer()],
+    programId,
+  );
+  const lpMint = PublicKey.findProgramAddressSync([Buffer.from(SEEDS.LP_MINT_PREFIX), vault.toBuffer()], programId);
 
   return {
     vaultPda: vault,
