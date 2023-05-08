@@ -11,7 +11,7 @@ import { AccountInfo, AccountLayout, u64 } from '@solana/spl-token';
 import { BN } from '@project-serum/anchor';
 
 import { SEEDS, SOL_MINT, VAULT_BASE_KEY } from '../constants';
-import { ParsedClockState } from '../types';
+import { ParsedClockState, VaultProgram } from '../types';
 
 export const getAssociatedTokenAccount = async (
   tokenMint: PublicKey,
@@ -177,3 +177,21 @@ export const getLpSupply = async (connection: Connection, tokenMint: PublicKey):
   const context = await connection.getTokenSupply(tokenMint);
   return new BN(context.value.amount);
 };
+
+export function chunks<T>(array: T[], size: number): T[][] {
+  return Array.apply<number, T[], T[][]>(0, new Array(Math.ceil(array.length / size))).map((_, index) =>
+    array.slice(index * size, (index + 1) * size),
+  );
+}
+
+export async function chunkedFetchMultipleVaultAccount(
+  program: VaultProgram,
+  pks: PublicKey[],
+  chunkSize: number = 100,
+) {
+  const accounts = (
+    await Promise.all(chunks(pks, chunkSize).map((chunk) => program.account.vault.fetchMultiple(chunk)))
+  ).flat();
+
+  return accounts.filter(Boolean);
+}

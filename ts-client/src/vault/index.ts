@@ -13,6 +13,7 @@ import { TokenInfo } from '@solana/spl-token-registry';
 
 import { AffiliateInfo, AffiliateVaultProgram, VaultImplementation, VaultProgram, VaultState } from './types';
 import {
+  chunkedFetchMultipleVaultAccount,
   deserializeAccount,
   getAssociatedTokenAccount,
   getLpSupply,
@@ -51,7 +52,7 @@ const getAllVaultState = async (tokenInfos: Array<TokenInfo>, program: VaultProg
   );
 
   const vaultPdas = vaultAccountPdas.map(({ vaultPda }) => vaultPda);
-  const vaultsState = (await program.account.vault.fetchMultiple(vaultPdas)) as Array<VaultState>;
+  const vaultsState = (await chunkedFetchMultipleVaultAccount(program, vaultPdas)) as Array<VaultState>;
 
   if (vaultsState.length !== tokenInfos.length) {
     throw new Error('Some of the vault state cannot be fetched');
