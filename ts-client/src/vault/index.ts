@@ -14,6 +14,7 @@ import { TokenInfo } from '@solana/spl-token-registry';
 import { AffiliateInfo, AffiliateVaultProgram, VaultImplementation, VaultProgram, VaultState } from './types';
 import {
   chunkedFetchMultipleVaultAccount,
+  chunkedGetMultipleAccountInfos,
   deserializeAccount,
   getAssociatedTokenAccount,
   getLpSupply,
@@ -59,7 +60,7 @@ const getAllVaultState = async (tokenInfos: Array<TokenInfo>, program: VaultProg
   }
 
   const vaultLpMints = vaultsState.map((vaultState) => vaultState.lpMint);
-  const vaultLpAccounts = await program.provider.connection.getMultipleAccountsInfo(vaultLpMints);
+  const vaultLpAccounts = await chunkedGetMultipleAccountInfos(program.provider.connection, vaultLpMints);
 
   return vaultsState.map((vaultState, index) => {
     const vaultAccountPda = vaultAccountPdas[index];
@@ -183,7 +184,7 @@ export default class VaultImpl implements VaultImplementation {
   ): Promise<Array<BN>> {
     const ataAccounts = await Promise.all(lpMintList.map((lpMint) => getAssociatedTokenAccount(lpMint, owner)));
 
-    const accountsInfo = await connection.getMultipleAccountsInfo(ataAccounts);
+    const accountsInfo = await chunkedGetMultipleAccountInfos(connection, ataAccounts);
 
     return accountsInfo.map((accountInfo) => {
       if (!accountInfo) return new BN(0);

@@ -195,3 +195,15 @@ export async function chunkedFetchMultipleVaultAccount(
 
   return accounts.filter(Boolean);
 }
+
+export async function chunkedGetMultipleAccountInfos(
+  connection: Connection,
+  pks: PublicKey[],
+  chunkSize: number = 100,
+) {
+  const accountInfos = (
+    await Promise.all(chunks(pks, chunkSize).map((chunk) => connection.getMultipleAccountsInfo(chunk)))
+  ).flat();
+
+  return accountInfos;
+}
