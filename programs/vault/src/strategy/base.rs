@@ -29,7 +29,7 @@ pub enum StrategyType {
     Frakt,
     Marginfi,
     Cypher,
-    Psylend,    
+    Psylend,
 }
 
 impl std::fmt::Display for StrategyType {

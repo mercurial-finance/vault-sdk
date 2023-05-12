@@ -1,9 +1,9 @@
+use crate::get_base_key;
 use crate::get_treasury_address;
 use crate::seed;
 use crate::state::{Strategy, Vault, MAX_BUMPS};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
-use crate::get_base_key;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, Debug)]
 pub struct VaultBumps {
