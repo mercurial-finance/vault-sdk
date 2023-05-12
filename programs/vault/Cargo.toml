@@ -26,7 +26,6 @@ no-capture = []
 serde = { version = "1.0.136" }
 anchor-lang = "0.26.0"
 anchor-spl = "0.26.0"
-psylend-cpi={git="https://github.com/MeteoraAg/PsyLendCPIExamples", rev="17aa0b6a87b8342b32558847e00c15303b451b95", features= ["no-entrypoint"]}
 
 [dev-dependencies]
 solana-program-test = "~1.14.12"

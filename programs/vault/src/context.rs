@@ -3,6 +3,7 @@ use crate::seed;
 use crate::state::{Strategy, Vault, MAX_BUMPS};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
+use crate::get_base_key;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, Debug)]
 pub struct VaultBumps {
@@ -111,46 +112,49 @@ pub struct RebalanceStrategy<'info> {
     #[account(constraint = vault.admin == operator.key() || vault.operator == operator.key())]
     pub operator: Signer<'info>,
 }
-
 /// Accounts for initialize a new vault
 #[derive(Accounts)]
 pub struct Initialize<'info> {
     /// This is base account for all vault    
-    pub base: Signer<'info>,
+    /// No need base key now because we only allow 1 vault per token now
+    // pub base: Signer<'info>,
 
     /// Vault account
     #[account(
         init,
         seeds = [
-            seed::VAULT_PREFIX.as_ref(), token_mint.key().as_ref(), base.key().as_ref()
+            seed::VAULT_PREFIX.as_ref(), token_mint.key().as_ref(), get_base_key().as_ref()
         ],
         bump,
-        payer = admin,
-        space = 10240,
+        payer = payer,
+        space = 8 + std::mem::size_of::<Vault>(),
     )]
     pub vault: Box<Account<'info, Vault>>,
 
-    /// Admin vault
+    /// Payer can be anyone
     #[account(mut)]
-    pub admin: Signer<'info>,
+    pub payer: Signer<'info>,
 
     /// Token vault account
     #[account(
         init,
         seeds = [seed::TOKEN_VAULT_PREFIX.as_ref(), vault.key().as_ref()],
         bump,
-        payer = admin,
+        payer = payer,
         token::mint = token_mint,
         token::authority = vault,
     )]
     pub token_vault: Box<Account<'info, TokenAccount>>,
     /// Token mint account
-    pub token_mint: Box<Account<'info, Mint>>,
-    /// Fee vault account
-    #[account(constraint = fee_vault.owner == get_treasury_address() && fee_vault.mint == lp_mint.key())]
-    pub fee_vault: Box<Account<'info, TokenAccount>>,
-    /// Lp mint account. It need to be created firstly before initialize vault
-    #[account(constraint = lp_mint.mint_authority.unwrap() == vault.key() && lp_mint.supply == 0 && lp_mint.decimals == token_mint.decimals )]
+    pub token_mint: Box<Account<'info, Mint>>, // allocate some accounts in heap to avoid stack frame size limit
+    #[account(
+        init,
+        seeds = [seed::LP_MINT_PREFIX.as_ref(), vault.key().as_ref()],
+        bump,
+        payer = payer,
+        mint::decimals = token_mint.decimals,
+        mint::authority = vault,
+    )]
     pub lp_mint: Box<Account<'info, Mint>>,
     /// rent
     pub rent: Sysvar<'info, Rent>,
