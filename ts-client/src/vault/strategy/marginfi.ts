@@ -64,7 +64,7 @@ export default class MarginFiHandler implements StrategyHandler {
     const marginfiAccount = await MarginfiAccount.fetch(marginfiPda, marginfiClient);
     const group = marginfiAccount.group;
 
-    const bank = group.getBankByMint(vault);
+    const bank = group.getBankByMint(vaultState.tokenMint);
 
     if (!bank) throw new Error('No bank found');
 
