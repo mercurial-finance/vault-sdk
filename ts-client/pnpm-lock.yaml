@@ -23,8 +23,8 @@ dependencies:
     specifier: 0.5.4
     version: 0.5.4
   '@mercurial-finance/marginfi-client-v2':
-    specifier: 1.0.1
-    version: 1.0.1
+    specifier: 1.0.2
+    version: 1.0.2
   '@mercurial-finance/optimist':
     specifier: ^0.1.4
     version: 0.1.4(@solana/spl-token@0.1.8)(@solana/web3.js@1.72.0)(bn.js@5.2.1)
@@ -919,8 +919,8 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@mercurial-finance/marginfi-client-v2@1.0.1:
-    resolution: {integrity: sha512-KfLudwjpawlGXS2WdbbKfx3D4SPyRJQ3T8/ubJrrVSWfok0sk+S9Uh159kqlhjELB8AQOmUT3rFX/Rzjo3Vk0w==}
+  /@mercurial-finance/marginfi-client-v2@1.0.2:
+    resolution: {integrity: sha512-Bmd6yJhVZLdiHMkJvNmEP+MxT0QCNXDGwwKEgIQxtTsIhAYtnlgBQegXz1t8aad5qEmimWRjyYQWu8jjaZ7UcQ==}
     dependencies:
       '@coral-xyz/anchor': 0.26.0
       '@mrgnlabs/mrgn-common': 1.0.1
