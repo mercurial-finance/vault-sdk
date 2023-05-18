@@ -54,7 +54,14 @@ export default class MarginFiHandler implements StrategyHandler {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
     const marginfiClient = await MarginfiClient.fetch(getConfig(), {} as any, this.connection);
-    const marginfiAccount = await MarginfiAccount.fetch(strategy.pubkey, marginfiClient);
+
+    const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
+    const [marginfiPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from(SEEDS.MARGINFI_ACCOUNT), strategyBuffer],
+      program.programId,
+    );
+
+    const marginfiAccount = await MarginfiAccount.fetch(marginfiPda, marginfiClient);
     const group = marginfiAccount.group;
 
     const bank = group.getBankByMint(vault);
@@ -63,7 +70,6 @@ export default class MarginFiHandler implements StrategyHandler {
 
     const observationAccounts = marginfiAccount.getHealthCheckAccounts([bank]);
 
-    const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
     const [collateralVault] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId,
