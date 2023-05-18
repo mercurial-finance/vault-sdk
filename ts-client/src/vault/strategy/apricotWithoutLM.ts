@@ -38,12 +38,11 @@ export default class ApricotWithoutLMHandler implements StrategyHandler {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
     const [[collateralVault], [userInfoSignerPda]] = await Promise.all(
-      [SEEDS.COLLATERAL_VAULT_PREFIX, SEEDS.APRICOT_USER_INFO_SIGNER_PREFIX].map(
-        async (seed) =>
-          await PublicKey.findProgramAddress(
-            [Buffer.from(seed), new PublicKey(strategy.pubkey).toBuffer()],
-            program.programId,
-          ),
+      [SEEDS.COLLATERAL_VAULT_PREFIX, SEEDS.APRICOT_USER_INFO_SIGNER_PREFIX].map(async (seed) =>
+        PublicKey.findProgramAddressSync(
+          [Buffer.from(seed), new PublicKey(strategy.pubkey).toBuffer()],
+          program.programId,
+        ),
       ),
     );
 

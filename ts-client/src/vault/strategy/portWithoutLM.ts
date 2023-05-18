@@ -46,7 +46,7 @@ export default class PortWithoutLMHandler implements StrategyHandler {
     const { state } = await this.getReserveState(program, strategy.state.reserve);
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
 
-    let [collateralVault] = await PublicKey.findProgramAddress(
+    let [collateralVault] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId,
     );
@@ -55,10 +55,7 @@ export default class PortWithoutLMHandler implements StrategyHandler {
 
     const oraclePubkey = liquidity.oracleOption === 0 ? null : liquidity.oraclePubkey;
 
-    const [lendingMarketAuthority] = await PublicKey.findProgramAddress(
-      [lendingMarket.toBuffer()],
-      this.strategyProgram,
-    );
+    const [lendingMarketAuthority] = PublicKey.findProgramAddressSync([lendingMarket.toBuffer()], this.strategyProgram);
 
     const accountData = [
       { pubkey: liquidity.supplyPubkey, isWritable: true },

@@ -12,13 +12,18 @@ import BN from 'bn.js';
 
 import { SEEDS } from '../constants';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
-import { getOrCreateATAInstruction } from '../utils';
 import { Strategy, StrategyHandler } from '.';
+import {
+  AccountType,
+  MarginfiAccount,
+  MarginfiClient,
+  PDA_BANK_FEE_VAULT_AUTH_SEED,
+  PDA_BANK_FEE_VAULT_SEED,
+  getConfig,
+} from '@mercurial-finance/marginfi-client-v2';
+import { getOrCreateATAInstruction } from '../utils';
 
-const FRAKT_PROGRAM_ID = new PublicKey('A66HabVL3DzNzeJgcHYtRRNW1ZRMKwBfrdSR4kLsZ9DJ');
-const FRAKT_ADMIN_FEE_PUBKEY = new PublicKey('9aTtUqAnuSMndCpjcPosRNf3fCkrTQAV8C8GERf3tZi3');
-
-export default class FraktHandler implements StrategyHandler {
+export default class MarginFiHandler implements StrategyHandler {
   private connection: Connection;
 
   constructor(program: VaultProgram) {
@@ -48,20 +53,24 @@ export default class FraktHandler implements StrategyHandler {
   ): Promise<Transaction> {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
-    const [liqOwner] = PublicKey.findProgramAddressSync(
-      [Buffer.from(SEEDS.FRAKT_LENDING), strategy.state.reserve.toBuffer()],
-      FRAKT_PROGRAM_ID,
-    );
+    const marginfiClient = await MarginfiClient.fetch(getConfig(), {} as any, this.connection);
+    const marginfiAccount = await MarginfiAccount.fetch(strategy.pubkey, marginfiClient);
+    const group = marginfiAccount.group;
+
+    const bank = group.getBankByMint(vault);
+
+    if (!bank) throw new Error('No bank found');
+
+    const observationAccounts = marginfiAccount.getHealthCheckAccounts([bank]);
 
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
-    const strategyReserveBuffer = new PublicKey(strategy.state.reserve).toBuffer();
     const [collateralVault] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId,
     );
 
     const [strategyOwner] = PublicKey.findProgramAddressSync(
-      [Buffer.from(SEEDS.FRAKT), strategyBuffer],
+      [Buffer.from(SEEDS.MARGINFI_STRATEGY), strategyBuffer],
       program.programId,
     );
 
@@ -75,26 +84,30 @@ export default class FraktHandler implements StrategyHandler {
     );
     createTokenAccountIx && preInstructions.push(createTokenAccountIx);
 
-    const [deposit] = PublicKey.findProgramAddressSync(
-      [Buffer.from(SEEDS.DEPOSIT), strategyReserveBuffer, new PublicKey(strategyOwner).toBuffer()],
-      FRAKT_PROGRAM_ID,
+    const [bankLiquidityVault] = PublicKey.findProgramAddressSync(
+      [PDA_BANK_FEE_VAULT_SEED, strategyBuffer],
+      marginfiClient.programId,
+    );
+    const [bankLiquidityVaultAuth] = PublicKey.findProgramAddressSync(
+      [PDA_BANK_FEE_VAULT_AUTH_SEED, strategyBuffer],
+      marginfiClient.programId,
     );
 
     const accounts = [
-      { pubkey: strategyOwner, isWritable: true },
-      { pubkey: tokenAccount, isWritable: true },
-      { pubkey: liqOwner, isWritable: true },
-      { pubkey: deposit, isWritable: true },
-      { pubkey: FRAKT_ADMIN_FEE_PUBKEY, isWritable: true },
-      { pubkey: SystemProgram.programId },
-      { pubkey: SYSVAR_CLOCK_PUBKEY },
+      { pubkey: strategyOwner },
+      { pubkey: group.publicKey },
+      { pubkey: marginfiAccount.publicKey },
+      { pubkey: tokenAccount },
+      { pubkey: bankLiquidityVault },
+      { pubkey: bankLiquidityVaultAuth },
+      ...observationAccounts,
     ];
 
     const remainingAccounts: Array<AccountMeta> = [];
     for (const account of accounts) {
       remainingAccounts.push({
         pubkey: account.pubkey,
-        isWritable: !!account.isWritable,
+        isWritable: false,
         isSigner: false,
       });
     }
@@ -108,7 +121,7 @@ export default class FraktHandler implements StrategyHandler {
       vault,
       strategy: new PublicKey(strategy.pubkey),
       reserve: new PublicKey(strategy.state.reserve),
-      strategyProgram: FRAKT_PROGRAM_ID,
+      strategyProgram: marginfiClient.programId,
       collateralVault,
       feeVault: vaultState.feeVault,
       tokenVault,

@@ -32,6 +32,8 @@ export const SEEDS = Object.freeze({
   MANGO: 'mango',
   PSYLEND: 'psylend',
   PSYLEND_OWNER: 'deposits',
+  MARGINFI_STRATEGY: 'marginfi_strategy',
+  MARGINFI_ACCOUNT: 'marginfi_account',
 });
 
 export const StrategyProgram: Record<

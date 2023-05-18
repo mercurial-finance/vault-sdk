@@ -69,7 +69,7 @@ export default class DriftHandler implements StrategyHandler {
     await this.driftClient.accountSubscriber.addSpotMarket(spotMarket.marketIndex);
 
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
-    const [collateralVault] = await PublicKey.findProgramAddress(
+    const [collateralVault] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId,
     );

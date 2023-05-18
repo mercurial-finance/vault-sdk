@@ -56,17 +56,17 @@ export default class PortWithLMHandler implements StrategyHandler {
     const { collateral: portCollateral, lendingMarket, liquidity } = state as port.ReserveData;
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
 
-    let [collateralVault] = await PublicKey.findProgramAddress(
+    let [collateralVault] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId,
     );
     const rewarder = new PublicKey(REWARDER);
 
-    const [quarryPda] = await PublicKey.findProgramAddress(
+    const [quarryPda] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.QUARRY), rewarder.toBuffer(), portCollateral.mintPubkey.toBuffer()],
       quarry.QUARRY_ADDRESSES.Mine,
     );
-    const [miner] = await PublicKey.findProgramAddress(
+    const [miner] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.MINER), quarryPda.toBuffer(), new PublicKey(vault).toBuffer()],
       quarry.QUARRY_ADDRESSES.Mine,
     );
@@ -79,10 +79,7 @@ export default class PortWithLMHandler implements StrategyHandler {
       true,
     );
 
-    const [lendingMarketAuthority] = await PublicKey.findProgramAddress(
-      [lendingMarket.toBuffer()],
-      this.strategyProgram,
-    );
+    const [lendingMarketAuthority] = PublicKey.findProgramAddressSync([lendingMarket.toBuffer()], this.strategyProgram);
 
     const accountData = [
       { pubkey: liquidity.supplyPubkey, isWritable: true },
