@@ -68,8 +68,6 @@ export default class MarginFiHandler implements StrategyHandler {
 
     if (!bank) throw new Error('No bank found');
 
-    const observationAccounts = marginfiAccount.getHealthCheckAccounts([bank]);
-
     const [collateralVault] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId,
@@ -99,9 +97,11 @@ export default class MarginFiHandler implements StrategyHandler {
       marginfiClient.programId,
     );
 
+    const observationAccounts = marginfiAccount.getHealthCheckAccounts([bank]);
+
     const accounts = [
       { pubkey: strategyOwner },
-      { pubkey: group.publicKey },
+      { pubkey: bank.group },
       { pubkey: marginfiAccount.publicKey },
       { pubkey: tokenAccount },
       { pubkey: bankLiquidityVault },
