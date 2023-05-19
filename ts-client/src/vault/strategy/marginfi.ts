@@ -1,5 +1,6 @@
 import {
   AccountMeta,
+  ComputeBudgetProgram,
   Connection,
   PublicKey,
   SYSVAR_CLOCK_PUBKEY,
@@ -14,11 +15,10 @@ import { SEEDS } from '../constants';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 import { Strategy, StrategyHandler } from '.';
 import {
-  AccountType,
   MarginfiAccount,
   MarginfiClient,
-  PDA_BANK_FEE_VAULT_AUTH_SEED,
-  PDA_BANK_FEE_VAULT_SEED,
+  PDA_BANK_LIQUIDITY_VAULT_AUTH_SEED,
+  PDA_BANK_LIQUIDITY_VAULT_SEED,
   getConfig,
 } from '@mercurial-finance/marginfi-client-v2';
 import { getOrCreateATAInstruction } from '../utils';
@@ -55,7 +55,7 @@ export default class MarginFiHandler implements StrategyHandler {
 
     const marginfiClient = await MarginfiClient.fetch(getConfig(), {} as any, this.connection);
 
-    const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
+    const strategyBuffer = strategy.pubkey.toBuffer();
     const [marginfiPda] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.MARGINFI_ACCOUNT), strategyBuffer],
       program.programId,
@@ -88,40 +88,45 @@ export default class MarginFiHandler implements StrategyHandler {
     );
     createTokenAccountIx && preInstructions.push(createTokenAccountIx);
 
+    const strategyReserveBuffer = strategy.state.reserve.toBuffer();
     const [bankLiquidityVault] = PublicKey.findProgramAddressSync(
-      [PDA_BANK_FEE_VAULT_SEED, strategyBuffer],
+      [PDA_BANK_LIQUIDITY_VAULT_SEED, strategyReserveBuffer],
       marginfiClient.programId,
     );
     const [bankLiquidityVaultAuth] = PublicKey.findProgramAddressSync(
-      [PDA_BANK_FEE_VAULT_AUTH_SEED, strategyBuffer],
+      [PDA_BANK_LIQUIDITY_VAULT_AUTH_SEED, strategyReserveBuffer],
       marginfiClient.programId,
     );
 
     const observationAccounts = marginfiAccount.getHealthCheckAccounts([bank]);
 
     const accounts = [
-      { pubkey: strategyOwner },
-      { pubkey: bank.group },
-      { pubkey: marginfiAccount.publicKey },
-      { pubkey: tokenAccount },
-      { pubkey: bankLiquidityVault },
-      { pubkey: bankLiquidityVaultAuth },
+      { pubkey: strategyOwner, isWritable: true },
+      { pubkey: bank.group, isWritable: true },
+      { pubkey: marginfiAccount.publicKey, isWritable: true },
+      { pubkey: tokenAccount, isWritable: true },
+      { pubkey: bankLiquidityVault, isWritable: true },
+      { pubkey: bankLiquidityVaultAuth, isWritable: true },
       ...observationAccounts,
     ];
+    console.log(
+      '🚀 ~ file: marginfi.ts:111 ~ MarginFiHandler ~ accounts:',
+      accounts.map((account) => ({ pubkey: account.pubkey.toBase58(), isWritable: account.isWritable })),
+    );
 
     const remainingAccounts: Array<AccountMeta> = [];
     for (const account of accounts) {
       remainingAccounts.push({
         pubkey: account.pubkey,
-        isWritable: false,
+        isWritable: account.isWritable,
         isSigner: false,
       });
     }
 
-    // prevent duplicate as spot market account pubkey will be add on program side
-    const remainingAccountsWithoutReserve = remainingAccounts.filter(
-      ({ pubkey }) => !pubkey.equals(strategy.state.reserve),
-    );
+    const additionalComputeBudgetInstruction = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 800000,
+    });
+    preInstructions.push(additionalComputeBudgetInstruction);
 
     const txAccounts = {
       vault,
@@ -147,7 +152,7 @@ export default class MarginFiHandler implements StrategyHandler {
           vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
-        .remainingAccounts(remainingAccountsWithoutReserve)
+        .remainingAccounts(remainingAccounts)
         .preInstructions(preInstructions)
         .postInstructions(postInstructions)
         .transaction();
@@ -162,7 +167,7 @@ export default class MarginFiHandler implements StrategyHandler {
         lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
-      .remainingAccounts(remainingAccountsWithoutReserve)
+      .remainingAccounts(remainingAccounts)
       .preInstructions(preInstructions)
       .postInstructions(postInstructions)
       .transaction();
