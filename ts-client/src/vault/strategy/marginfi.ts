@@ -3,8 +3,6 @@ import {
   ComputeBudgetProgram,
   Connection,
   PublicKey,
-  SYSVAR_CLOCK_PUBKEY,
-  SystemProgram,
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
@@ -109,10 +107,6 @@ export default class MarginFiHandler implements StrategyHandler {
       { pubkey: bankLiquidityVaultAuth, isWritable: true },
       ...observationAccounts,
     ];
-    console.log(
-      '🚀 ~ file: marginfi.ts:111 ~ MarginFiHandler ~ accounts:',
-      accounts.map((account) => ({ pubkey: account.pubkey.toBase58(), isWritable: account.isWritable })),
-    );
 
     const remainingAccounts: Array<AccountMeta> = [];
     for (const account of accounts) {
@@ -123,6 +117,7 @@ export default class MarginFiHandler implements StrategyHandler {
       });
     }
 
+    // Do not remove: to resolve limit of computation and log
     const additionalComputeBudgetInstruction = ComputeBudgetProgram.setComputeUnitLimit({
       units: 800000,
     });
