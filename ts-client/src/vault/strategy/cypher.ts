@@ -53,12 +53,12 @@ export default class CypherHandler implements StrategyHandler {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
-    const [collateralVault] = await PublicKey.findProgramAddress(
+    const [collateralVault] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId,
     );
 
-    const [strategyOwnerPubkey] = await PublicKey.findProgramAddress(
+    const [strategyOwnerPubkey] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.CYPHER), strategyBuffer],
       program.programId,
     );

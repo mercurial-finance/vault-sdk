@@ -1,9 +1,8 @@
 import {
   AccountMeta,
+  ComputeBudgetProgram,
   Connection,
   PublicKey,
-  SYSVAR_CLOCK_PUBKEY,
-  SystemProgram,
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
@@ -12,13 +11,17 @@ import BN from 'bn.js';
 
 import { SEEDS } from '../constants';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
-import { getOrCreateATAInstruction } from '../utils';
 import { Strategy, StrategyHandler } from '.';
+import {
+  MarginfiAccount,
+  MarginfiClient,
+  PDA_BANK_LIQUIDITY_VAULT_AUTH_SEED,
+  PDA_BANK_LIQUIDITY_VAULT_SEED,
+  getConfig,
+} from '@mercurial-finance/marginfi-client-v2';
+import { getOrCreateATAInstruction } from '../utils';
 
-const FRAKT_PROGRAM_ID = new PublicKey('A66HabVL3DzNzeJgcHYtRRNW1ZRMKwBfrdSR4kLsZ9DJ');
-const FRAKT_ADMIN_FEE_PUBKEY = new PublicKey('9aTtUqAnuSMndCpjcPosRNf3fCkrTQAV8C8GERf3tZi3');
-
-export default class FraktHandler implements StrategyHandler {
+export default class MarginFiHandler implements StrategyHandler {
   private connection: Connection;
 
   constructor(program: VaultProgram) {
@@ -48,20 +51,28 @@ export default class FraktHandler implements StrategyHandler {
   ): Promise<Transaction> {
     if (!walletPubKey) throw new Error('No user wallet public key');
 
-    const [liqOwner] = PublicKey.findProgramAddressSync(
-      [Buffer.from(SEEDS.FRAKT_LENDING), strategy.state.reserve.toBuffer()],
-      FRAKT_PROGRAM_ID,
+    const marginfiClient = await MarginfiClient.fetch(getConfig(), {} as any, this.connection);
+
+    const strategyBuffer = strategy.pubkey.toBuffer();
+    const [marginfiPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from(SEEDS.MARGINFI_ACCOUNT), strategyBuffer],
+      program.programId,
     );
 
-    const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
-    const strategyReserveBuffer = new PublicKey(strategy.state.reserve).toBuffer();
+    const marginfiAccount = await MarginfiAccount.fetch(marginfiPda, marginfiClient);
+    const group = marginfiAccount.group;
+
+    const bank = group.getBankByMint(vaultState.tokenMint);
+
+    if (!bank) throw new Error('No bank found');
+
     const [collateralVault] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId,
     );
 
     const [strategyOwner] = PublicKey.findProgramAddressSync(
-      [Buffer.from(SEEDS.FRAKT), strategyBuffer],
+      [Buffer.from(SEEDS.MARGINFI_STRATEGY), strategyBuffer],
       program.programId,
     );
 
@@ -75,40 +86,48 @@ export default class FraktHandler implements StrategyHandler {
     );
     createTokenAccountIx && preInstructions.push(createTokenAccountIx);
 
-    const [deposit] = PublicKey.findProgramAddressSync(
-      [Buffer.from(SEEDS.DEPOSIT), strategyReserveBuffer, new PublicKey(strategyOwner).toBuffer()],
-      FRAKT_PROGRAM_ID,
+    const strategyReserveBuffer = strategy.state.reserve.toBuffer();
+    const [bankLiquidityVault] = PublicKey.findProgramAddressSync(
+      [PDA_BANK_LIQUIDITY_VAULT_SEED, strategyReserveBuffer],
+      marginfiClient.programId,
     );
+    const [bankLiquidityVaultAuth] = PublicKey.findProgramAddressSync(
+      [PDA_BANK_LIQUIDITY_VAULT_AUTH_SEED, strategyReserveBuffer],
+      marginfiClient.programId,
+    );
+
+    const observationAccounts = marginfiAccount.getHealthCheckAccounts([bank]);
 
     const accounts = [
       { pubkey: strategyOwner, isWritable: true },
+      { pubkey: bank.group, isWritable: true },
+      { pubkey: marginfiAccount.publicKey, isWritable: true },
       { pubkey: tokenAccount, isWritable: true },
-      { pubkey: liqOwner, isWritable: true },
-      { pubkey: deposit, isWritable: true },
-      { pubkey: FRAKT_ADMIN_FEE_PUBKEY, isWritable: true },
-      { pubkey: SystemProgram.programId },
-      { pubkey: SYSVAR_CLOCK_PUBKEY },
+      { pubkey: bankLiquidityVault, isWritable: true },
+      { pubkey: bankLiquidityVaultAuth, isWritable: true },
+      ...observationAccounts,
     ];
 
     const remainingAccounts: Array<AccountMeta> = [];
     for (const account of accounts) {
       remainingAccounts.push({
         pubkey: account.pubkey,
-        isWritable: !!account.isWritable,
+        isWritable: account.isWritable,
         isSigner: false,
       });
     }
 
-    // prevent duplicate as spot market account pubkey will be add on program side
-    const remainingAccountsWithoutReserve = remainingAccounts.filter(
-      ({ pubkey }) => !pubkey.equals(strategy.state.reserve),
-    );
+    // Do not remove: to resolve limit of computation and log
+    const additionalComputeBudgetInstruction = ComputeBudgetProgram.setComputeUnitLimit({
+      units: 800000,
+    });
+    preInstructions.push(additionalComputeBudgetInstruction);
 
     const txAccounts = {
       vault,
       strategy: new PublicKey(strategy.pubkey),
       reserve: new PublicKey(strategy.state.reserve),
-      strategyProgram: FRAKT_PROGRAM_ID,
+      strategyProgram: marginfiClient.programId,
       collateralVault,
       feeVault: vaultState.feeVault,
       tokenVault,
@@ -128,7 +147,7 @@ export default class FraktHandler implements StrategyHandler {
           vaultLpMint: vaultState.lpMint,
           owner: walletPubKey,
         })
-        .remainingAccounts(remainingAccountsWithoutReserve)
+        .remainingAccounts(remainingAccounts)
         .preInstructions(preInstructions)
         .postInstructions(postInstructions)
         .transaction();
@@ -143,7 +162,7 @@ export default class FraktHandler implements StrategyHandler {
         lpMint: vaultState.lpMint,
         user: walletPubKey,
       })
-      .remainingAccounts(remainingAccountsWithoutReserve)
+      .remainingAccounts(remainingAccounts)
       .preInstructions(preInstructions)
       .postInstructions(postInstructions)
       .transaction();

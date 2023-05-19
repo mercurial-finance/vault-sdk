@@ -17,6 +17,7 @@ import VaultHandler from './vault';
 import FraktHandler from './frakt';
 import CypherHandler from './cypher';
 import PsyLendHandler from './psylend';
+import MarginFiHandler from './marginfi';
 
 export type StrategyType =
   | 'portFinanceWithoutLm'
@@ -31,7 +32,8 @@ export type StrategyType =
   | 'drift'
   | 'frakt'
   | 'cypher'
-  | 'psylend';
+  | 'psylend'
+  | 'marginfi';
 
 export type StrategyState = {
   reserve: PublicKey;
@@ -119,6 +121,8 @@ export const getStrategyHandler = (
       return new CypherHandler(cluster, program);
     case 'psylend':
       return new PsyLendHandler(cluster, program);
+    case 'marginfi':
+      return new MarginFiHandler(program);
     default:
       return null;
   }

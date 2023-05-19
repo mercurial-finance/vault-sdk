@@ -32,7 +32,7 @@ export default class MangoHandler implements StrategyHandler {
       };
     },
   ) {
-    const [mangoAccountPK] = await PublicKey.findProgramAddress(
+    const [mangoAccountPK] = PublicKey.findProgramAddressSync(
       [MangoHandler.MangoGrouPK.toBuffer(), vault.toBuffer(), Buffer.from([0, 0, 0, 0, 0, 0, 0, 0])],
       MangoHandler.MangoProgramId,
     );
@@ -68,7 +68,7 @@ export default class MangoHandler implements StrategyHandler {
       });
     }
 
-    const [collateralVault] = await PublicKey.findProgramAddress(
+    const [collateralVault] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), new PublicKey(strategy.pubkey).toBuffer()],
       program.programId,
     );

@@ -51,17 +51,14 @@ export default class SolendWithLMHandler implements StrategyHandler {
     },
   ) {
     const { collateral, state } = await this.getReserveState(program, strategy.state.reserve);
-    let [collateralVault] = await PublicKey.findProgramAddress(
+    let [collateralVault] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), new PublicKey(strategy.pubkey).toBuffer()],
       program.programId,
     );
 
     const { liquidity, lendingMarket } = state as solend.Reserve;
 
-    const [lendingMarketAuthority] = await PublicKey.findProgramAddress(
-      [lendingMarket.toBuffer()],
-      this.strategyProgram,
-    );
+    const [lendingMarketAuthority] = PublicKey.findProgramAddressSync([lendingMarket.toBuffer()], this.strategyProgram);
 
     const accounts = [
       { pubkey: liquidity.supplyPubkey, isWritable: true },

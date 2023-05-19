@@ -345,11 +345,11 @@ export default class VaultImpl implements VaultImplementation {
     const partner = this.affiliateId;
     const partnerToken = await getAssociatedTokenAccount(new PublicKey(this.tokenInfo.address), partner);
 
-    const [partnerAddress, _nonce] = await PublicKey.findProgramAddress(
+    const [partnerAddress, _nonce] = PublicKey.findProgramAddressSync(
       [this.vaultPda.toBuffer(), partnerToken.toBuffer()],
       this.affiliateProgram.programId,
     );
-    const [userAddress, _nonceUser] = await PublicKey.findProgramAddress(
+    const [userAddress, _nonceUser] = PublicKey.findProgramAddressSync(
       [partnerAddress.toBuffer(), owner.toBuffer()],
       this.affiliateProgram.programId,
     );
@@ -691,7 +691,7 @@ export default class VaultImpl implements VaultImplementation {
     const partner = this.affiliateId;
     const partnerToken = await getAssociatedTokenAccount(new PublicKey(this.tokenInfo.address), partner);
 
-    const [partnerAddress, _nonce] = await PublicKey.findProgramAddress(
+    const [partnerAddress, _nonce] = PublicKey.findProgramAddressSync(
       [this.vaultPda.toBuffer(), partnerToken.toBuffer()],
       this.affiliateProgram.programId,
     );

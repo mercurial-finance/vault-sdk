@@ -40,7 +40,7 @@ export default class FranciumHandler implements StrategyHandler {
 
     const collateralMint = lendingPool.lendingPoolShareMint;
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
-    const [collateralVault] = await PublicKey.findProgramAddress(
+    const [collateralVault] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId,
     );

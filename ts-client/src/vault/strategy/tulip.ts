@@ -39,7 +39,7 @@ export default class TulipHandler implements StrategyHandler {
 
     const collateralMint = lendingPool.collateralTokenMint;
     const strategyBuffer = new PublicKey(strategy.pubkey).toBuffer();
-    const [collateralVault] = await PublicKey.findProgramAddress(
+    const [collateralVault] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEEDS.COLLATERAL_VAULT_PREFIX), strategyBuffer],
       program.programId,
     );
