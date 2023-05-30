@@ -62,7 +62,7 @@ export default class SolendWithoutLMHandler implements StrategyHandler {
 
     const accounts = [
       { pubkey: liquidity.supplyPubkey, isWritable: true },
-      { pubkey: lendingMarket },
+      { pubkey: lendingMarket, isWritable: true },
       { pubkey: lendingMarketAuthority },
       { pubkey: collateral.mintPubkey, isWritable: true },
       { pubkey: SYSVAR_CLOCK_PUBKEY },
