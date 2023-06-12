@@ -23,8 +23,8 @@ dependencies:
     specifier: 0.5.4
     version: 0.5.4
   '@mercurial-finance/marginfi-client-v2':
-    specifier: 1.0.2
-    version: 1.0.2
+    specifier: 1.0.3
+    version: 1.0.3
   '@mercurial-finance/optimist':
     specifier: ^0.1.4
     version: 0.1.4(@solana/spl-token@0.1.8)(@solana/web3.js@1.72.0)(bn.js@5.2.1)
@@ -919,11 +919,11 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@mercurial-finance/marginfi-client-v2@1.0.2:
-    resolution: {integrity: sha512-Bmd6yJhVZLdiHMkJvNmEP+MxT0QCNXDGwwKEgIQxtTsIhAYtnlgBQegXz1t8aad5qEmimWRjyYQWu8jjaZ7UcQ==}
+  /@mercurial-finance/marginfi-client-v2@1.0.3:
+    resolution: {integrity: sha512-8SkvOU7EULqUbLNdkQnJSabNKObJbs/vac0nTwzuTpbK2kFIYB8l4da8TczM6ZUxRVYMBs+nJe/C4pWW+nk2Dw==}
     dependencies:
       '@coral-xyz/anchor': 0.26.0
-      '@mrgnlabs/mrgn-common': 1.0.1
+      '@mercurial-finance/mrgn-common': 1.0.1
       '@project-serum/anchor': 0.26.0
       '@pythnetwork/client': 2.14.0(@solana/web3.js@1.72.0)
       '@solana/wallet-adapter-base': 0.9.22(@solana/web3.js@1.72.0)
@@ -932,6 +932,23 @@ packages:
       bignumber.js: 9.1.1
       decimal.js: 10.4.3
       superstruct: 1.0.3
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - supports-color
+      - utf-8-validate
+    dev: false
+
+  /@mercurial-finance/mrgn-common@1.0.1:
+    resolution: {integrity: sha512-KsKSzAdfuSOrkiss0bTVbQhLza6dZ7bQcKuj0p2FG67bPTQNSpxoZz4BdH+gdvzwktSA7EjLOmnX2rqYQCHf2Q==}
+    dependencies:
+      '@coral-xyz/anchor': 0.26.0
+      '@project-serum/anchor': 0.26.0
+      '@solana/buffer-layout-utils': 0.2.0
+      '@solana/wallet-adapter-base': 0.9.22(@solana/web3.js@1.72.0)
+      '@solana/web3.js': 1.72.0
+      bignumber.js: 9.1.1
+      decimal.js: 10.4.3
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -1057,23 +1074,6 @@ packages:
       chai: 4.3.7
       psyfi-euros-test: 0.0.2-rc.5
       spl2: /@solana/spl-token@0.2.0
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - supports-color
-      - utf-8-validate
-    dev: false
-
-  /@mrgnlabs/mrgn-common@1.0.1:
-    resolution: {integrity: sha512-ozQtgGkHc81sD1/mf83IL/wDA5mwkdxF8oSql+s6fHUeOwjiN7SkalxPiXIyYsPdKCAh4UGM/dv3gs/ZDhn2ZQ==}
-    dependencies:
-      '@coral-xyz/anchor': 0.26.0
-      '@project-serum/anchor': 0.26.0
-      '@solana/buffer-layout-utils': 0.2.0
-      '@solana/wallet-adapter-base': 0.9.22(@solana/web3.js@1.72.0)
-      '@solana/web3.js': 1.72.0
-      bignumber.js: 9.1.1
-      decimal.js: 10.4.3
     transitivePeerDependencies:
       - bufferutil
       - encoding
