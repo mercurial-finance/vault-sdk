@@ -34,12 +34,21 @@ pub fn get_treasury_address() -> Pubkey {
     Pubkey::from_str("9kZeN47U2dubGbbzMrzzoRAUvpuxVLRcjW9XiFpYjUo4").unwrap()
 }
 
+pub fn get_base_address_for_idle_vault() -> Pubkey {
+    Pubkey::default()
+}
+
 #[program]
 pub mod vault {
     use super::*;
 
     #[allow(unused_variables)]
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        Ok(())
+    }
+
+    #[allow(unused_variables)]
+    pub fn initialize_idle_vault(ctx: Context<InitializeIdleVault>) -> Result<()> {
         Ok(())
     }
 
