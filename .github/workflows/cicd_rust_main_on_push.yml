@@ -41,8 +41,7 @@ jobs:
       # Install rust + toolchain
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
-          components: clippy
+          components: clippy, rustfmt
       # Cargo build cache
       - name: Cargo Cache
         uses: actions/cache@v1
