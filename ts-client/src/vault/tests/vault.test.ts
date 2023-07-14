@@ -4,6 +4,8 @@ import { Wallet, AnchorProvider, BN } from '@project-serum/anchor';
 
 import VaultImpl from '..';
 import { airDropSol } from './utils';
+import { getVaultPdas } from '../utils';
+import { PROGRAM_ID } from '../constants';
 
 const mockWallet = new Wallet(new Keypair());
 const mainnetConnection = new Connection('https://api.mainnet-beta.solana.com');
@@ -18,10 +20,20 @@ const USDT_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'USDT') as Tok
 
 describe('Get Mainnet vault state', () => {
   let vaults: VaultImpl[] = [];
+  let vaultsForPool: VaultImpl[] = [];
 
   // Make sure all vaults can be initialized
   beforeAll(async () => {
-    vaults = await VaultImpl.createMultiple(mainnetConnection, [SOL_TOKEN_INFO, USDC_TOKEN_INFO, USDT_TOKEN_INFO]);
+    const tokensInfo = [SOL_TOKEN_INFO, USDC_TOKEN_INFO, USDT_TOKEN_INFO];
+    const tokensInfoPda = tokensInfo.map((tokenInfo) => {
+      const vaultPdas = getVaultPdas(new PublicKey(tokenInfo.address), new PublicKey(PROGRAM_ID));
+      return {
+        info: tokenInfo,
+        ...vaultPdas,
+      };
+    });
+    vaults = await VaultImpl.createMultiple(mainnetConnection, tokensInfo);
+    vaultsForPool = await VaultImpl.createMultipleWithPda(mainnetConnection, tokensInfoPda);
   });
 
   test('Get LP Supply', async () => {
@@ -32,7 +44,20 @@ describe('Get Mainnet vault state', () => {
         return lpSupply;
       }),
     );
+
     vaultLpSupplies.forEach((lpSupply) => {
+      expect(Number(lpSupply)).toBeGreaterThan(0);
+    });
+
+    const vaultLpSuppliesForPool = await Promise.all(
+      vaultsForPool.map(async (vault) => {
+        const lpSupply = await vault.getVaultSupply();
+
+        return lpSupply;
+      }),
+    );
+
+    vaultLpSuppliesForPool.forEach((lpSupply) => {
       expect(Number(lpSupply)).toBeGreaterThan(0);
     });
   });
