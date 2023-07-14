@@ -33,7 +33,7 @@ describe('Get Mainnet vault state', () => {
       };
     });
     vaults = await VaultImpl.createMultiple(mainnetConnection, tokensInfo);
-    vaultsForPool = await VaultImpl.createMultipleForPool(mainnetConnection, tokensInfoPda);
+    vaultsForPool = await VaultImpl.createMultipleWithPda(mainnetConnection, tokensInfoPda);
   });
 
   test('Get LP Supply', async () => {

@@ -261,7 +261,7 @@ export default class VaultImpl implements VaultImplementation {
     });
   }
 
-  public static async createMultipleForPool(
+  public static async createMultipleWithPda(
     connection: Connection,
     tokensInfoPda: Array<TokenInfoPda>,
     opt?: {
