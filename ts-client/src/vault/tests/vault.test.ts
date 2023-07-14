@@ -4,6 +4,8 @@ import { Wallet, AnchorProvider, BN } from '@project-serum/anchor';
 
 import VaultImpl from '..';
 import { airDropSol } from './utils';
+import { getVaultPdas } from '../utils';
+import { PROGRAM_ID } from '../constants';
 
 const mockWallet = new Wallet(new Keypair());
 const mainnetConnection = new Connection('https://api.mainnet-beta.solana.com');
@@ -21,7 +23,14 @@ describe('Get Mainnet vault state', () => {
 
   // Make sure all vaults can be initialized
   beforeAll(async () => {
-    vaults = await VaultImpl.createMultiple(mainnetConnection, [SOL_TOKEN_INFO, USDC_TOKEN_INFO, USDT_TOKEN_INFO]);
+    const tokensInfoPda = [SOL_TOKEN_INFO, USDC_TOKEN_INFO, USDT_TOKEN_INFO].map((tokenInfo) => {
+      const vaultPdas = getVaultPdas(new PublicKey(tokenInfo.address), new PublicKey(PROGRAM_ID));
+      return {
+        info: tokenInfo,
+        ...vaultPdas,
+      };
+    });
+    vaults = await VaultImpl.createMultiple(mainnetConnection, tokensInfoPda);
   });
 
   test('Get LP Supply', async () => {
