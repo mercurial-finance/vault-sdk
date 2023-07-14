@@ -49,7 +49,37 @@ type WithdrawOpt = {
   };
 };
 
-const getAllVaultState = async (tokensInfoPda: Array<TokenInfoPda>, program: VaultProgram, seedBaseKey?: PublicKey) => {
+const getAllVaultState = async (tokenInfos: Array<TokenInfo>, program: VaultProgram, seedBaseKey?: PublicKey) => {
+  const vaultAccountPdas = tokenInfos.map((tokenInfo) =>
+    getVaultPdas(new PublicKey(tokenInfo.address), new PublicKey(program.programId), seedBaseKey),
+  );
+
+  const vaultPdas = vaultAccountPdas.map(({ vaultPda }) => vaultPda);
+  const vaultsState = (await chunkedFetchMultipleVaultAccount(program, vaultPdas)) as Array<VaultState>;
+
+  if (vaultsState.length !== tokenInfos.length) {
+    throw new Error('Some of the vault state cannot be fetched');
+  }
+
+  const vaultLpMints = vaultsState.map((vaultState) => vaultState.lpMint);
+  const vaultLpAccounts = await chunkedGetMultipleAccountInfos(program.provider.connection, vaultLpMints);
+
+  return vaultsState.map((vaultState, index) => {
+    const vaultAccountPda = vaultAccountPdas[index];
+    if (!vaultAccountPda) throw new Error('Missing vault account pda');
+    const vaultLpAccount = vaultLpAccounts[index];
+    if (!vaultLpAccount) throw new Error('Missing vault lp account');
+    const lpSupply = new BN(u64.fromBuffer(MintLayout.decode(vaultLpAccount.data).supply));
+
+    return { ...vaultAccountPda, vaultState, lpSupply };
+  });
+};
+
+const getAllVaultStateByPda = async (
+  tokensInfoPda: Array<TokenInfoPda>,
+  program: VaultProgram,
+  seedBaseKey?: PublicKey,
+) => {
   const vaultPdas = tokensInfoPda.map(({ vaultPda }) => vaultPda);
   const vaultsState = (await chunkedFetchMultipleVaultAccount(program, vaultPdas)) as Array<VaultState>;
 
@@ -196,6 +226,43 @@ export default class VaultImpl implements VaultImplementation {
 
   public static async createMultiple(
     connection: Connection,
+    tokenInfos: Array<TokenInfo>,
+    opt?: {
+      seedBaseKey?: PublicKey;
+      allowOwnerOffCurve?: boolean;
+      cluster?: Cluster;
+      programId?: string;
+      affiliateId?: PublicKey;
+      affiliateProgramId?: string;
+    },
+  ): Promise<Array<VaultImpl>> {
+    const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
+    const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
+
+    const vaultsStateInfo = await getAllVaultState(tokenInfos, program);
+
+    return vaultsStateInfo.map(({ vaultPda, tokenVaultPda, vaultState, lpSupply }, index) => {
+      const tokenInfo = tokenInfos[index];
+      return new VaultImpl(
+        program,
+        { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply },
+        {
+          ...opt,
+          affiliateId: opt?.affiliateId,
+          affiliateProgram: opt?.affiliateId
+            ? new Program<AffiliateVaultIdl>(
+                AffiliateIDL as AffiliateVaultIdl,
+                opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
+                provider,
+              )
+            : undefined,
+        },
+      );
+    });
+  }
+
+  public static async createMultipleForPool(
+    connection: Connection,
     tokensInfoPda: Array<TokenInfoPda>,
     opt?: {
       seedBaseKey?: PublicKey;
@@ -209,7 +276,7 @@ export default class VaultImpl implements VaultImplementation {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
 
-    const vaultsStateInfo = await getAllVaultState(tokensInfoPda, program);
+    const vaultsStateInfo = await getAllVaultStateByPda(tokensInfoPda, program);
 
     return vaultsStateInfo.map(({ vaultPda, tokenVaultPda, vaultState, lpSupply }, index) => {
       const tokenInfo = tokensInfoPda[index].info;
