@@ -30,6 +30,8 @@ import { IDL, Vault as VaultIdl } from './idl';
 import { IDL as AffiliateIDL, AffiliateVault as AffiliateVaultIdl } from './affiliate-idl';
 import { calculateWithdrawableAmount } from './helper';
 
+type TokenInfoPda = { info: TokenInfo; vaultPda: PublicKey; tokenVaultPda: PublicKey; lpMintPda: PublicKey };
+
 type VaultDetails = {
   tokenInfo: TokenInfo;
   vaultPda: PublicKey;
@@ -47,15 +49,11 @@ type WithdrawOpt = {
   };
 };
 
-const getAllVaultState = async (tokenInfos: Array<TokenInfo>, program: VaultProgram, seedBaseKey?: PublicKey) => {
-  const vaultAccountPdas = tokenInfos.map((tokenInfo) =>
-    getVaultPdas(new PublicKey(tokenInfo.address), new PublicKey(program.programId), seedBaseKey),
-  );
-
-  const vaultPdas = vaultAccountPdas.map(({ vaultPda }) => vaultPda);
+const getAllVaultState = async (tokensInfoPda: Array<TokenInfoPda>, program: VaultProgram, seedBaseKey?: PublicKey) => {
+  const vaultPdas = tokensInfoPda.map(({ vaultPda }) => vaultPda);
   const vaultsState = (await chunkedFetchMultipleVaultAccount(program, vaultPdas)) as Array<VaultState>;
 
-  if (vaultsState.length !== tokenInfos.length) {
+  if (vaultsState.length !== tokensInfoPda.length) {
     throw new Error('Some of the vault state cannot be fetched');
   }
 
@@ -63,7 +61,7 @@ const getAllVaultState = async (tokenInfos: Array<TokenInfo>, program: VaultProg
   const vaultLpAccounts = await chunkedGetMultipleAccountInfos(program.provider.connection, vaultLpMints);
 
   return vaultsState.map((vaultState, index) => {
-    const vaultAccountPda = vaultAccountPdas[index];
+    const vaultAccountPda = tokensInfoPda[index];
     if (!vaultAccountPda) throw new Error('Missing vault account pda');
     const vaultLpAccount = vaultLpAccounts[index];
     if (!vaultLpAccount) throw new Error('Missing vault lp account');
@@ -198,7 +196,7 @@ export default class VaultImpl implements VaultImplementation {
 
   public static async createMultiple(
     connection: Connection,
-    tokenInfos: Array<TokenInfo>,
+    tokensInfoPda: Array<TokenInfoPda>,
     opt?: {
       seedBaseKey?: PublicKey;
       allowOwnerOffCurve?: boolean;
@@ -211,10 +209,10 @@ export default class VaultImpl implements VaultImplementation {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
 
-    const vaultsStateInfo = await getAllVaultState(tokenInfos, program);
+    const vaultsStateInfo = await getAllVaultState(tokensInfoPda, program);
 
     return vaultsStateInfo.map(({ vaultPda, tokenVaultPda, vaultState, lpSupply }, index) => {
-      const tokenInfo = tokenInfos[index];
+      const tokenInfo = tokensInfoPda[index].info;
       return new VaultImpl(
         program,
         { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply },
