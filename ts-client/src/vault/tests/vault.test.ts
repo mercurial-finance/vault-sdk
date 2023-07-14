@@ -20,17 +20,20 @@ const USDT_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'USDT') as Tok
 
 describe('Get Mainnet vault state', () => {
   let vaults: VaultImpl[] = [];
+  let vaultsForPool: VaultImpl[] = [];
 
   // Make sure all vaults can be initialized
   beforeAll(async () => {
-    const tokensInfoPda = [SOL_TOKEN_INFO, USDC_TOKEN_INFO, USDT_TOKEN_INFO].map((tokenInfo) => {
+    const tokensInfo = [SOL_TOKEN_INFO, USDC_TOKEN_INFO, USDT_TOKEN_INFO];
+    const tokensInfoPda = tokensInfo.map((tokenInfo) => {
       const vaultPdas = getVaultPdas(new PublicKey(tokenInfo.address), new PublicKey(PROGRAM_ID));
       return {
         info: tokenInfo,
         ...vaultPdas,
       };
     });
-    vaults = await VaultImpl.createMultiple(mainnetConnection, tokensInfoPda);
+    vaults = await VaultImpl.createMultiple(mainnetConnection, tokensInfo);
+    vaultsForPool = await VaultImpl.createMultipleForPool(mainnetConnection, tokensInfoPda);
   });
 
   test('Get LP Supply', async () => {
@@ -41,7 +44,20 @@ describe('Get Mainnet vault state', () => {
         return lpSupply;
       }),
     );
+
     vaultLpSupplies.forEach((lpSupply) => {
+      expect(Number(lpSupply)).toBeGreaterThan(0);
+    });
+
+    const vaultLpSuppliesForPool = await Promise.all(
+      vaultsForPool.map(async (vault) => {
+        const lpSupply = await vault.getVaultSupply();
+
+        return lpSupply;
+      }),
+    );
+
+    vaultLpSuppliesForPool.forEach((lpSupply) => {
       expect(Number(lpSupply)).toBeGreaterThan(0);
     });
   });
