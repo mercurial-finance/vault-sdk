@@ -7,7 +7,6 @@ export const AFFILIATE_PROGRAM_ID = 'GacY9YuN16HNRTy7ZWwULPccwvfFSBeNLuAQP7y38Du
 export const REWARDER = 'GuHrjvzqDvLTB27ebd9iFKwceCxKvSswzTByDQUTsvdm';
 
 // Mainnet addresses
-export const SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112');
 export const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 export const USDT_MINT = new PublicKey('Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB');
 

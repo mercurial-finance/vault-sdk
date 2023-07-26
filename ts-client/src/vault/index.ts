@@ -8,7 +8,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   SystemProgram,
 } from '@solana/web3.js';
-import { MintLayout, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token';
+import { MintLayout, TOKEN_PROGRAM_ID, u64, NATIVE_MINT } from '@solana/spl-token';
 import { TokenInfo } from '@solana/spl-token-registry';
 
 import { AffiliateInfo, AffiliateVaultProgram, VaultImplementation, VaultProgram, VaultState } from './types';
@@ -24,7 +24,7 @@ import {
   unwrapSOLInstruction,
   wrapSOLInstruction,
 } from './utils';
-import { AFFILIATE_PROGRAM_ID, PROGRAM_ID, SEEDS, SOL_MINT, VAULT_BASE_KEY, VAULT_STRATEGY_ADDRESS } from './constants';
+import { AFFILIATE_PROGRAM_ID, PROGRAM_ID, SEEDS, VAULT_BASE_KEY, VAULT_STRATEGY_ADDRESS } from './constants';
 import { getStrategyHandler, getStrategyType, StrategyState } from './strategy';
 import { IDL, Vault as VaultIdl } from './idl';
 import { IDL as AffiliateIDL, AffiliateVault as AffiliateVaultIdl } from './affiliate-idl';
@@ -337,7 +337,7 @@ export default class VaultImpl implements VaultImplementation {
     const address = await (async () => {
       // User deposit directly
       if (!isAffiliated) {
-        return await getAssociatedTokenAccount(this.vaultState.lpMint, owner, this.allowOwnerOffCurve);
+        return await getAssociatedTokenAccount(this.vaultState.lpMint, owner);
       }
 
       // Get user affiliated address with the partner
@@ -488,7 +488,7 @@ export default class VaultImpl implements VaultImplementation {
     }
 
     // If it's SOL vault, wrap desired amount of SOL
-    if (this.tokenInfo.address === SOL_MINT.toString()) {
+    if (this.tokenInfo.address === NATIVE_MINT.toString()) {
       preInstructions = preInstructions.concat(wrapSOLInstruction(owner, userToken, baseTokenAmount));
     }
 
@@ -660,7 +660,7 @@ export default class VaultImpl implements VaultImplementation {
 
     // Unwrap SOL
     const postInstruction: Array<TransactionInstruction> = [];
-    if (this.tokenInfo.address === SOL_MINT.toString()) {
+    if (this.tokenInfo.address === NATIVE_MINT.toString()) {
       const closeWrappedSOLIx = await unwrapSOLInstruction(owner);
       if (closeWrappedSOLIx) {
         postInstruction.push(closeWrappedSOLIx);
@@ -704,7 +704,7 @@ export default class VaultImpl implements VaultImplementation {
   ): Promise<Transaction> {
     // Unwrap SOL
     const postInstruction: Array<TransactionInstruction> = [];
-    if (this.tokenInfo.address === SOL_MINT.toString()) {
+    if (this.tokenInfo.address === NATIVE_MINT.toString()) {
       const closeWrappedSOLIx = await unwrapSOLInstruction(owner);
       if (closeWrappedSOLIx) {
         postInstruction.push(closeWrappedSOLIx);
