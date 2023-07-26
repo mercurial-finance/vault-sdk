@@ -1,4 +1,4 @@
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, NATIVE_MINT } from '@solana/spl-token';
 import {
   Connection,
   ParsedAccountData,
@@ -10,21 +10,11 @@ import {
 import { AccountInfo, AccountLayout, u64 } from '@solana/spl-token';
 import { BN } from '@project-serum/anchor';
 
-import { SEEDS, SOL_MINT, VAULT_BASE_KEY } from '../constants';
+import { SEEDS, VAULT_BASE_KEY } from '../constants';
 import { ParsedClockState, VaultProgram } from '../types';
 
-export const getAssociatedTokenAccount = async (
-  tokenMint: PublicKey,
-  owner: PublicKey,
-  allowOwnerOffCurve: boolean = false,
-) => {
-  return await Token.getAssociatedTokenAddress(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID,
-    tokenMint,
-    owner,
-    allowOwnerOffCurve,
-  );
+export const getAssociatedTokenAccount = async (tokenMint: PublicKey, owner: PublicKey) => {
+  return await Token.getAssociatedTokenAddress(ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, tokenMint, owner, true);
 };
 
 export const deserializeAccount = (data: Buffer | undefined): AccountInfo | undefined => {
@@ -146,7 +136,7 @@ export const unwrapSOLInstruction = async (walletPublicKey: PublicKey) => {
   const wSolATAAccount = await Token.getAssociatedTokenAddress(
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
-    SOL_MINT,
+    NATIVE_MINT,
     walletPublicKey,
     true,
   );
