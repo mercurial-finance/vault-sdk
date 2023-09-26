@@ -28,62 +28,41 @@ pub async fn initialize_vault(
     admin: &Keypair,
     banks_client: &mut BanksClient,
 ) -> Vault {
-    let base = Keypair::new();
-    let (vault, vault_bump) =
-        mercurial_vault::utils::derive_vault_address(token_mint, base.pubkey());
+    let base = mercurial_vault::get_base_key();
+    let (vault, vault_bump) = mercurial_vault::utils::derive_vault_address(token_mint, base);
 
     let (token_vault, token_vault_bump) = mercurial_vault::utils::derive_token_vault_address(vault);
 
-    let token_mint_state = get_mint_account(&token_mint, banks_client).await;
-
-    let lp_mint = Keypair::new();
-
-    initialize_mint(
-        admin,
-        &lp_mint,
-        &vault,
-        token_mint_state.decimals,
-        banks_client,
-    )
-    .await;
-
-    // create fee vault as admin authority
-    let fee_vault = spl_associated_token_account::get_associated_token_address(
-        &mercurial_vault::get_treasury_address(),
-        &lp_mint.pubkey(),
+    let (lp_mint, _bump) = Pubkey::find_program_address(
+        &[
+            mercurial_vault::seed::LP_MINT_PREFIX.as_ref(),
+            vault.as_ref(),
+        ],
+        &mercurial_vault::id(),
     );
-    create_associated_token_account(
-        admin,
-        &lp_mint.pubkey(),
-        &mercurial_vault::get_treasury_address(),
-        banks_client,
-    )
-    .await;
 
     let init_vault_ins = Instruction {
         program_id: mercurial_vault::id(),
         accounts: mercurial_vault::accounts::Initialize {
-            base: base.pubkey(),
             vault,
-            admin: admin.pubkey(),
             token_vault,
             token_mint,
-            fee_vault,
-            lp_mint: lp_mint.pubkey(),
+            lp_mint,
             system_program: system_program::id(),
             rent: sysvar::rent::ID,
+            payer: admin.pubkey(),
             token_program: spl_token::id(),
         }
         .to_account_metas(None),
         data: mercurial_vault::instruction::Initialize {}.data(),
     };
 
-    process_and_assert_ok(&[init_vault_ins], admin, &[admin, &base], banks_client).await;
+    process_and_assert_ok(&[init_vault_ins], admin, &[admin], banks_client).await;
 
     Vault {
         pubkey: vault,
         token_vault: token_vault,
-        lp_mint: lp_mint.pubkey(),
+        lp_mint,
     }
 }
 

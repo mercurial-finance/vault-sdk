@@ -5,9 +5,10 @@ use anchor_lang::solana_program::program_pack::Pack;
 use anchor_lang::solana_program::pubkey::Pubkey;
 use anchor_spl::token::spl_token;
 use anyhow::Result;
+use std::ops::Deref;
 
-pub fn deposit(
-    program_client: &anchor_client::Program,
+pub fn deposit<C: Deref<Target = impl Signer> + Clone>(
+    program_client: &anchor_client::Program<C>,
     token_mint: Pubkey,
     base: Pubkey,
     token_amount: u64,
@@ -47,8 +48,8 @@ pub fn deposit(
     Ok(())
 }
 
-pub fn withdraw(
-    program_client: &anchor_client::Program,
+pub fn withdraw<C: Deref<Target = impl Signer> + Clone>(
+    program_client: &anchor_client::Program<C>,
     token_mint: Pubkey,
     base: Pubkey,
     unmint_amount: u64,
@@ -88,8 +89,8 @@ pub fn withdraw(
     Ok(())
 }
 
-pub fn get_or_create_ata(
-    program_client: &anchor_client::Program,
+pub fn get_or_create_ata<C: Deref<Target = impl Signer> + Clone>(
+    program_client: &anchor_client::Program<C>,
     token_mint: Pubkey,
     user: Pubkey,
 ) -> Result<Pubkey> {
@@ -113,8 +114,8 @@ pub fn get_or_create_ata(
     Ok(user_token_account)
 }
 
-pub fn create_mint(
-    program_client: &anchor_client::Program,
+pub fn create_mint<C: Deref<Target = impl Signer> + Clone>(
+    program_client: &anchor_client::Program<C>,
     mint_keypair: &Keypair,
     authority: Pubkey,
     decimals: u8,
