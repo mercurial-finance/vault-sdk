@@ -39,10 +39,4 @@ SUBCOMMANDS:
 ../target/debug/rust-client deposit 100 --provider.token_mint So11111111111111111111111111111111111111112
 
 ../target/debug/rust-client withdraw 100 --provider.token_mint So11111111111111111111111111111111111111112
-
-../target/debug/rust-client withdraw-from-strategy 100 8xmmL78qZnAGN9qkuYTPLppqC4kySm8VxCmEJo5avPHy --provider.token_mint So11111111111111111111111111111111111111112
-
-../target/debug/rust-client withdraw-from-strategy 100 2e5yJK9Kp47aETTg1YzigbryvWTgGtNZpPhngQZ7em7h --provider.token_mint So11111111111111111111111111111111111111112
-
-../target/debug/rust-client withdraw-from-strategy 100 56TtMh31Fsw7btcjBhYzPxnwAdw7oCYqCCFKbsQsMKKB --provider.token_mint So11111111111111111111111111111111111111112
 ```
