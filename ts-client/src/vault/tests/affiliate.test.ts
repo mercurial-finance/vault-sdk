@@ -4,6 +4,7 @@ import { Wallet, AnchorProvider, BN } from '@project-serum/anchor';
 
 import VaultImpl from '..';
 import { airDropSol } from './utils';
+import { NATIVE_MINT } from '@solana/spl-token';
 
 const mockWallet = new Wallet(new Keypair());
 // devnet ATA creation and reading must use confirmed.
@@ -24,7 +25,7 @@ describe('Interact with Vault in devnet', () => {
   let vaultImpl: VaultImpl;
   beforeAll(async () => {
     await airDropSol(devnetConnection, mockWallet.publicKey);
-    vaultImpl = await VaultImpl.create(devnetConnection, SOL_TOKEN_INFO, {
+    vaultImpl = await VaultImpl.getVault(devnetConnection, NATIVE_MINT, {
       cluster: 'devnet',
       affiliateId: TEMPORARY_PARTNER_PUBLIC_KEY,
     });
