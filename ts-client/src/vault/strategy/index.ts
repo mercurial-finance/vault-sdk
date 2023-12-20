@@ -1,6 +1,5 @@
 import { BN } from '@project-serum/anchor';
 import { Cluster, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
-import { TokenInfo } from '@solana/spl-token-registry';
 
 import { StrategyProgram } from '../constants';
 import type { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
