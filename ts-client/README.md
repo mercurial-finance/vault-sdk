@@ -32,9 +32,8 @@ npm i @mercurial-finance/vault-sdk @project-serum/anchor @solana/web3.js @solana
 2. Initialize VaultImpl instance
 - Affiliate or partner? refer to the [Vault Affiliate Program]()
 ```ts
-import VaultImpl from '@mercurial-finance/vault-sdk';
+import VaultImpl, { TokenInfo } from '@mercurial-finance/vault-sdk';
 import { PublicKey } from '@solana/web3.js';
-import { StaticTokenListResolutionStrategy, TokenInfo } from "@solana/spl-token-registry";
 import { Wallet, AnchorProvider } from '@project-serum/anchor';
 
 // Connection, Wallet, and AnchorProvider to interact with the network
@@ -45,9 +44,14 @@ const provider = new AnchorProvider(mainnetConnection, mockWallet, {
 });
 // Alternatively, to use Solana Wallet Adapter, refer to `Demo Repo`
 
-const tokenMap = new StaticTokenListResolutionStrategy().resolve();
+const tokensList: TokenInfo[] = [];
+const data = await fetch(`https://token.jup.ag/strict`) //or token.jup.ag/all
+const tokens = await data.json()
+tokens.forEach((token: TokenInfo) => {
+    tokensList.push(token);
+});
 // Find the token info you want to use.
-const SOL_TOKEN_INFO = tokenMap.find(token => token.symbol === 'SOL') as TokenInfo;
+const SOL_TOKEN_INFO = tokensList.find(token => token.symbol === 'SOL') as TokenInfo;
 const vaultImpl = await VaultImpl.create(connection, SOL_TOKEN_INFO);
 ```
 
