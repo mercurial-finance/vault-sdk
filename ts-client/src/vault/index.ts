@@ -36,6 +36,7 @@ type VaultDetails = {
   tokenInfo: TokenInfo;
   vaultPda: PublicKey;
   tokenVaultPda: PublicKey;
+  lpMintPda: PublicKey;
   vaultState: VaultState;
   lpSupply: BN;
 };
@@ -75,11 +76,7 @@ const getAllVaultState = async (tokenInfos: Array<TokenInfo>, program: VaultProg
   });
 };
 
-const getAllVaultStateByPda = async (
-  tokensInfoPda: Array<TokenInfoPda>,
-  program: VaultProgram,
-  seedBaseKey?: PublicKey,
-) => {
+const getAllVaultStateByPda = async (tokensInfoPda: Array<TokenInfoPda>, program: VaultProgram) => {
   const vaultPdas = tokensInfoPda.map(({ vaultPda }) => vaultPda);
   const vaultsState = (await chunkedFetchMultipleVaultAccount(program, vaultPdas)) as Array<VaultState>;
 
@@ -115,7 +112,19 @@ const getVaultState = async (vaultParams: TokenInfo, program: VaultProgram, seed
 
   const lpSupply = await getLpSupply(program.provider.connection, vaultState.lpMint);
 
-  return { vaultPda, tokenVaultPda, vaultState, lpSupply };
+  return { vaultPda, tokenVaultPda, vaultState, lpSupply, lpMintPda: vaultState.lpMint };
+};
+
+const getVaultStateByPda = async (tokenInfoPda: TokenInfoPda, program: VaultProgram) => {
+  const vaultState = (await program.account.vault.fetchNullable(tokenInfoPda.vaultPda)) as VaultState;
+
+  if (!vaultState) {
+    throw 'Cannot get vault state';
+  }
+
+  const lpSupply = await getLpSupply(program.provider.connection, tokenInfoPda.lpMintPda);
+
+  return { ...tokenInfoPda, vaultState, lpSupply };
 };
 
 const getVaultLiquidity = async (connection: Connection, tokenVaultPda: PublicKey): Promise<string | null> => {
@@ -141,6 +150,7 @@ export default class VaultImpl implements VaultImplementation {
   public tokenInfo: TokenInfo;
   public vaultPda: PublicKey;
   public tokenVaultPda: PublicKey;
+  public lpMintPda: PublicKey;
   public vaultState: VaultState;
   public lpSupply: BN;
 
@@ -167,6 +177,7 @@ export default class VaultImpl implements VaultImplementation {
 
     this.vaultPda = vaultDetails.vaultPda;
     this.tokenVaultPda = vaultDetails.tokenVaultPda;
+    this.lpMintPda = vaultDetails.lpMintPda;
     this.vaultState = vaultDetails.vaultState;
     this.lpSupply = vaultDetails.lpSupply;
   }
@@ -241,11 +252,11 @@ export default class VaultImpl implements VaultImplementation {
 
     const vaultsStateInfo = await getAllVaultState(tokenInfos, program);
 
-    return vaultsStateInfo.map(({ vaultPda, tokenVaultPda, vaultState, lpSupply }, index) => {
+    return vaultsStateInfo.map(({ vaultPda, tokenVaultPda, lpMintPda, vaultState, lpSupply }, index) => {
       const tokenInfo = tokenInfos[index];
       return new VaultImpl(
         program,
-        { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply },
+        { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply, lpMintPda },
         {
           ...opt,
           affiliateId: opt?.affiliateId,
@@ -278,11 +289,11 @@ export default class VaultImpl implements VaultImplementation {
 
     const vaultsStateInfo = await getAllVaultStateByPda(tokensInfoPda, program);
 
-    return vaultsStateInfo.map(({ vaultPda, tokenVaultPda, vaultState, lpSupply }, index) => {
+    return vaultsStateInfo.map(({ vaultPda, tokenVaultPda, lpMintPda, vaultState, lpSupply }, index) => {
       const tokenInfo = tokensInfoPda[index].info;
       return new VaultImpl(
         program,
-        { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply },
+        { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply, lpMintPda },
         {
           ...opt,
           affiliateId: opt?.affiliateId,
@@ -313,10 +324,10 @@ export default class VaultImpl implements VaultImplementation {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
 
-    const { vaultPda, tokenVaultPda, vaultState, lpSupply } = await getVaultState(tokenInfo, program);
+    const { vaultPda, tokenVaultPda, lpMintPda, vaultState, lpSupply } = await getVaultState(tokenInfo, program);
     return new VaultImpl(
       program,
-      { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply },
+      { tokenInfo, vaultPda, tokenVaultPda, vaultState, lpSupply, lpMintPda },
       {
         ...opt,
         affiliateId: opt?.affiliateId,
@@ -373,7 +384,10 @@ export default class VaultImpl implements VaultImplementation {
   }
 
   public async refreshVaultState() {
-    const { vaultState, lpSupply } = await getVaultState(this.tokenInfo, this.program);
+    const { vaultState, lpSupply } = await getVaultStateByPda(
+      { info: this.tokenInfo, lpMintPda: this.lpMintPda, tokenVaultPda: this.tokenVaultPda, vaultPda: this.vaultPda },
+      this.program,
+    );
     this.vaultState = vaultState;
     this.lpSupply = lpSupply;
   }
