@@ -1,21 +1,27 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { StaticTokenListResolutionStrategy, TokenInfo } from '@solana/spl-token-registry';
 import { Wallet, AnchorProvider, BN } from '@project-serum/anchor';
 
 import VaultImpl from '..';
-import { airDropSol } from './utils';
+import { airDropSol, getValidatedTokens } from './utils';
+import { TokenInfo } from '../types';
 
 const mockWallet = new Wallet(new Keypair());
 // devnet ATA creation and reading must use confirmed.
 const devnetConnection = new Connection('https://api.devnet.solana.com/', { commitment: 'confirmed' });
 
-const tokenMap = new StaticTokenListResolutionStrategy().resolve();
-const SOL_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'SOL') as TokenInfo;
-const USDC_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'USDC') as TokenInfo;
-const USDT_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'USDT') as TokenInfo;
-
 // TODO: Remove this fake partner ID
 const TEMPORARY_PARTNER_PUBLIC_KEY = new PublicKey('7236FoaWTXJyzbfFPZcrzg3tBpPhGiTgXsGWvjwrYfiF');
+
+let SOL_TOKEN_INFO: TokenInfo;
+let USDC_TOKEN_INFO: TokenInfo;
+let USDT_TOKEN_INFO: TokenInfo;
+
+beforeAll(async () => {
+  const tokenList = await getValidatedTokens();
+  SOL_TOKEN_INFO = tokenList.find(token => token.symbol === 'SOL') as TokenInfo;
+  USDC_TOKEN_INFO = tokenList.find(token => token.symbol === 'USDC') as TokenInfo;
+  USDT_TOKEN_INFO = tokenList.find(token => token.symbol === 'USDT') as TokenInfo;
+});
 describe('Interact with Vault in devnet', () => {
   const provider = new AnchorProvider(devnetConnection, mockWallet, {
     commitment: 'confirmed',

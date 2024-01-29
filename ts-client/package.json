@@ -34,7 +34,6 @@
     "@saberhq/anchor-contrib": "1.13.32",
     "@solana/buffer-layout": "^4.0.0",
     "@solana/spl-token": "0.1.8",
-    "@solana/spl-token-registry": "0.2.1105",
     "@solana/web3.js": "~1.72.0",
     "bn.js": "5.2.1",
     "cross-fetch": "^3.1.5",

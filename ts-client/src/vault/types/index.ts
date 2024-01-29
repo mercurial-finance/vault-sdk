@@ -43,3 +43,11 @@ export interface ParsedClockState {
   program: string;
   space: number;
 }
+
+export interface TokenInfo {
+  address: string;
+  decimals: number;
+  name: string;
+  symbol: string;
+  logoURI?: string;
+};
