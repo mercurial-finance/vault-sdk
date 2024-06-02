@@ -59,9 +59,6 @@ dependencies:
   '@solana/spl-token':
     specifier: 0.1.8
     version: 0.1.8
-  '@solana/spl-token-registry':
-    specifier: 0.2.1105
-    version: 0.2.1105
   '@solana/web3.js':
     specifier: ~1.72.0
     version: 1.72.0
@@ -1611,13 +1608,6 @@ packages:
     engines: {node: '>=5.10'}
     dependencies:
       buffer: 6.0.3
-
-  /@solana/spl-token-registry@0.2.1105:
-    resolution: {integrity: sha512-s9MIUoTAtqYsg1RaXIHXq7DhsUVS9VckvrwYuJBFn68YCZNSMUEquqaimbaHi88OVduFsApVAbKRmsGnJ9abIw==}
-    engines: {node: '>=10'}
-    dependencies:
-      cross-fetch: 3.0.6
-    dev: false
 
   /@solana/spl-token-registry@0.2.3988:
     resolution: {integrity: sha512-Y+8JbpiNWNkEgeXjGjAWA13qrf0YJZULmCR/MPL8tkqLF8uHDvJvOHFe9lzfqDvIzAO8dTdz2CMa2e+TeEjjuQ==}

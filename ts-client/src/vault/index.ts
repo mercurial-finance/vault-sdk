@@ -9,9 +9,8 @@ import {
   SystemProgram,
 } from '@solana/web3.js';
 import { MintLayout, TOKEN_PROGRAM_ID, u64, NATIVE_MINT } from '@solana/spl-token';
-import { TokenInfo } from '@solana/spl-token-registry';
 
-import { AffiliateInfo, AffiliateVaultProgram, VaultImplementation, VaultProgram, VaultState } from './types';
+import { AffiliateInfo, AffiliateVaultProgram, TokenInfo, VaultImplementation, VaultProgram, VaultState } from './types';
 import {
   chunkedFetchMultipleVaultAccount,
   chunkedGetMultipleAccountInfos,
