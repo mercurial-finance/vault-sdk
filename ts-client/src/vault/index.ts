@@ -29,10 +29,10 @@ import { IDL, Vault as VaultIdl } from './idl';
 import { IDL as AffiliateIDL, AffiliateVault as AffiliateVaultIdl } from './affiliate-idl';
 import { calculateWithdrawableAmount } from './helper';
 
-type PdaInfo = { vaultMint: PublicKey; vaultPda: PublicKey; tokenVaultPda: PublicKey; lpMintPda: PublicKey };
+type PdaInfo = { tokenMint: PublicKey; vaultPda: PublicKey; tokenVaultPda: PublicKey; lpMintPda: PublicKey };
 
 type VaultDetails = {
-  vaultMint: PublicKey;
+  tokenMint: PublicKey;
   vaultPda: PublicKey;
   tokenVaultPda: PublicKey;
   lpMintPda: PublicKey;
@@ -49,15 +49,15 @@ type WithdrawOpt = {
   };
 };
 
-const getAllVaultState = async (vaultMints: Array<PublicKey>, program: VaultProgram, seedBaseKey?: PublicKey) => {
-  const vaultAccountPdas = vaultMints.map((vaultMint) =>
-    getVaultPdas(vaultMint, new PublicKey(program.programId), seedBaseKey),
+const getAllVaultState = async (tokensMint: Array<PublicKey>, program: VaultProgram, seedBaseKey?: PublicKey) => {
+  const vaultAccountPdas = tokensMint.map((tokenMint) =>
+    getVaultPdas(tokenMint, new PublicKey(program.programId), seedBaseKey),
   );
 
   const vaultPdas = vaultAccountPdas.map(({ vaultPda }) => vaultPda);
   const vaultsState = (await chunkedFetchMultipleVaultAccount(program, vaultPdas)) as Array<VaultState>;
 
-  if (vaultsState.length !== vaultMints.length) {
+  if (vaultsState.length !== tokensMint.length) {
     throw new Error('Some of the vault state cannot be fetched');
   }
 
@@ -75,11 +75,11 @@ const getAllVaultState = async (vaultMints: Array<PublicKey>, program: VaultProg
   });
 };
 
-const getAllVaultStateByPda = async (tokensInfoPda: Array<PdaInfo>, program: VaultProgram) => {
-  const vaultPdas = tokensInfoPda.map(({ vaultPda }) => vaultPda);
+const getAllVaultStateByPda = async (vaultsPdaInfo: Array<PdaInfo>, program: VaultProgram) => {
+  const vaultPdas = vaultsPdaInfo.map(({ vaultPda }) => vaultPda);
   const vaultsState = (await chunkedFetchMultipleVaultAccount(program, vaultPdas)) as Array<VaultState>;
 
-  if (vaultsState.length !== tokensInfoPda.length) {
+  if (vaultsState.length !== vaultsPdaInfo.length) {
     throw new Error('Some of the vault state cannot be fetched');
   }
 
@@ -87,7 +87,7 @@ const getAllVaultStateByPda = async (tokensInfoPda: Array<PdaInfo>, program: Vau
   const vaultLpAccounts = await chunkedGetMultipleAccountInfos(program.provider.connection, vaultLpMints);
 
   return vaultsState.map((vaultState, index) => {
-    const vaultAccountPda = tokensInfoPda[index];
+    const vaultAccountPda = vaultsPdaInfo[index];
     if (!vaultAccountPda) throw new Error('Missing vault account pda');
     const vaultLpAccount = vaultLpAccounts[index];
     if (!vaultLpAccount) throw new Error('Missing vault lp account');
@@ -146,7 +146,7 @@ export default class VaultImpl implements VaultImplementation {
   private allowOwnerOffCurve?: boolean;
   public seedBaseKey?: PublicKey;
 
-  public vaultMint: PublicKey;
+  public tokenMint: PublicKey;
   public vaultPda: PublicKey;
   public tokenVaultPda: PublicKey;
   public lpMintPda: PublicKey;
@@ -173,7 +173,7 @@ export default class VaultImpl implements VaultImplementation {
 
     this.allowOwnerOffCurve = opt?.allowOwnerOffCurve;
 
-    this.vaultMint = vaultDetails.vaultMint;
+    this.tokenMint = vaultDetails.tokenMint;
     this.vaultPda = vaultDetails.vaultPda;
     this.tokenVaultPda = vaultDetails.tokenVaultPda;
     this.lpMintPda = vaultDetails.lpMintPda;
@@ -254,7 +254,7 @@ export default class VaultImpl implements VaultImplementation {
       const tokenMint = tokenMints[index];
       return new VaultImpl(
         program,
-        { vaultMint: tokenMint, vaultPda, tokenVaultPda, vaultState, lpSupply, lpMintPda },
+        { tokenMint, vaultPda, tokenVaultPda, vaultState, lpSupply, lpMintPda },
         {
           ...opt,
           affiliateId: opt?.affiliateId,
@@ -288,10 +288,10 @@ export default class VaultImpl implements VaultImplementation {
     const vaultsStateInfo = await getAllVaultStateByPda(pdaInfos, program);
 
     return vaultsStateInfo.map(({ vaultPda, tokenVaultPda, lpMintPda, vaultState, lpSupply }, index) => {
-      const vaultMint = pdaInfos[index].vaultMint;
+      const { tokenMint } = pdaInfos[index];
       return new VaultImpl(
         program,
-        { vaultMint, vaultPda, tokenVaultPda, vaultState, lpSupply, lpMintPda },
+        { tokenMint, vaultPda, tokenVaultPda, vaultState, lpSupply, lpMintPda },
         {
           ...opt,
           affiliateId: opt?.affiliateId,
@@ -325,7 +325,7 @@ export default class VaultImpl implements VaultImplementation {
     const { vaultPda, tokenVaultPda, lpMintPda, vaultState, lpSupply } = await getVaultState(tokenMint, program);
     return new VaultImpl(
       program,
-      { vaultMint: tokenMint, vaultPda, tokenVaultPda, vaultState, lpSupply, lpMintPda },
+      { tokenMint, vaultPda, tokenVaultPda, vaultState, lpSupply, lpMintPda },
       {
         ...opt,
         affiliateId: opt?.affiliateId,
@@ -383,7 +383,7 @@ export default class VaultImpl implements VaultImplementation {
 
   public async refreshVaultState() {
     const { vaultState, lpSupply } = await getVaultStateByPda(
-      { vaultMint: this.vaultMint, lpMintPda: this.lpMintPda, tokenVaultPda: this.tokenVaultPda, vaultPda: this.vaultPda },
+      { tokenMint: this.tokenMint, lpMintPda: this.lpMintPda, tokenVaultPda: this.tokenVaultPda, vaultPda: this.vaultPda },
       this.program,
     );
     this.vaultState = vaultState;
@@ -393,7 +393,7 @@ export default class VaultImpl implements VaultImplementation {
   private async createATAPreInstructions(owner: PublicKey) {
     let preInstructions: TransactionInstruction[] = [];
     const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
-      this.vaultMint,
+      this.tokenMint,
       owner,
       this.connection,
     );
@@ -420,7 +420,7 @@ export default class VaultImpl implements VaultImplementation {
     if (!this.affiliateId || !this.affiliateProgram) throw new Error('Affiliate ID or program not found');
 
     const partner = this.affiliateId;
-    const partnerToken = await getAssociatedTokenAccount(this.vaultMint, partner);
+    const partnerToken = await getAssociatedTokenAccount(this.tokenMint, partner);
 
     const [partnerAddress, _nonce] = PublicKey.findProgramAddressSync(
       [this.vaultPda.toBuffer(), partnerToken.toBuffer()],
@@ -433,7 +433,7 @@ export default class VaultImpl implements VaultImplementation {
 
     let preInstructions: TransactionInstruction[] = [];
     const [userToken, createUserTokenIx] = await getOrCreateATAInstruction(
-      this.vaultMint,
+      this.tokenMint,
       owner,
       this.connection,
     );
@@ -500,7 +500,7 @@ export default class VaultImpl implements VaultImplementation {
     }
 
     // If it's SOL vault, wrap desired amount of SOL
-    if (this.vaultMint.equals(NATIVE_MINT)) {
+    if (this.tokenMint.equals(NATIVE_MINT)) {
       preInstructions = preInstructions.concat(wrapSOLInstruction(owner, userToken, baseTokenAmount));
     }
 
@@ -672,7 +672,7 @@ export default class VaultImpl implements VaultImplementation {
 
     // Unwrap SOL
     const postInstruction: Array<TransactionInstruction> = [];
-    if (this.vaultMint.equals(NATIVE_MINT)) {
+    if (this.tokenMint.equals(NATIVE_MINT)) {
       const closeWrappedSOLIx = await unwrapSOLInstruction(owner);
       if (closeWrappedSOLIx) {
         postInstruction.push(closeWrappedSOLIx);
@@ -716,7 +716,7 @@ export default class VaultImpl implements VaultImplementation {
   ): Promise<Transaction> {
     // Unwrap SOL
     const postInstruction: Array<TransactionInstruction> = [];
-    if (this.vaultMint.equals(NATIVE_MINT)) {
+    if (this.tokenMint.equals(NATIVE_MINT)) {
       const closeWrappedSOLIx = await unwrapSOLInstruction(owner);
       if (closeWrappedSOLIx) {
         postInstruction.push(closeWrappedSOLIx);
@@ -766,7 +766,7 @@ export default class VaultImpl implements VaultImplementation {
     if (!this.affiliateId || !this.affiliateProgram) throw new Error('No affiliateId or affiliate program found');
 
     const partner = this.affiliateId;
-    const partnerToken = await getAssociatedTokenAccount(this.vaultMint, partner);
+    const partnerToken = await getAssociatedTokenAccount(this.tokenMint, partner);
 
     const [partnerAddress, _nonce] = PublicKey.findProgramAddressSync(
       [this.vaultPda.toBuffer(), partnerToken.toBuffer()],
