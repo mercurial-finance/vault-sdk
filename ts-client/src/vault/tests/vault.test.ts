@@ -1,5 +1,4 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { StaticTokenListResolutionStrategy, TokenInfo } from '@solana/spl-token-registry';
 import { Wallet, AnchorProvider, BN } from '@project-serum/anchor';
 
 import VaultImpl from '..';
@@ -12,12 +11,6 @@ const mockWallet = new Wallet(new Keypair());
 const mainnetConnection = new Connection('https://api.mainnet-beta.solana.com');
 // devnet ATA creation and reading must use confirmed.
 const devnetConnection = new Connection('https://api.devnet.solana.com/', { commitment: 'confirmed' });
-
-// Prevent importing directly from .json, causing slowdown on Intellisense
-const tokenMap = new StaticTokenListResolutionStrategy().resolve();
-const SOL_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'SOL') as TokenInfo;
-const USDC_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'USDC') as TokenInfo;
-const USDT_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'USDT') as TokenInfo;
 
 describe('Get Mainnet vault state', () => {
   let vaults: VaultImpl[] = [];
