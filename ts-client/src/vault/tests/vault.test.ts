@@ -5,7 +5,8 @@ import { Wallet, AnchorProvider, BN } from '@project-serum/anchor';
 import VaultImpl from '..';
 import { airDropSol } from './utils';
 import { getVaultPdas } from '../utils';
-import { PROGRAM_ID } from '../constants';
+import { PROGRAM_ID, USDC_MINT, USDT_MINT } from '../constants';
+import { NATIVE_MINT } from '@solana/spl-token';
 
 const mockWallet = new Wallet(new Keypair());
 const mainnetConnection = new Connection('https://api.mainnet-beta.solana.com');
@@ -24,15 +25,15 @@ describe('Get Mainnet vault state', () => {
 
   // Make sure all vaults can be initialized
   beforeAll(async () => {
-    const tokensInfo = [SOL_TOKEN_INFO, USDC_TOKEN_INFO, USDT_TOKEN_INFO];
-    const tokensInfoPda = tokensInfo.map((tokenInfo) => {
-      const vaultPdas = getVaultPdas(new PublicKey(tokenInfo.address), new PublicKey(PROGRAM_ID));
+    const tokensMint = [NATIVE_MINT, USDC_MINT, USDT_MINT];
+    const tokensInfoPda = tokensMint.map((tokenMint) => {
+      const vaultPdas = getVaultPdas(tokenMint, new PublicKey(PROGRAM_ID));
       return {
-        info: tokenInfo,
+        tokenMint,
         ...vaultPdas,
       };
     });
-    vaults = await VaultImpl.createMultiple(mainnetConnection, tokensInfo);
+    vaults = await VaultImpl.createMultiple(mainnetConnection, tokensMint);
     vaultsForPool = await VaultImpl.createMultipleWithPda(mainnetConnection, tokensInfoPda);
   });
 
@@ -78,7 +79,7 @@ describe('Interact with Vault in devnet', () => {
   let vault: VaultImpl;
   beforeAll(async () => {
     await airDropSol(devnetConnection, mockWallet.publicKey);
-    vault = await VaultImpl.create(devnetConnection, SOL_TOKEN_INFO, { cluster: 'devnet' });
+    vault = await VaultImpl.create(devnetConnection, NATIVE_MINT, { cluster: 'devnet' });
   });
 
   test('Deposit, check balance, withdraw', async () => {
