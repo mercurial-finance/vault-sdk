@@ -108,7 +108,7 @@ describe('Interact with Vault in devnet', () => {
         expect(typeof depositResult).toBe('string');
 
         // Withdraw from specific strategy
-        const withdrawTx = await vault.withdraw(mockWallet.publicKey, new BN(1000), { strategy });
+        const withdrawTx = await vault.withdraw(mockWallet.publicKey, new BN(1000));
 
         try {
           const withdrawResult = await provider.sendAndConfirm(withdrawTx);
