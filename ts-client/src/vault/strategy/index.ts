@@ -1,23 +1,23 @@
-import { BN } from '@project-serum/anchor';
+import { BN } from '@coral-xyz/anchor';
 import { Cluster, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import { TokenInfo } from '@solana/spl-token-registry';
 
 import { StrategyProgram } from '../constants';
 import type { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
-import ApricotWithoutLMHandler from './apricotWithoutLM';
-import FranciumHandler from './francium';
-import MangoHandler from './mangoV4';
-import TulipHandler from './tulip';
-import DriftHandler from './drift';
-import PortWithLMHandler from './portWithLM';
-import PortWithoutLMHandler from './portWithoutLM';
-import SolendWithLMHandler from './solendWithLM';
-import SolendWithoutLMHandler from './solendWithoutLM';
+// import ApricotWithoutLMHandler from './apricotWithoutLM';
+// import FranciumHandler from './francium';
+// import MangoHandler from './mangoV4';
+// import TulipHandler from './tulip';
+// import DriftHandler from './drift';
+// import PortWithLMHandler from './portWithLM';
+// import PortWithoutLMHandler from './portWithoutLM';
+// import SolendWithLMHandler from './solendWithLM';
+// import SolendWithoutLMHandler from './solendWithoutLM';
 import VaultHandler from './vault';
-import FraktHandler from './frakt';
-import CypherHandler from './cypher';
-import PsyLendHandler from './psylend';
-import MarginFiHandler from './marginfi';
+// import FraktHandler from './frakt';
+// import CypherHandler from './cypher';
+// import PsyLendHandler from './psylend';
+// import MarginFiHandler from './marginfi';
 
 export type StrategyType =
   | 'portFinanceWithoutLm'
@@ -92,38 +92,40 @@ export const getStrategyHandler = (
   cluster: Cluster,
   program: VaultProgram,
 ): StrategyHandler | null => {
-  const strategyProgramAddresses = StrategyProgram[cluster ?? 'mainnet-beta'];
+  return new VaultHandler();
 
-  switch (strategyType) {
-    case 'solendWithoutLm':
-      return new SolendWithoutLMHandler(strategyProgramAddresses.solend);
-    case 'solendWithLm':
-      return new SolendWithLMHandler(strategyProgramAddresses.solend);
-    case 'portFinanceWithoutLm':
-      return new PortWithoutLMHandler(strategyProgramAddresses.portFinance);
-    case 'portFinanceWithLm':
-      return new PortWithLMHandler(strategyProgramAddresses.portFinance);
-    case 'francium':
-      return new FranciumHandler();
-    case 'apricotWithoutLM':
-      return new ApricotWithoutLMHandler();
-    case 'mango':
-      return new MangoHandler(cluster, program);
-    case 'tulip':
-      return new TulipHandler();
-    case 'vault':
-      return new VaultHandler();
-    case 'drift':
-      return new DriftHandler(cluster, program);
-    case 'frakt':
-      return new FraktHandler(program);
-    case 'cypher':
-      return new CypherHandler(cluster, program);
-    case 'psylend':
-      return new PsyLendHandler(cluster, program);
-    case 'marginfi':
-      return new MarginFiHandler(program);
-    default:
-      return null;
-  }
+  // const strategyProgramAddresses = StrategyProgram[cluster ?? 'mainnet-beta'];
+
+  // switch (strategyType) {
+  //   case 'solendWithoutLm':
+  //     return new SolendWithoutLMHandler(strategyProgramAddresses.solend);
+  //   case 'solendWithLm':
+  //     return new SolendWithLMHandler(strategyProgramAddresses.solend);
+  //   case 'portFinanceWithoutLm':
+  //     return new PortWithoutLMHandler(strategyProgramAddresses.portFinance);
+  //   case 'portFinanceWithLm':
+  //     return new PortWithLMHandler(strategyProgramAddresses.portFinance);
+  //   case 'francium':
+  //     return new FranciumHandler();
+  //   case 'apricotWithoutLM':
+  //     return new ApricotWithoutLMHandler();
+  //   case 'mango':
+  //     return new MangoHandler(cluster, program);
+  //   case 'tulip':
+  //     return new TulipHandler();
+  //   case 'vault':
+  //     return new VaultHandler();
+  //   case 'drift':
+  //     return new DriftHandler(cluster, program);
+  //   case 'frakt':
+  //     return new FraktHandler(program);
+  //   case 'cypher':
+  //     return new CypherHandler(cluster, program);
+  //   case 'psylend':
+  //     return new PsyLendHandler(cluster, program);
+  //   case 'marginfi':
+  //     return new MarginFiHandler(program);
+  //   default:
+  //     return null;
+  // }
 };

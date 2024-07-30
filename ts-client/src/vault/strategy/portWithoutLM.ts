@@ -1,6 +1,6 @@
 import { PublicKey, AccountMeta, SYSVAR_CLOCK_PUBKEY, Cluster, TransactionInstruction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import * as anchor from '@project-serum/anchor';
+import * as anchor from '@coral-xyz/anchor';
 import * as port from '@mercurial-finance/port-sdk';
 
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
@@ -8,7 +8,7 @@ import { SEEDS } from '../constants';
 import { ReserveState, Strategy, StrategyHandler } from '.';
 
 export default class PortWithoutLMHandler implements StrategyHandler {
-  constructor(public strategyProgram: PublicKey) {}
+  constructor(public strategyProgram: PublicKey) { }
   async getReserveState(program: VaultProgram, reserve: PublicKey): Promise<ReserveState> {
     const account = await program.provider.connection.getAccountInfo(reserve);
     const state = port.ReserveLayout.decode(account!.data) as port.ReserveData;

@@ -1,5 +1,5 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { Wallet, AnchorProvider, BN } from '@project-serum/anchor';
+import { Wallet, AnchorProvider, BN } from '@coral-xyz/anchor';
 
 import VaultImpl from '..';
 import { airDropSol } from './utils';

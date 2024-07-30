@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, BN } from '@project-serum/anchor';
+import { AnchorProvider, Program, BN } from '@coral-xyz/anchor';
 import {
   PublicKey,
   TransactionInstruction,
@@ -8,7 +8,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   SystemProgram,
 } from '@solana/web3.js';
-import { MintLayout, TOKEN_PROGRAM_ID, u64, NATIVE_MINT } from '@solana/spl-token';
+import { MintLayout, TOKEN_PROGRAM_ID, NATIVE_MINT } from '@solana/spl-token';
 
 import { AffiliateInfo, AffiliateVaultProgram, VaultImplementation, VaultProgram, VaultState } from './types';
 import {
@@ -69,7 +69,7 @@ const getAllVaultState = async (tokensMint: Array<PublicKey>, program: VaultProg
     if (!vaultAccountPda) throw new Error('Missing vault account pda');
     const vaultLpAccount = vaultLpAccounts[index];
     if (!vaultLpAccount) throw new Error('Missing vault lp account');
-    const lpSupply = new BN(u64.fromBuffer(MintLayout.decode(vaultLpAccount.data).supply));
+    const lpSupply = new BN(MintLayout.decode(vaultLpAccount.data).supply);
 
     return { ...vaultAccountPda, vaultState, lpSupply };
   });
@@ -260,10 +260,10 @@ export default class VaultImpl implements VaultImplementation {
           affiliateId: opt?.affiliateId,
           affiliateProgram: opt?.affiliateId
             ? new Program<AffiliateVaultIdl>(
-                AffiliateIDL as AffiliateVaultIdl,
-                opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
-                provider,
-              )
+              AffiliateIDL as AffiliateVaultIdl,
+              opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
+              provider,
+            )
             : undefined,
         },
       );
@@ -297,10 +297,10 @@ export default class VaultImpl implements VaultImplementation {
           affiliateId: opt?.affiliateId,
           affiliateProgram: opt?.affiliateId
             ? new Program<AffiliateVaultIdl>(
-                AffiliateIDL as AffiliateVaultIdl,
-                opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
-                provider,
-              )
+              AffiliateIDL as AffiliateVaultIdl,
+              opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
+              provider,
+            )
             : undefined,
         },
       );
@@ -331,10 +331,10 @@ export default class VaultImpl implements VaultImplementation {
         affiliateId: opt?.affiliateId,
         affiliateProgram: opt?.affiliateId
           ? new Program<AffiliateVaultIdl>(
-              AffiliateIDL as AffiliateVaultIdl,
-              opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
-              provider,
-            )
+            AffiliateIDL as AffiliateVaultIdl,
+            opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
+            provider,
+          )
           : undefined,
       },
     );
@@ -615,13 +615,13 @@ export default class VaultImpl implements VaultImplementation {
       withdrawOpt =
         this.affiliateId && this.affiliateProgram
           ? {
-              affiliate: {
-                affiliateId: this.affiliateId,
-                affiliateProgram: this.affiliateProgram,
-                partner: partnerAddress,
-                user: userAddress,
-              },
-            }
+            affiliate: {
+              affiliateId: this.affiliateId,
+              affiliateProgram: this.affiliateProgram,
+              partner: partnerAddress,
+              user: userAddress,
+            },
+          }
           : undefined;
     } else {
       // Without affiliate

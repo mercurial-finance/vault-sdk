@@ -1,6 +1,6 @@
 import { MangoClient, MANGO_V4_ID } from '@mercurial-finance/mango-v4';
 import { AccountRetriever } from '@mercurial-finance/mango-v4/dist/client';
-import * as anchor from '@project-serum/anchor';
+import * as anchor from '@coral-xyz/anchor';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { AccountMeta, Cluster, Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 

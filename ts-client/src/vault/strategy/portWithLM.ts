@@ -1,6 +1,6 @@
 import { PublicKey, AccountMeta, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import * as anchor from '@project-serum/anchor';
+import * as anchor from '@coral-xyz/anchor';
 import * as quarry from '@quarryprotocol/quarry-sdk';
 import { Token } from '@solana/spl-token';
 import * as port from '@mercurial-finance/port-sdk';

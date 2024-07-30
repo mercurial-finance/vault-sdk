@@ -9,7 +9,7 @@ import {
 } from '@solana/web3.js';
 import { IDL as PsyLendIDL, Psylend, keys, instructions } from '@mithraic-labs/psylend-utils';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { BN, Program, AnchorProvider } from '@project-serum/anchor';
+import { BN, Program, AnchorProvider } from '@coral-xyz/anchor';
 
 import { StrategyHandler, Strategy } from '.';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';

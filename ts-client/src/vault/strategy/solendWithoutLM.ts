@@ -1,14 +1,14 @@
 import { AccountMeta, PublicKey, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import * as solend from '@mercurial-finance/solend-sdk';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import * as anchor from '@project-serum/anchor';
+import * as anchor from '@coral-xyz/anchor';
 
 import { ReserveState, StrategyHandler, Strategy } from '.';
 import { SEEDS } from '../constants';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';
 
 export default class SolendWithoutLMHandler implements StrategyHandler {
-  constructor(public strategyProgram: PublicKey) {}
+  constructor(public strategyProgram: PublicKey) { }
 
   async getReserveState(program: VaultProgram, reserve: PublicKey): Promise<ReserveState> {
     const state = await (async () => {

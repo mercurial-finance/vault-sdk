@@ -8,7 +8,7 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { AccountInfo, AccountLayout, u64 } from '@solana/spl-token';
-import { BN } from '@project-serum/anchor';
+import { BN } from '@coral-xyz/anchor';
 
 import { SEEDS, VAULT_BASE_KEY } from '../constants';
 import { ParsedClockState, VaultProgram } from '../types';
