@@ -1,5 +1,5 @@
 import { Cluster, PublicKey } from '@solana/web3.js';
-import { BN } from '@project-serum/anchor';
+import { BN } from '@coral-xyz/anchor';
 
 export const PROGRAM_ID = '24Uqj9JCLxUeoC3hGfh5W3s9FM9uCHDS2SG3LYwBpyTi';
 export const AFFILIATE_PROGRAM_ID = 'GacY9YuN16HNRTy7ZWwULPccwvfFSBeNLuAQP7y38Du3';

@@ -1,6 +1,6 @@
-import { BN, IdlTypes, Program } from '@project-serum/anchor';
+import { BN, IdlTypes, Program } from '@coral-xyz/anchor';
 import { PublicKey, Transaction } from '@solana/web3.js';
-import { TypeDef } from '@project-serum/anchor/dist/cjs/program/namespace/types';
+import { TypeDef } from '@coral-xyz/anchor/dist/cjs/program/namespace/types';
 
 import { Vault as VaultIdl } from '../idl';
 import { AffiliateVault as AffiliateVaultIdl } from '../affiliate-idl';

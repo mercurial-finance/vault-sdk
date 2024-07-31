@@ -1,5 +1,5 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { Wallet, AnchorProvider, BN } from '@project-serum/anchor';
+import { Wallet, AnchorProvider, BN } from '@coral-xyz/anchor';
 
 import VaultImpl from '..';
 import { airDropSol } from './utils';
@@ -108,7 +108,7 @@ describe('Interact with Vault in devnet', () => {
         expect(typeof depositResult).toBe('string');
 
         // Withdraw from specific strategy
-        const withdrawTx = await vault.withdraw(mockWallet.publicKey, new BN(1000), { strategy });
+        const withdrawTx = await vault.withdraw(mockWallet.publicKey, new BN(1000));
 
         try {
           const withdrawResult = await provider.sendAndConfirm(withdrawTx);

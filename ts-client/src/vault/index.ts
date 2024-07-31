@@ -1,4 +1,4 @@
-import { AnchorProvider, Program, BN } from '@project-serum/anchor';
+import { AnchorProvider, Program, BN } from '@coral-xyz/anchor';
 import {
   PublicKey,
   TransactionInstruction,
@@ -8,7 +8,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   SystemProgram,
 } from '@solana/web3.js';
-import { MintLayout, TOKEN_PROGRAM_ID, u64, NATIVE_MINT } from '@solana/spl-token';
+import { MintLayout, TOKEN_PROGRAM_ID, NATIVE_MINT } from '@solana/spl-token';
 
 import { AffiliateInfo, AffiliateVaultProgram, VaultImplementation, VaultProgram, VaultState } from './types';
 import {
@@ -24,10 +24,11 @@ import {
   wrapSOLInstruction,
 } from './utils';
 import { AFFILIATE_PROGRAM_ID, PROGRAM_ID, SEEDS, VAULT_BASE_KEY, VAULT_STRATEGY_ADDRESS } from './constants';
-import { getStrategyHandler, getStrategyType, StrategyState } from './strategy';
+import { getStrategyType, StrategyState } from './strategy';
 import { IDL, Vault as VaultIdl } from './idl';
 import { IDL as AffiliateIDL, AffiliateVault as AffiliateVaultIdl } from './affiliate-idl';
 import { calculateWithdrawableAmount } from './helper';
+import VaultHandler from './strategy/vault';
 
 type PdaInfo = { tokenMint: PublicKey; vaultPda: PublicKey; tokenVaultPda: PublicKey; lpMintPda: PublicKey };
 
@@ -69,7 +70,7 @@ const getAllVaultState = async (tokensMint: Array<PublicKey>, program: VaultProg
     if (!vaultAccountPda) throw new Error('Missing vault account pda');
     const vaultLpAccount = vaultLpAccounts[index];
     if (!vaultLpAccount) throw new Error('Missing vault lp account');
-    const lpSupply = new BN(u64.fromBuffer(MintLayout.decode(vaultLpAccount.data).supply));
+    const lpSupply = new BN(MintLayout.decode(vaultLpAccount.data).supply.toString());
 
     return { ...vaultAccountPda, vaultState, lpSupply };
   });
@@ -91,7 +92,7 @@ const getAllVaultStateByPda = async (vaultsPdaInfo: Array<PdaInfo>, program: Vau
     if (!vaultAccountPda) throw new Error('Missing vault account pda');
     const vaultLpAccount = vaultLpAccounts[index];
     if (!vaultLpAccount) throw new Error('Missing vault lp account');
-    const lpSupply = new BN(u64.fromBuffer(MintLayout.decode(vaultLpAccount.data).supply));
+    const lpSupply = new BN(MintLayout.decode(vaultLpAccount.data).supply.toString());
 
     return { ...vaultAccountPda, vaultState, lpSupply };
   });
@@ -219,7 +220,7 @@ export default class VaultImpl implements VaultImplementation {
     lpMintList: Array<PublicKey>,
     owner: PublicKey,
   ): Promise<Array<BN>> {
-    const ataAccounts = await Promise.all(lpMintList.map((lpMint) => getAssociatedTokenAccount(lpMint, owner)));
+    const ataAccounts = lpMintList.map((lpMint) => getAssociatedTokenAccount(lpMint, owner));
 
     const accountsInfo = await chunkedGetMultipleAccountInfos(connection, ataAccounts);
 
@@ -229,7 +230,7 @@ export default class VaultImpl implements VaultImplementation {
       const accountBalance = deserializeAccount(accountInfo.data);
       if (!accountBalance) throw new Error('Failed to parse user account for LP token.');
 
-      return new BN(accountBalance.amount);
+      return new BN(accountBalance.amount.toString());
     });
   }
 
@@ -260,10 +261,10 @@ export default class VaultImpl implements VaultImplementation {
           affiliateId: opt?.affiliateId,
           affiliateProgram: opt?.affiliateId
             ? new Program<AffiliateVaultIdl>(
-                AffiliateIDL as AffiliateVaultIdl,
-                opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
-                provider,
-              )
+              AffiliateIDL as AffiliateVaultIdl,
+              opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
+              provider,
+            )
             : undefined,
         },
       );
@@ -297,10 +298,10 @@ export default class VaultImpl implements VaultImplementation {
           affiliateId: opt?.affiliateId,
           affiliateProgram: opt?.affiliateId
             ? new Program<AffiliateVaultIdl>(
-                AffiliateIDL as AffiliateVaultIdl,
-                opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
-                provider,
-              )
+              AffiliateIDL as AffiliateVaultIdl,
+              opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
+              provider,
+            )
             : undefined,
         },
       );
@@ -331,10 +332,10 @@ export default class VaultImpl implements VaultImplementation {
         affiliateId: opt?.affiliateId,
         affiliateProgram: opt?.affiliateId
           ? new Program<AffiliateVaultIdl>(
-              AffiliateIDL as AffiliateVaultIdl,
-              opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
-              provider,
-            )
+            AffiliateIDL as AffiliateVaultIdl,
+            opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
+            provider,
+          )
           : undefined,
       },
     );
@@ -346,7 +347,7 @@ export default class VaultImpl implements VaultImplementation {
     const address = await (async () => {
       // User deposit directly
       if (!isAffiliated) {
-        return await getAssociatedTokenAccount(this.vaultState.lpMint, owner);
+        return getAssociatedTokenAccount(this.vaultState.lpMint, owner);
       }
 
       // Get user affiliated address with the partner
@@ -364,7 +365,7 @@ export default class VaultImpl implements VaultImplementation {
       throw new Error('Failed to parse user account for LP token.');
     }
 
-    return new BN(result.amount);
+    return new BN(result.amount.toString());
   }
 
   /** To refetch the latest lpSupply */
@@ -420,7 +421,7 @@ export default class VaultImpl implements VaultImplementation {
     if (!this.affiliateId || !this.affiliateProgram) throw new Error('Affiliate ID or program not found');
 
     const partner = this.affiliateId;
-    const partnerToken = await getAssociatedTokenAccount(this.tokenMint, partner);
+    const partnerToken = getAssociatedTokenAccount(this.tokenMint, partner);
 
     const [partnerAddress, _nonce] = PublicKey.findProgramAddressSync(
       [this.vaultPda.toBuffer(), partnerToken.toBuffer()],
@@ -589,7 +590,7 @@ export default class VaultImpl implements VaultImplementation {
     return highestLiquidity;
   }
 
-  public async withdraw(owner: PublicKey, baseTokenAmount: BN, opt?: { strategy?: PublicKey }): Promise<Transaction> {
+  public async withdraw(owner: PublicKey, baseTokenAmount: BN): Promise<Transaction> {
     // Refresh vault state
     await this.refreshVaultState();
     const lpSupply = await this.getVaultSupply();
@@ -615,13 +616,13 @@ export default class VaultImpl implements VaultImplementation {
       withdrawOpt =
         this.affiliateId && this.affiliateProgram
           ? {
-              affiliate: {
-                affiliateId: this.affiliateId,
-                affiliateProgram: this.affiliateProgram,
-                partner: partnerAddress,
-                user: userAddress,
-              },
-            }
+            affiliate: {
+              affiliateId: this.affiliateId,
+              affiliateProgram: this.affiliateProgram,
+              partner: partnerAddress,
+              user: userAddress,
+            },
+          }
           : undefined;
     } else {
       // Without affiliate
@@ -654,7 +655,7 @@ export default class VaultImpl implements VaultImplementation {
 
     // Get strategy with highest liquidity
     // opt.strategy reserved for testing
-    const selectedStrategy = await this.getStrategyWithHighestLiquidity(opt?.strategy);
+    const selectedStrategy = await this.getStrategyWithHighestLiquidity();
 
     const currentLiquidity = new BN(selectedStrategy.strategyState.currentLiquidity);
     const availableAmount = currentLiquidity.add(vaultLiquidity);
@@ -663,12 +664,7 @@ export default class VaultImpl implements VaultImplementation {
       throw new Error('Selected strategy does not have enough liquidity.');
     }
 
-    const strategyType = getStrategyType(selectedStrategy.strategyState.strategyType);
-    const strategyHandler = getStrategyHandler(strategyType, this.cluster, this.program);
-
-    if (!strategyType || !strategyHandler) {
-      throw new Error('Cannot find strategy handler');
-    }
+    const strategyHandler = new VaultHandler();
 
     // Unwrap SOL
     const postInstruction: Array<TransactionInstruction> = [];
@@ -766,7 +762,7 @@ export default class VaultImpl implements VaultImplementation {
     if (!this.affiliateId || !this.affiliateProgram) throw new Error('No affiliateId or affiliate program found');
 
     const partner = this.affiliateId;
-    const partnerToken = await getAssociatedTokenAccount(this.tokenMint, partner);
+    const partnerToken = getAssociatedTokenAccount(this.tokenMint, partner);
 
     const [partnerAddress, _nonce] = PublicKey.findProgramAddressSync(
       [this.vaultPda.toBuffer(), partnerToken.toBuffer()],
