@@ -9,15 +9,6 @@ import os from 'os'
 
 let mockWallet = new Wallet(new Keypair());
 
-// function loadKeypairFromFile(filename: string): Keypair {
-//   const secret = JSON.parse(fs.readFileSync(filename.replace("~", os.homedir)).toString()) as number[];
-//   const secretKey = Uint8Array.from(secret);
-//   return Keypair.fromSecretKey(secretKey);
-// }
-// const payerKP = loadKeypairFromFile("/Users/andrewnguyen/.config/solana/id.json")
-// mockWallet = new Wallet(payerKP);
-// console.log("Wallet Address: %s \n", payerKP.publicKey);
-
 // devnet ATA creation and reading must use confirmed.
 const devnetConnection = new Connection('https://api.devnet.solana.com/', { commitment: 'confirmed' });
 
@@ -38,7 +29,7 @@ describe('Interact with Vault in devnet', () => {
     });
   });
 
-  test.only('Test affiliate init user, check balance, deposits, then withdraw all', async () => {
+  test('Test affiliate init user, check balance, deposits, then withdraw all', async () => {
     // First deposit
     const depositTx = await vaultImpl.deposit(mockWallet.publicKey, new BN(100_000_000));
     const depositResult = await provider.sendAndConfirm(depositTx);
