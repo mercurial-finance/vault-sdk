@@ -1,4 +1,13 @@
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, NATIVE_MINT, getAssociatedTokenAddressSync, createAssociatedTokenAccountInstruction, createCloseAccountInstruction, RawAccount } from '@solana/spl-token';
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  NATIVE_MINT,
+  getAssociatedTokenAddressSync,
+  createAssociatedTokenAccountInstruction,
+  createCloseAccountInstruction,
+  RawAccount,
+  AccountLayout,
+} from '@solana/spl-token';
 import {
   Connection,
   ParsedAccountData,
@@ -7,7 +16,6 @@ import {
   SYSVAR_CLOCK_PUBKEY,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { AccountLayout } from '@solana/spl-token';
 import { BN } from '@coral-xyz/anchor';
 
 import { SEEDS, VAULT_BASE_KEY } from '../constants';
@@ -26,7 +34,7 @@ export const deserializeAccount = (data: Buffer | undefined): RawAccount | undef
 };
 
 export const getOrCreateATAInstruction = async (
-  tokenMint: PublicKey,
+  tokenAddress: PublicKey,
   owner: PublicKey,
   connection: Connection,
   opt?: {
@@ -35,20 +43,14 @@ export const getOrCreateATAInstruction = async (
 ): Promise<[PublicKey, TransactionInstruction?]> => {
   let toAccount;
   try {
-    toAccount = getAssociatedTokenAddressSync(
-      tokenMint,
-      owner,
-      true,
-      TOKEN_PROGRAM_ID,
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-    );
+    toAccount = getAssociatedTokenAddressSync(tokenAddress, owner, true, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
     const account = await connection.getAccountInfo(toAccount);
     if (!account) {
       const ix = createAssociatedTokenAccountInstruction(
         opt?.payer || owner,
         toAccount,
         owner,
-        tokenMint,
+        tokenAddress,
         TOKEN_PROGRAM_ID,
         ASSOCIATED_TOKEN_PROGRAM_ID,
       );
