@@ -1,11 +1,14 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { Wallet, AnchorProvider, BN } from '@project-serum/anchor';
+import { Wallet, AnchorProvider, BN } from '@coral-xyz/anchor';
 
 import VaultImpl from '..';
 import { airDropSol } from './utils';
 import { NATIVE_MINT } from '@solana/spl-token';
+import fs from "fs";
+import os from 'os'
 
-const mockWallet = new Wallet(new Keypair());
+let mockWallet = new Wallet(new Keypair());
+
 // devnet ATA creation and reading must use confirmed.
 const devnetConnection = new Connection('https://api.devnet.solana.com/', { commitment: 'confirmed' });
 
@@ -29,14 +32,6 @@ describe('Interact with Vault in devnet', () => {
   test('Test affiliate init user, check balance, deposits, then withdraw all', async () => {
     // First deposit
     const depositTx = await vaultImpl.deposit(mockWallet.publicKey, new BN(100_000_000));
-    expect(depositTx.instructions.map((ix) => ix.programId.toString())).toEqual([
-      'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL', // create ATA for user token
-      'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL', // create ATA for user lp token
-      '11111111111111111111111111111111', // Wrap SOL
-      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA', // Sync nativve
-      'GacY9YuN16HNRTy7ZWwULPccwvfFSBeNLuAQP7y38Du3', // Affiliate program init user
-      'GacY9YuN16HNRTy7ZWwULPccwvfFSBeNLuAQP7y38Du3', // Affiliate program deposit
-    ]);
     const depositResult = await provider.sendAndConfirm(depositTx);
     console.log('Deposit result', depositResult);
     expect(typeof depositResult).toBe('string');

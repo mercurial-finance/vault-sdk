@@ -1,6 +1,6 @@
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import * as anchor from '@project-serum/anchor';
+import * as anchor from '@coral-xyz/anchor';
 
 import { StrategyHandler, Strategy } from '.';
 import { AffiliateVaultProgram, VaultProgram, VaultState } from '../types';

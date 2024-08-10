@@ -1,6 +1,6 @@
 {
   "name": "@mercurial-finance/vault-sdk",
-  "version": "1.0.0",
+  "version": "2.0.0-rc.0",
   "description": "Mercurial Vault SDK is a typescript library that allows you to interact with Mercurial v2's vault.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
@@ -16,34 +16,17 @@
   "author": "mercurial-finance",
   "license": "MIT",
   "dependencies": {
-    "@blockworks-foundation/mango-client": "^3.4.7",
-    "@mercurial-finance/apricot-sdk": "0.17.6",
-    "@mercurial-finance/cypher-client": "^4.1.4",
-    "@mercurial-finance/drift-sdk": "1.0.3",
-    "@mercurial-finance/frakt-sdk": "0.0.2",
-    "@mercurial-finance/francium-sdk": "1.4.3",
-    "@mercurial-finance/mango-v4": "0.5.4",
-    "@mercurial-finance/marginfi-client-v2": "1.0.2",
-    "@mercurial-finance/optimist": "^0.1.4",
-    "@mercurial-finance/port-sdk": "0.2.69",
-    "@mercurial-finance/solend-sdk": "0.6.5",
-    "@mercurial-finance/tulip-platform-sdk": "2.0.30",
-    "@mithraic-labs/psylend-utils": "0.0.3-rc39",
-    "@project-serum/anchor": "0.25.0",
-    "@quarryprotocol/quarry-sdk": "5.0.2",
-    "@saberhq/anchor-contrib": "1.13.32",
-    "@solana/buffer-layout": "^4.0.0",
-    "@solana/spl-token": "0.1.8",
-    "@solana/spl-token-registry": "0.2.1105",
-    "@solana/web3.js": "~1.72.0",
+    "@coral-xyz/anchor": "^0.28.0",
+    "@solana/buffer-layout": "^4.0.1",
+    "@solana/spl-token": "^0.4.6",
+    "@solana/spl-token-registry": "^0.2.4574",
+    "@solana/web3.js": "^1.91.6",
     "bn.js": "5.2.1",
     "cross-fetch": "^3.1.5",
     "decimal.js": "10.3.1",
     "jsbi": "4.3.0"
   },
   "devDependencies": {
-    "@saberhq/solana-contrib": "1.13.32",
-    "@saberhq/token-utils": "1.13.32",
     "@tsconfig/recommended": "^1.0.1",
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^4.3.1",
@@ -54,7 +37,7 @@
     "mocha": "^10.0.0",
     "ts-jest": "^28.0.2",
     "ts-mocha": "^10.0.0",
-    "typescript": "^4.7.2"
+    "typescript": "^5.5.4"
   },
   "directories": {
     "test": "tests"
