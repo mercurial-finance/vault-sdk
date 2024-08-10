@@ -18,15 +18,15 @@ describe('Get Mainnet vault state', () => {
 
   // Make sure all vaults can be initialized
   beforeAll(async () => {
-    const tokensMint = [NATIVE_MINT, USDC_MINT, USDT_MINT];
-    const tokensInfoPda = tokensMint.map((tokenMint) => {
-      const vaultPdas = getVaultPdas(tokenMint, new PublicKey(PROGRAM_ID));
+    const tokenAddresses = [NATIVE_MINT, USDC_MINT, USDT_MINT];
+    const tokensInfoPda = tokenAddresses.map((tokenAddress) => {
+      const vaultPdas = getVaultPdas(tokenAddress, new PublicKey(PROGRAM_ID));
       return {
-        tokenMint,
+        tokenAddress,
         ...vaultPdas,
       };
     });
-    vaults = await VaultImpl.createMultiple(mainnetConnection, tokensMint);
+    vaults = await VaultImpl.createMultiple(mainnetConnection, tokenAddresses);
     vaultsForPool = await VaultImpl.createMultipleWithPda(mainnetConnection, tokensInfoPda);
   });
 
