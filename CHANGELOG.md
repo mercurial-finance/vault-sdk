@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## @mercurial-finance/vault-sdk [2.0.1] - PR [#126](https://github.com/mercurial-finance/vault-sdk/pull/126)
+
+### Fixed
+
+- fix `refreshVaultState` not working
+
 ## @mercurial-finance/vault-sdk [2.0.0] - PR [#124](https://github.com/mercurial-finance/vault-sdk/pull/124)
 
 ### Changed
@@ -27,5 +33,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
--  Remove logic to withdraw directly from strategy
-
+- Remove logic to withdraw directly from strategy
