@@ -118,7 +118,7 @@ const getVaultStateByPda = async (pdaInfo: PdaInfo, program: VaultProgram) => {
     throw 'Cannot get vault state';
   }
 
-  const lpSupply = await getLpSupply(program.provider.connection, pdaInfo.lpMintPda);
+  const lpSupply = await getLpSupply(program.provider.connection, vaultState.lpMint);
 
   return { ...pdaInfo, vaultState, lpSupply };
 };
