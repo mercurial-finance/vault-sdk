@@ -56,18 +56,18 @@ type WithdrawOpt = {
 };
 
 const getAllVaultState = async (
-  tokensMint: Array<PublicKey>,
+  tokensAddress: Array<PublicKey>,
   program: VaultProgram,
   seedBaseKey?: PublicKey,
 ): Promise<Array<VaultStateAndLp>> => {
-  const vaultAccountPdas = tokensMint.map((tokenMint) =>
+  const vaultAccountPdas = tokensAddress.map((tokenMint) =>
     getVaultPdas(tokenMint, new PublicKey(program.programId), seedBaseKey),
   );
 
   const vaultsPda = vaultAccountPdas.map(({ vaultPda }) => vaultPda);
   const vaultsState = (await chunkedFetchMultipleVaultAccount(program, vaultsPda)) as Array<VaultState>;
 
-  if (vaultsState.length !== tokensMint.length) {
+  if (vaultsState.length !== tokensAddress.length) {
     throw new Error('Some of the vault state cannot be fetched');
   }
 
@@ -114,11 +114,11 @@ const getAllVaultStateByPda = async (
 };
 
 const getVaultState = async (
-  vaultPublicKey: PublicKey,
+  tokenAddress: PublicKey,
   program: VaultProgram,
   seedBaseKey?: PublicKey,
 ): Promise<VaultStateAndLp> => {
-  const { vaultPda } = getVaultPdas(vaultPublicKey, new PublicKey(program.programId), seedBaseKey);
+  const { vaultPda } = getVaultPdas(tokenAddress, new PublicKey(program.programId), seedBaseKey);
   const vaultState = (await program.account.vault.fetchNullable(vaultPda)) as VaultState;
 
   if (!vaultState) {
