@@ -70,16 +70,16 @@ export const getVaultPdas = (tokenMint: PublicKey, programId: PublicKey, seedBas
     programId,
   );
 
-  const tokenVault = PublicKey.findProgramAddressSync(
+  const [tokenVault] = PublicKey.findProgramAddressSync(
     [Buffer.from(SEEDS.TOKEN_VAULT_PREFIX), vault.toBuffer()],
     programId,
   );
-  const lpMint = PublicKey.findProgramAddressSync([Buffer.from(SEEDS.LP_MINT_PREFIX), vault.toBuffer()], programId);
+  const [lpMint] = PublicKey.findProgramAddressSync([Buffer.from(SEEDS.LP_MINT_PREFIX), vault.toBuffer()], programId);
 
   return {
     vaultPda: vault,
-    tokenVaultPda: tokenVault[0],
-    lpMintPda: lpMint[0],
+    tokenVaultPda: tokenVault,
+    lpMintPda: lpMint,
   };
 };
 
