@@ -97,6 +97,7 @@ const getAllVaultStateByPda = async (vaultsPda: Array<PublicKey>, program: Vault
       vaultPda: vaultAccountPda,
       tokenVaultPda: vaultState.tokenVault,
       lpMintPda: vaultState.lpMint,
+      tokenAddress: vaultState.tokenMint,
       vaultAccountPda,
       vaultState,
       lpSupply,
@@ -278,7 +279,7 @@ export default class VaultImpl implements VaultImplementation {
 
   public static async createMultipleWithPda(
     connection: Connection,
-    vaultsPda: Array<PdaInfo>,
+    vaultsPda: Array<PublicKey>,
     opt?: {
       seedBaseKey?: PublicKey;
       allowOwnerOffCurve?: boolean;
@@ -291,14 +292,10 @@ export default class VaultImpl implements VaultImplementation {
     const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
 
-    const vaultsStateInfo = await getAllVaultStateByPda(
-      vaultsPda.map(({ vaultPda }) => vaultPda),
-      program,
-    );
+    const vaultsStateInfo = await getAllVaultStateByPda(vaultsPda, program);
 
     return Promise.all(
-      vaultsStateInfo.map(async ({ vaultPda, tokenVaultPda, lpMintPda, vaultState, lpSupply }, index) => {
-        const { tokenAddress } = vaultsPda[index];
+      vaultsStateInfo.map(async ({ vaultPda, tokenVaultPda, lpMintPda, vaultState, lpSupply, tokenAddress }, index) => {
         const tokenMint = await getMint(connection, tokenAddress);
         return new VaultImpl(
           program,
