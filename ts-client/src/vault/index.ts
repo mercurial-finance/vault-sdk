@@ -344,6 +344,40 @@ export default class VaultImpl implements VaultImplementation {
     );
   }
 
+  public static async createWithPda(
+    connection: Connection,
+    pdaInfo: PdaInfo,
+    opt?: {
+      seedBaseKey?: PublicKey;
+      allowOwnerOffCurve?: boolean;
+      cluster?: Cluster;
+      programId?: string;
+      affiliateId?: PublicKey;
+      affiliateProgramId?: string;
+    },
+  ): Promise<VaultImpl> {
+    const provider = new AnchorProvider(connection, {} as any, AnchorProvider.defaultOptions());
+    const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
+
+    const { vaultPda, tokenVaultPda, lpMintPda, vaultState, lpSupply } = await getVaultStateByPda(pdaInfo, program);
+    const tokenMint = await getMint(connection, pdaInfo.tokenAddress);
+    return new VaultImpl(
+      program,
+      { tokenMint, vaultPda, tokenVaultPda, vaultState, lpSupply, lpMintPda },
+      {
+        ...opt,
+        affiliateId: opt?.affiliateId,
+        affiliateProgram: opt?.affiliateId
+          ? new Program<AffiliateVaultIdl>(
+              AffiliateIDL as AffiliateVaultIdl,
+              opt?.affiliateProgramId || AFFILIATE_PROGRAM_ID,
+              provider,
+            )
+          : undefined,
+      },
+    );
+  }
+
   public async getUserBalance(owner: PublicKey): Promise<BN> {
     const isAffiliated = this.affiliateId && this.affiliateProgram;
 
