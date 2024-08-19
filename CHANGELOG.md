@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## @mercurial-finance/vault-sdk [2.0.2] - PR [#128](https://github.com/mercurial-finance/vault-sdk/pull/128)
+
+### Fixed
+
+- fix `createMultiple` to take in less param
+
 ## @mercurial-finance/vault-sdk [2.0.1] - PR [#126](https://github.com/mercurial-finance/vault-sdk/pull/126)
 
 ### Fixed
