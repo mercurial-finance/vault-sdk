@@ -20,11 +20,8 @@ describe('Get Mainnet vault state', () => {
   beforeAll(async () => {
     const tokenAddresses = [NATIVE_MINT, USDC_MINT, USDT_MINT];
     const tokensInfoPda = tokenAddresses.map((tokenAddress) => {
-      const vaultPdas = getVaultPdas(tokenAddress, new PublicKey(PROGRAM_ID));
-      return {
-        tokenAddress,
-        ...vaultPdas,
-      };
+      const { vaultPda } = getVaultPdas(tokenAddress, new PublicKey(PROGRAM_ID));
+      return vaultPda;
     });
     vaults = await VaultImpl.createMultiple(mainnetConnection, tokenAddresses);
     vaultsForPool = await VaultImpl.createMultipleWithPda(mainnetConnection, tokensInfoPda);
