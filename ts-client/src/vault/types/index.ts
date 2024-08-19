@@ -43,3 +43,9 @@ export interface ParsedClockState {
   program: string;
   space: number;
 }
+
+export interface VaultStateAndLp {
+  vaultPda: PublicKey;
+  vaultState: VaultState;
+  lpSupply: BN;
+}
