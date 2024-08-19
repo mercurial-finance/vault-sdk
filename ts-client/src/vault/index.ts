@@ -30,8 +30,6 @@ import { IDL as AffiliateIDL, AffiliateVault as AffiliateVaultIdl } from './affi
 import { calculateWithdrawableAmount } from './helper';
 import VaultHandler from './strategy/vault';
 
-type PdaInfo = { tokenAddress: PublicKey; vaultPda: PublicKey };
-
 type VaultDetails = {
   tokenMint: Mint;
   vaultPda: PublicKey;
@@ -115,11 +113,18 @@ const getVaultState = async (vaultPublicKey: PublicKey, program: VaultProgram, s
 
   const lpSupply = await getLpSupply(program.provider.connection, vaultState.lpMint);
 
-  return { vaultPda, tokenVaultPda, vaultState, lpSupply, lpMintPda: vaultState.lpMint };
+  return {
+    vaultPda,
+    tokenVaultPda,
+    vaultState,
+    lpSupply,
+    lpMintPda: vaultState.lpMint,
+    tokenAddress: vaultState.tokenMint,
+  };
 };
 
-const getVaultStateByPda = async (pdaInfo: PdaInfo, program: VaultProgram) => {
-  const vaultState = (await program.account.vault.fetchNullable(pdaInfo.vaultPda)) as VaultState;
+const getVaultStateByPda = async (vaultPda: PublicKey, program: VaultProgram) => {
+  const vaultState = (await program.account.vault.fetchNullable(vaultPda)) as VaultState;
 
   if (!vaultState) {
     throw 'Cannot get vault state';
@@ -127,7 +132,14 @@ const getVaultStateByPda = async (pdaInfo: PdaInfo, program: VaultProgram) => {
 
   const lpSupply = await getLpSupply(program.provider.connection, vaultState.lpMint);
 
-  return { ...pdaInfo, vaultState, lpSupply };
+  return {
+    vaultPda,
+    tokenVaultPda: vaultState.tokenVault,
+    lpMintPda: vaultState.lpMint,
+    tokenAddress: vaultState.tokenMint,
+    vaultState,
+    lpSupply,
+  };
 };
 
 const getVaultLiquidity = async (connection: Connection, tokenVaultPda: PublicKey): Promise<string | null> => {
@@ -392,13 +404,7 @@ export default class VaultImpl implements VaultImplementation {
   }
 
   public async refreshVaultState() {
-    const { vaultState, lpSupply } = await getVaultStateByPda(
-      {
-        tokenAddress: this.tokenMint.address,
-        vaultPda: this.vaultPda,
-      },
-      this.program,
-    );
+    const { vaultState, lpSupply } = await getVaultStateByPda(this.vaultPda, this.program);
     this.vaultState = vaultState;
     this.lpSupply = lpSupply;
   }

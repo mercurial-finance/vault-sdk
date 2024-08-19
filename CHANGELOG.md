@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-## @mercurial-finance/vault-sdk [2.0.2] - PR [#128](https://github.com/mercurial-finance/vault-sdk/pull/128)
+## @mercurial-finance/vault-sdk [2.1.0] - PR [#128](https://github.com/mercurial-finance/vault-sdk/pull/128)
 
 ### Fixed
 
