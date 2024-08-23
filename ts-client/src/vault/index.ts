@@ -8,7 +8,7 @@ import {
   SYSVAR_RENT_PUBKEY,
   SystemProgram,
 } from '@solana/web3.js';
-import { MintLayout, TOKEN_PROGRAM_ID, NATIVE_MINT, getMint, Mint, unpackMint } from '@solana/spl-token';
+import { TOKEN_PROGRAM_ID, NATIVE_MINT, getMint, Mint, unpackMint } from '@solana/spl-token';
 
 import {
   AffiliateInfo,
@@ -41,7 +41,6 @@ type VaultDetails = {
   vaultLpMint: Mint;
   vaultPda: PublicKey;
   tokenVaultPda: PublicKey;
-  lpMintPda: PublicKey;
   vaultState: VaultState;
 };
 
@@ -200,7 +199,6 @@ export default class VaultImpl implements VaultImplementation {
   public tokenLpMint: Mint;
   public vaultPda: PublicKey;
   public tokenVaultPda: PublicKey;
-  public lpMintPda: PublicKey;
   public vaultState: VaultState;
 
   private constructor(
@@ -227,7 +225,6 @@ export default class VaultImpl implements VaultImplementation {
     this.tokenMint = vaultDetails.vaultMint;
     this.vaultPda = vaultDetails.vaultPda;
     this.tokenVaultPda = vaultDetails.tokenVaultPda;
-    this.lpMintPda = vaultDetails.lpMintPda;
     this.vaultState = vaultDetails.vaultState;
   }
 
@@ -310,7 +307,6 @@ export default class VaultImpl implements VaultImplementation {
             vaultState,
             vaultLpMint,
             vaultMint,
-            lpMintPda: vaultState.lpMint,
           },
           {
             ...opt,
@@ -355,7 +351,6 @@ export default class VaultImpl implements VaultImplementation {
             vaultState,
             vaultMint,
             vaultLpMint,
-            lpMintPda: vaultState.lpMint,
           },
           {
             ...opt,
@@ -397,7 +392,6 @@ export default class VaultImpl implements VaultImplementation {
         vaultPda,
         tokenVaultPda: vaultState.tokenVault,
         vaultState,
-        lpMintPda: vaultState.lpMint,
       },
       {
         ...opt,
