@@ -83,7 +83,7 @@ const getAllVaultState = async (
     const vaultLpAccount = vaultLpAccounts[index];
     if (!vaultLpAccount) throw new Error('Missing vault lp account');
     const vaultLpMint = unpackMint(vaultState.lpMint, vaultLpAccount, vaultLpAccount.owner);
-    const vaultAccount = vaultLpAccounts[index + tokensAddress.length];
+    const vaultAccount = vaultLpAccounts[index + vaultLpMints.length];
     if (!vaultAccount) throw new Error('Missing vault account');
     const vaultMint = unpackMint(vaultState.tokenMint, vaultAccount, vaultAccount.owner);
 
@@ -114,7 +114,7 @@ const getAllVaultStateByPda = async (
     const vaultLpAccount = vaultLpAccounts[index];
     if (!vaultLpAccount) throw new Error('Missing vault lp account');
     const vaultLpMint = unpackMint(vaultState.lpMint, vaultLpAccount, vaultLpAccount.owner);
-    const vaultAccount = vaultLpAccounts[index + vaultsPda.length];
+    const vaultAccount = vaultLpAccounts[index + vaultLpMints.length];
     if (!vaultAccount) throw new Error('Missing vault account');
     const vaultMint = unpackMint(vaultState.tokenMint, vaultAccount, vaultAccount.owner);
 
