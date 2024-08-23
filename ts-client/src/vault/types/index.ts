@@ -4,6 +4,7 @@ import { TypeDef } from '@coral-xyz/anchor/dist/cjs/program/namespace/types';
 
 import { Vault as VaultIdl } from '../idl';
 import { AffiliateVault as AffiliateVaultIdl } from '../affiliate-idl';
+import { Mint } from '@solana/spl-token';
 
 export type VaultProgram = Program<VaultIdl>;
 export type AffiliateVaultProgram = Program<AffiliateVaultIdl>;
@@ -47,5 +48,5 @@ export interface ParsedClockState {
 export interface VaultStateAndLp {
   vaultPda: PublicKey;
   vaultState: VaultState;
-  lpSupply: BN;
+  vaultMint: Mint;
 }
