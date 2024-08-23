@@ -82,10 +82,10 @@ const getAllVaultState = async (
     if (!vaultAccountPda) throw new Error('Missing vault account pda');
     const vaultLpAccount = vaultLpAccounts[index];
     if (!vaultLpAccount) throw new Error('Missing vault lp account');
-    const vaultMint = unpackMint(vaultState.tokenMint, vaultLpAccount, vaultLpAccount.owner);
+    const vaultLpMint = unpackMint(vaultState.lpMint, vaultLpAccount, vaultLpAccount.owner);
     const vaultAccount = vaultLpAccounts[index + tokensAddress.length];
     if (!vaultAccount) throw new Error('Missing vault account');
-    const vaultLpMint = unpackMint(vaultState.tokenMint, vaultAccount, vaultAccount.owner);
+    const vaultMint = unpackMint(vaultState.tokenMint, vaultAccount, vaultAccount.owner);
 
     return { vaultPda: vaultAccountPda.vaultPda, vaultState, vaultMint, vaultLpMint };
   });
@@ -113,7 +113,7 @@ const getAllVaultStateByPda = async (
     if (!vaultPda) throw new Error('Missing vault account pda');
     const vaultLpAccount = vaultLpAccounts[index];
     if (!vaultLpAccount) throw new Error('Missing vault lp account');
-    const vaultLpMint = unpackMint(vaultState.tokenMint, vaultLpAccount, vaultLpAccount.owner);
+    const vaultLpMint = unpackMint(vaultState.lpMint, vaultLpAccount, vaultLpAccount.owner);
     const vaultAccount = vaultLpAccounts[index + vaultsPda.length];
     if (!vaultAccount) throw new Error('Missing vault account');
     const vaultMint = unpackMint(vaultState.tokenMint, vaultAccount, vaultAccount.owner);
@@ -143,7 +143,7 @@ const getVaultState = async (
     vaultState.lpMint,
     vaultState.tokenMint,
   ]);
-  const vaultLpMint = unpackMint(vaultState.tokenMint, vaultLpAccount, vaultLpAccount?.owner);
+  const vaultLpMint = unpackMint(vaultState.lpMint, vaultLpAccount, vaultLpAccount?.owner);
   const vaultMint = unpackMint(vaultState.tokenMint, vaultAccount, vaultAccount?.owner);
 
   return {
@@ -165,7 +165,7 @@ const getVaultStateByPda = async (vaultPda: PublicKey, program: VaultProgram): P
     vaultState.lpMint,
     vaultState.tokenMint,
   ]);
-  const vaultLpMint = unpackMint(vaultState.tokenMint, vaultLpAccount, vaultLpAccount?.owner);
+  const vaultLpMint = unpackMint(vaultState.lpMint, vaultLpAccount, vaultLpAccount?.owner);
   const vaultMint = unpackMint(vaultState.tokenMint, vaultAccount, vaultAccount?.owner);
 
   return {
