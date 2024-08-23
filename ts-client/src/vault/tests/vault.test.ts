@@ -37,7 +37,7 @@ describe('Get Mainnet vault state', () => {
     );
 
     vaultLpSupplies.forEach((lpSupply) => {
-      expect(Number(lpSupply)).toBeGreaterThan(0);
+      expect(lpSupply.gtn(0)).toBeTruthy();
     });
 
     const vaultLpSuppliesForPool = await Promise.all(
@@ -49,7 +49,7 @@ describe('Get Mainnet vault state', () => {
     );
 
     vaultLpSuppliesForPool.forEach((lpSupply) => {
-      expect(Number(lpSupply)).toBeGreaterThan(0);
+      expect(lpSupply.gtn(0)).toBeTruthy();
     });
   });
 
