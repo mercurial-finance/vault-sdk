@@ -19,11 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-## @mercurial-finance/vault-sdk [2.1.2] - PR [#130](https://github.com/mercurial-finance/vault-sdk/pull/130)
+## @mercurial-finance/vault-sdk [2.2.0] - PR [#130](https://github.com/mercurial-finance/vault-sdk/pull/130)
 
 ### Fixed
 
 - fix `tokenMint` & `tokenLpMint`
+
+### Removed
+
+- remove `lpMintPda` field
 
 ## @mercurial-finance/vault-sdk [2.1.1] - PR [#129](https://github.com/mercurial-finance/vault-sdk/pull/129)
 
