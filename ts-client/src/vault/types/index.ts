@@ -48,5 +48,6 @@ export interface ParsedClockState {
 export interface VaultStateAndLp {
   vaultPda: PublicKey;
   vaultState: VaultState;
+  vaultLpMint: Mint;
   vaultMint: Mint;
 }
