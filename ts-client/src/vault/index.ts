@@ -358,7 +358,6 @@ export default class VaultImpl implements VaultImplementation {
     const program = new Program<VaultIdl>(IDL as VaultIdl, opt?.programId || PROGRAM_ID, provider);
 
     const { vaultPda, vaultState, vaultMint } = await getVaultState(tokenAddress, program);
-    const tokenMint = await getMint(connection, tokenAddress);
     return new VaultImpl(
       program,
       { vaultMint, vaultPda, tokenVaultPda: vaultState.tokenVault, vaultState, lpMintPda: vaultState.lpMint },
