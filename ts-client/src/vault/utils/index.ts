@@ -27,7 +27,7 @@ export const getAssociatedTokenAccount = (tokenMint: PublicKey, owner: PublicKey
   return getAssociatedTokenAddressSync(tokenMint, owner, true, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
 };
 
-export const deserializeAccount = (data: Uint8Array | undefined): RawAccount | undefined => {
+export const deserializeAccount = (data: Buffer | undefined): RawAccount | undefined => {
   if (data == undefined || data.length == 0) {
     return undefined;
   }
@@ -35,7 +35,7 @@ export const deserializeAccount = (data: Uint8Array | undefined): RawAccount | u
   return accountInfo;
 };
 
-export const deserializeMint = (data: Uint8Array | undefined): RawMint | undefined => {
+export const deserializeMint = (data: Buffer | undefined): RawMint | undefined => {
   if (data == undefined || data.length == 0) {
     return undefined;
   }
