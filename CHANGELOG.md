@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## @mercurial-finance/vault-sdk [2.2.1] - PR [#131](https://github.com/mercurial-finance/vault-sdk/pull/131)
+
+### Added
+
+- new utils `deserializeMint`
+
 ## @mercurial-finance/vault-sdk [2.2.0] - PR [#130](https://github.com/mercurial-finance/vault-sdk/pull/130)
 
 ### Fixed

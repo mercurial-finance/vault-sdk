@@ -7,6 +7,8 @@ import {
   createCloseAccountInstruction,
   RawAccount,
   AccountLayout,
+  MintLayout,
+  RawMint,
 } from '@solana/spl-token';
 import {
   Connection,
@@ -31,6 +33,14 @@ export const deserializeAccount = (data: Buffer | undefined): RawAccount | undef
   }
   const accountInfo = AccountLayout.decode(data);
   return accountInfo;
+};
+
+export const deserializeMint = (data: Buffer | undefined): RawMint | undefined => {
+  if (data == undefined || data.length == 0) {
+    return undefined;
+  }
+  const mintInfo = MintLayout.decode(data);
+  return mintInfo;
 };
 
 export const getOrCreateATAInstruction = async (
