@@ -5,7 +5,8 @@
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "scripts": {
-    "prepare": "npm rm @meteora-ag/config && npm install @meteora-ag/config",
+    "postinstall": "pnpm i --lockfile-only",
+    "postclone": "pnpm rm @meteora-ag/config && pnpm install @meteora-ag/config",
     "build": "rm -rf dist && tsc -p tsconfig.build.json && tsc -p tsconfig.esm.json",
     "test": "jest ./src/vault/tests/*.test.ts --runInBand",
     "test-affiliate": "jest ./src/vault/tests/affiliate.test.ts --runInBand"
@@ -30,10 +31,10 @@
     "typescript": "^5.5.4"
   },
   "peerDependencies": {
-    "bn.js": "^5.2.1",
     "@coral-xyz/anchor": "^0.28.0",
     "@solana/spl-token": "^0.4.9",
-    "@solana/web3.js": "^1.95.3"
+    "@solana/web3.js": "^1.95.5",
+    "bn.js": "^5.2.1"
   },
   "directories": {
     "test": "tests"
@@ -45,5 +46,8 @@
   "bugs": {
     "url": "https://github.com/mercurial-finance/mercurial_sdk/issues"
   },
-  "homepage": "https://github.com/mercurial-finance/mercurial_sdk#readme"
+  "homepage": "https://github.com/mercurial-finance/mercurial_sdk#readme",
+  "dependencies": {
+    "@mcsam/recharts": "^2.10.3"
+  }
 }
