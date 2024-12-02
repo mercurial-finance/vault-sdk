@@ -142,6 +142,8 @@ const getVaultState = async (
     vaultState.lpMint,
     vaultState.tokenMint,
   ]);
+  if (!vaultLpAccount || !vaultAccount) throw new Error('Missing vault account');
+
   const vaultLpMint = unpackMint(vaultState.lpMint, vaultLpAccount, vaultLpAccount?.owner);
   const vaultMint = unpackMint(vaultState.tokenMint, vaultAccount, vaultAccount?.owner);
 
@@ -164,6 +166,8 @@ const getVaultStateByPda = async (vaultPda: PublicKey, program: VaultProgram): P
     vaultState.lpMint,
     vaultState.tokenMint,
   ]);
+  if (!vaultLpAccount || !vaultAccount) throw new Error('Missing vault account');
+
   const vaultLpMint = unpackMint(vaultState.lpMint, vaultLpAccount, vaultLpAccount?.owner);
   const vaultMint = unpackMint(vaultState.tokenMint, vaultAccount, vaultAccount?.owner);
 
@@ -719,6 +723,8 @@ export default class VaultImpl implements VaultImplementation {
     // Get strategy with highest liquidity
     // opt.strategy reserved for testing
     const selectedStrategy = await this.getStrategyWithHighestLiquidity();
+
+    if (!selectedStrategy) throw new Error('No strategy with highest liquidity found');
 
     const currentLiquidity = new BN(selectedStrategy.strategyState.currentLiquidity);
     const availableAmount = currentLiquidity.add(vaultLiquidity);
