@@ -5,6 +5,7 @@
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "scripts": {
+    "prepare": "npm rm @meteora-ag/config && npm install @meteora-ag/config",
     "build": "rm -rf dist && tsc -p tsconfig.build.json && tsc -p tsconfig.esm.json",
     "test": "jest ./src/vault/tests/*.test.ts --runInBand",
     "test-affiliate": "jest ./src/vault/tests/affiliate.test.ts --runInBand"
