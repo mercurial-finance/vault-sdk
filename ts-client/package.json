@@ -1,11 +1,10 @@
 {
   "name": "@meteora-ag/vault-sdk",
-  "version": "2.2.1",
+  "version": "0.1.0",
   "description": "Mercurial Vault SDK is a typescript library that allows you to interact with Mercurial v2's vault.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "scripts": {
-    "postinstall": "pnpm i --lockfile-only",
     "postclone": "pnpm rm @meteora-ag/config && pnpm install @meteora-ag/config",
     "build": "rm -rf dist && tsc -p tsconfig.build.json && tsc -p tsconfig.esm.json",
     "test": "jest ./src/vault/tests/*.test.ts --runInBand",
@@ -19,7 +18,7 @@
   "license": "MIT",
   "devDependencies": {
     "@meteora-ag/config": "workspace:*",
-    "@types/bn.js": "^5.1.0",
+    "@types/bn.js": "^5.1.6",
     "@types/chai": "^4.3.1",
     "@types/jest": "^27.5.1",
     "@types/mocha": "^9.1.1",
@@ -46,8 +45,5 @@
   "bugs": {
     "url": "https://github.com/mercurial-finance/mercurial_sdk/issues"
   },
-  "homepage": "https://github.com/mercurial-finance/mercurial_sdk#readme",
-  "dependencies": {
-    "@mcsam/recharts": "^2.10.3"
-  }
+  "homepage": "https://github.com/mercurial-finance/mercurial_sdk#readme"
 }
