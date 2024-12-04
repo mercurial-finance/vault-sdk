@@ -1,5 +1,5 @@
 {
-  "extends": "@meteora-ag/config/typescript/react-library",
+  "extends": "@meteora-ag/config/typescript/sdk",
   "compilerOptions": {
     "outDir": "dist",
     "types": ["jest", "mocha", "chai"],
@@ -7,6 +7,7 @@
     "module": "commonjs",
     "target": "es6",
     "moduleResolution": "node",
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "preserveSymlinks": true
   }
 }

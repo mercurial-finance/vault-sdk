@@ -5,7 +5,8 @@
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "scripts": {
-    "postclone": "pnpm rm @meteora-ag/config && pnpm install @meteora-ag/config",
+    "postclone": "pnpm rm @meteora-ag/config && pnpm i @meteora-ag/config",
+    "dev": "rm -rf dist && tsc -p tsconfig.dev.json --watch",
     "build": "rm -rf dist && tsc -p tsconfig.build.json && tsc -p tsconfig.esm.json",
     "test": "jest ./src/vault/tests/*.test.ts --runInBand",
     "test-affiliate": "jest ./src/vault/tests/affiliate.test.ts --runInBand"
@@ -22,6 +23,7 @@
     "@types/chai": "^4.3.1",
     "@types/jest": "^27.5.1",
     "@types/mocha": "^9.1.1",
+    "@types/node": "^22.10.1",
     "chai": "^4.3.6",
     "jest": "^28.1.0",
     "mocha": "^10.0.0",
