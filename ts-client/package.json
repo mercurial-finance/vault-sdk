@@ -1,7 +1,7 @@
 {
   "name": "@meteora-ag/vault-sdk",
   "version": "0.1.0",
-  "description": "Mercurial Vault SDK is a typescript library that allows you to interact with Mercurial v2's vault.",
+  "description": "Meteora Vault SDK is a typescript library that allows you to interact with Meteora's dynamic vault.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "scripts": {
