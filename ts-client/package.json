@@ -1,7 +1,7 @@
 {
-  "name": "@mercurial-finance/vault-sdk",
-  "version": "2.2.2",
-  "description": "Mercurial Vault SDK is a typescript library that allows you to interact with Mercurial v2's vault.",
+  "name": "@meteora-ag/vault-sdk",
+  "version": "0.1.0",
+  "description": "Mercurial Vault SDK is a typescript library that allows you to interact with Meteora's dynamic vault.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "dist"
   ],
   "keywords": [],
-  "author": "mercurial-finance",
+  "author": "meteora-ag",
   "license": "MIT",
   "dependencies": {
     "@coral-xyz/anchor": "^0.28.0",
@@ -44,10 +44,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mercurial-finance/mercurial_sdk.git"
+    "url": "git+https://github.com/MeteoraAg/vault-sdk.git"
   },
   "bugs": {
-    "url": "https://github.com/mercurial-finance/mercurial_sdk/issues"
+    "url": "https://github.com/MeteoraAg/vault-sdk/issues"
   },
-  "homepage": "https://github.com/mercurial-finance/mercurial_sdk#readme"
+  "homepage": "https://github.com/MeteoraAg/vault-sdk#readme"
 }

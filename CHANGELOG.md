@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## @meteora-ag/vault-sdk[0.1.0] - PR [#134](https://github.com/mercurial-finance/vault-sdk/pull/134)
+
+### Changed
+
+- move to `meteora-ag` org
+
 ## @mercurial-finance/vault-sdk [2.2.1] - PR [#131](https://github.com/mercurial-finance/vault-sdk/pull/131)
 
 ### Added
