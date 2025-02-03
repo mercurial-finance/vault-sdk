@@ -28,8 +28,7 @@ pub enum StrategyType {
     Drift,
     Frakt,
     Marginfi,
-    Cypher,
-    Psylend,
+    Kamino,
 }
 
 impl std::fmt::Display for StrategyType {
@@ -74,4 +73,14 @@ pub fn get_solend_program_id() -> Pubkey {
 #[cfg(not(feature = "devnet"))]
 pub fn get_solend_program_id() -> Pubkey {
     Pubkey::from_str("So1endDq2YkqhipRh3WViPa8hdiSpxWy6z3Z6tMCpAo").unwrap()
+}
+
+#[cfg(feature = "staging")]
+pub fn get_kamino_program_id() -> Pubkey {
+    Pubkey::from_str("SLendK7ySfcEzyaFqy93gDnD3RtrpXJcnRwb6zFHJSh").unwrap()
+}
+
+#[cfg(not(feature = "staging"))]
+pub fn get_kamino_program_id() -> Pubkey {
+    Pubkey::from_str("KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD").unwrap()
 }

@@ -1,9 +1,10 @@
-import { BN, IdlTypes, Program } from '@project-serum/anchor';
+import { BN, IdlTypes, Program } from '@coral-xyz/anchor';
 import { PublicKey, Transaction } from '@solana/web3.js';
-import { TypeDef } from '@project-serum/anchor/dist/cjs/program/namespace/types';
+import { TypeDef } from '@coral-xyz/anchor/dist/cjs/program/namespace/types';
 
 import { Vault as VaultIdl } from '../idl';
 import { AffiliateVault as AffiliateVaultIdl } from '../affiliate-idl';
+import { Mint } from '@solana/spl-token';
 
 export type VaultProgram = Program<VaultIdl>;
 export type AffiliateVaultProgram = Program<AffiliateVaultIdl>;
@@ -42,4 +43,11 @@ export interface ParsedClockState {
   type: string;
   program: string;
   space: number;
+}
+
+export interface VaultStateAndLp {
+  vaultPda: PublicKey;
+  vaultState: VaultState;
+  vaultLpMint: Mint;
+  vaultMint: Mint;
 }

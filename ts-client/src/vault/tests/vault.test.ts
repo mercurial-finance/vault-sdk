@@ -1,22 +1,16 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { StaticTokenListResolutionStrategy, TokenInfo } from '@solana/spl-token-registry';
-import { Wallet, AnchorProvider, BN } from '@project-serum/anchor';
+import { Wallet, AnchorProvider, BN } from '@coral-xyz/anchor';
 
 import VaultImpl from '..';
 import { airDropSol } from './utils';
 import { getVaultPdas } from '../utils';
-import { PROGRAM_ID } from '../constants';
+import { PROGRAM_ID, USDC_MINT, USDT_MINT } from '../constants';
+import { NATIVE_MINT } from '@solana/spl-token';
 
 const mockWallet = new Wallet(new Keypair());
 const mainnetConnection = new Connection('https://api.mainnet-beta.solana.com');
 // devnet ATA creation and reading must use confirmed.
 const devnetConnection = new Connection('https://api.devnet.solana.com/', { commitment: 'confirmed' });
-
-// Prevent importing directly from .json, causing slowdown on Intellisense
-const tokenMap = new StaticTokenListResolutionStrategy().resolve();
-const SOL_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'SOL') as TokenInfo;
-const USDC_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'USDC') as TokenInfo;
-const USDT_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'USDT') as TokenInfo;
 
 describe('Get Mainnet vault state', () => {
   let vaults: VaultImpl[] = [];
@@ -24,15 +18,12 @@ describe('Get Mainnet vault state', () => {
 
   // Make sure all vaults can be initialized
   beforeAll(async () => {
-    const tokensInfo = [SOL_TOKEN_INFO, USDC_TOKEN_INFO, USDT_TOKEN_INFO];
-    const tokensInfoPda = tokensInfo.map((tokenInfo) => {
-      const vaultPdas = getVaultPdas(new PublicKey(tokenInfo.address), new PublicKey(PROGRAM_ID));
-      return {
-        info: tokenInfo,
-        ...vaultPdas,
-      };
+    const tokenAddresses = [NATIVE_MINT, USDC_MINT, USDT_MINT];
+    const tokensInfoPda = tokenAddresses.map((tokenAddress) => {
+      const { vaultPda } = getVaultPdas(tokenAddress, new PublicKey(PROGRAM_ID));
+      return vaultPda;
     });
-    vaults = await VaultImpl.createMultiple(mainnetConnection, tokensInfo);
+    vaults = await VaultImpl.createMultiple(mainnetConnection, tokenAddresses);
     vaultsForPool = await VaultImpl.createMultipleWithPda(mainnetConnection, tokensInfoPda);
   });
 
@@ -46,7 +37,7 @@ describe('Get Mainnet vault state', () => {
     );
 
     vaultLpSupplies.forEach((lpSupply) => {
-      expect(Number(lpSupply)).toBeGreaterThan(0);
+      expect(lpSupply.gtn(0)).toBeTruthy();
     });
 
     const vaultLpSuppliesForPool = await Promise.all(
@@ -58,7 +49,7 @@ describe('Get Mainnet vault state', () => {
     );
 
     vaultLpSuppliesForPool.forEach((lpSupply) => {
-      expect(Number(lpSupply)).toBeGreaterThan(0);
+      expect(lpSupply.gtn(0)).toBeTruthy();
     });
   });
 
@@ -78,7 +69,7 @@ describe('Interact with Vault in devnet', () => {
   let vault: VaultImpl;
   beforeAll(async () => {
     await airDropSol(devnetConnection, mockWallet.publicKey);
-    vault = await VaultImpl.create(devnetConnection, SOL_TOKEN_INFO, { cluster: 'devnet' });
+    vault = await VaultImpl.create(devnetConnection, NATIVE_MINT, { cluster: 'devnet' });
   });
 
   test('Deposit, check balance, withdraw', async () => {
@@ -114,7 +105,7 @@ describe('Interact with Vault in devnet', () => {
         expect(typeof depositResult).toBe('string');
 
         // Withdraw from specific strategy
-        const withdrawTx = await vault.withdraw(mockWallet.publicKey, new BN(1000), { strategy });
+        const withdrawTx = await vault.withdraw(mockWallet.publicKey, new BN(1000));
 
         try {
           const withdrawResult = await provider.sendAndConfirm(withdrawTx);

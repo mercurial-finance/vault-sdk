@@ -1,27 +1,19 @@
 [package]
 name = "rust-client"
-version = "0.4.2"
+version = "0.5.0"
 edition = "2018"
 
 [features]
 devnet = []
 
 [dependencies]
-anchor-lang = {version = "0.26.0"}
-anchor-spl = {version = "0.26.0"}
-anchor-client = {version = "0.26.0"}
+anchor-lang = {version = "0.28.0"}
+anchor-spl = {version = "0.28.0"}
+anchor-client = {version = "0.28.0"}
 anyhow = "1.0"
 clap = {version = "3.0.10", features=["derive"]}
 mercurial-vault = { path = "../programs/vault", features = ["cpi"] }
 shellexpand = "2.1.0"
-spl-associated-token-account = { version = "1.0.2", features = ["no-entrypoint"] }
+spl-associated-token-account = { version = "2.1.0", features = ["no-entrypoint"] }
 rust_decimal="1.20.0"
-port-variable-rate-lending-instructions = "0.3.0"
-apricot-client = {git="https://github.com/mercurial-finance/apricot-client", rev="af66bdcb15cdd19612ceee78f6195668a984f4b4"}
-solend-program = { git="https://github.com/mercurial-finance/solana-program-library", rev="bff3df14cab2dba01dce044bb6cfc0aa86ff45c3", features = [ "no-entrypoint" ] }
 bincode = "^1.3.1"
-tulipv2-sdk-common = { git = "https://github.com/mercurial-finance/tulipv2-sdk", rev="ed15cea625f370828488493c13e50555d047dff3"}
-tulipv2-sdk-lending = { git = "https://github.com/mercurial-finance/tulipv2-sdk", rev="ed15cea625f370828488493c13e50555d047dff3"}
-drift = { git="https://github.com/mercurial-finance/protocol-v2", features = ["cpi"], rev="18423fcb249c15f8b68f4739684dddd8797d2865" }
-# Need to lock this because switchboard-program have relaxed dependency version on switchboard-utils. Cargo will automatically resolved it to 0.1.37 which as_bytes_mut function was removed. Ideally, this should be fixed by switchboard
-# switchboard-utils = "=0.1.32"
