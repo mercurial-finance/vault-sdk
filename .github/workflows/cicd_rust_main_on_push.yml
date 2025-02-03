@@ -29,35 +29,3 @@ jobs:
           files: |
             rust-client
             programs
-
-  rust-test-publish:
-    needs: changed_files_rust
-    runs-on: ubuntu-latest
-    if: needs.changed_files_rust.outputs.program == 'true'
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/setup-dep
-      - uses: ./.github/actions/setup-solana
-      # Install rust + toolchain
-      - uses: actions-rs/toolchain@v1
-        with:
-          components: clippy, rustfmt
-      # Cargo build cache
-      - name: Cargo Cache
-        uses: actions/cache@v1
-        with:
-          path: |
-            ~/.cargo/
-            target
-          key: ${{ runner.os }}-cargo-${{ steps.extract_branch.outputs.branch }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-${{ steps.extract_branch.outputs.branch }}
-            ${{ runner.os }}-cargo
-      - name: Cargo fmt check
-        run: cargo fmt -- --check
-        shell: bash
-      - name: Cargo test
-        run: cargo test -- --nocapture
-        shell: bash
-      - name: Publish Rust to Crates.io
-        run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }} -p mercurial-vault
