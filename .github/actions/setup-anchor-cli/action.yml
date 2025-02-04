@@ -4,5 +4,5 @@ runs:
   using: "composite"
   steps:
     - uses: actions/setup-node@v2
-    - run: npm install -g @project-serum/anchor-cli@${{ env.ANCHOR_CLI_VERSION }} yarn
+    - run: npm install -g @coral-xyz/anchor-cli@${{ env.ANCHOR_CLI_VERSION }} yarn
       shell: bash
