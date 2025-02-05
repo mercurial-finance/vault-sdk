@@ -13,8 +13,8 @@ on:
       - staging
 
 env:
-  SOLANA_CLI_VERSION: 1.14.6
-  ANCHOR_CLI_VERSION: 0.25.0
+  SOLANA_CLI_VERSION: 1.16.13
+  ANCHOR_CLI_VERSION: 0.28.0
 
 jobs:
   changed_files_rust:

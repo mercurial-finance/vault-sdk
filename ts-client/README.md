@@ -7,15 +7,9 @@
 
 ## Getting started
 
-NPM: https://www.npmjs.com/package/@mercurial-finance/vault-sdk
+NPM: https://www.npmjs.com/package/@meteora-ag/vault-sdk
 
-SDK: https://github.com/mercurial-finance/vault-sdk
-
-Demo: https://vault-sdk-demo.vercel.app/
-
-Demo repo: https://github.com/mercurial-finance/vault-sdk-demo
-
-- Easiest way to get started with our Typescript SDK, the example demo includes all functionality and information we display on our own site.
+SDK: https://github.com/meteora-ag/vault-sdk
 
 Docs: https://docs.mercurial.finance/mercurial-dynamic-yield-infra/
 
@@ -28,7 +22,7 @@ Discord: https://discord.com/channels/841152225564950528/864859354335412224
 1. Install deps
 
 ```
-npm i @mercurial-finance/vault-sdk @coral-xyz/anchor @solana/web3.js @solana/spl-token @solana/spl-token-registry
+npm i @meteora-ag/vault-sdk @coral-xyz/anchor @solana/web3.js@1 @solana/spl-token @solana/spl-token-registry
 ```
 
 2. Initialize VaultImpl instance
@@ -36,9 +30,9 @@ npm i @mercurial-finance/vault-sdk @coral-xyz/anchor @solana/web3.js @solana/spl
 - Affiliate or partner? refer to the [Vault Affiliate Program]()
 
 ```ts
-import VaultImpl from '@mercurial-finance/vault-sdk';
+import VaultImpl from '@meteora-ag/vault-sdk';
 import { PublicKey } from '@solana/web3.js';
-import { StaticTokenListResolutionStrategy, TokenInfo } from '@solana/spl-token-registry';
+import { NATIVE_MINT } from "@solana/spl-token";
 import { Wallet, AnchorProvider } from '@coral-xyz/anchor';
 
 // Connection, Wallet, and AnchorProvider to interact with the network
@@ -47,12 +41,8 @@ const mockWallet = new Wallet(new Keypair());
 const provider = new AnchorProvider(mainnetConnection, mockWallet, {
   commitment: 'confirmed',
 });
-// Alternatively, to use Solana Wallet Adapter, refer to `Demo Repo`
 
-const tokenMap = new StaticTokenListResolutionStrategy().resolve();
-// Find the token info you want to use.
-const SOL_TOKEN_INFO = tokenMap.find((token) => token.symbol === 'SOL') as TokenInfo;
-const vaultImpl = await VaultImpl.create(connection, SOL_TOKEN_INFO);
+const vaultImpl = await VaultImpl.create(connection, NATIVE_MINT);
 ```
 
 3. To interact with the VaultImpl
@@ -67,7 +57,7 @@ const lpSupply = await vaultImpl.getVaultSupply();
 const unlockedAmount = await vaultImpl.getWithdrawableAmount();
 
 // To deposit into the vault
-const amountInLamports = 1 * 10 ** SOL_TOKEN_INFO.decimals; // 1.0 SOL
+const amountInLamports = 1 * 10 ** 9; // 1.0 SOL
 const depositTx = await vaultImpl.deposit(mockWallet.publicKey, new BN(amountInLamports)); // Web3 Transaction Object
 const depositResult = await provider.sendAndConfirm(depositTx); // Transaction hash
 
@@ -82,7 +72,7 @@ const withdrawResult = await provider.sendAndConfirm(withdrawTx); // Transaction
 4. Helper function
 
 ```ts
-import { helper } from '@mercurial-finance/vault-sdk';
+import { helper } from '@meteora-ag/vault-sdk';
 
 const userShare = await vaultImpl.getUserBalance(mockWallet.publicKey);
 const unlockedAmount = await vaultImpl.getWithdrawableAmount();
@@ -92,7 +82,7 @@ const lpSupply = await vaultImpl.getVaultSupply();
 const underlyingShare = helper.getAmountByShare(userShare, unlockedAmount, lpSupply);
 
 // To convert underlying token amount into user's LP balance
-const amountInLamports = 1 * 10 ** SOL_TOKEN_INFO.decimals; // 1.0 SOL
+const amountInLamports = 1 * 10 ** 9; // 1.0 SOL
 const lpToUnmint = helper.getUnmintAmount(new BN(amountInLamports), unlockedAmount, lpSupply); // To withdraw 1.0 SOL
 ```
 
@@ -111,7 +101,7 @@ Affiliates only need to initialize the vault instance with the third paratemer `
 ```ts
 const vaultImpl = await VaultImpl.create(
     connection,
-    SOL_TOKEN_INFO,
+    NATIVE_MINT,
     {
         affiliateId: new PublicKey('YOUR_PARTNER_PUBLIC_KEY');
     }
