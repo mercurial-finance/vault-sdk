@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## @meteora-ag/vault-sdk[2.3.1] - PR [#135](https://github.com/mercurial-finance/vault-sdk/pull/135)
+
+### Changed
+
+- remove `@solana/spl-token-registry` deps
+
 ## @meteora-ag/vault-sdk[2.3.0] - PR [#134](https://github.com/mercurial-finance/vault-sdk/pull/134)
 
 ### Changed
