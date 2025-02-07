@@ -22,7 +22,7 @@ Discord: https://discord.com/channels/841152225564950528/864859354335412224
 1. Install deps
 
 ```
-npm i @meteora-ag/vault-sdk @coral-xyz/anchor @solana/web3.js@1 @solana/spl-token @solana/spl-token-registry
+npm i @meteora-ag/vault-sdk @coral-xyz/anchor @solana/web3.js@1 @solana/spl-token
 ```
 
 2. Initialize VaultImpl instance

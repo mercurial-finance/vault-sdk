@@ -17,9 +17,6 @@ importers:
       '@solana/spl-token':
         specifier: ^0.4.6
         version: 0.4.8(@solana/web3.js@1.95.2(bufferutil@4.0.6)(utf-8-validate@5.0.9))(bufferutil@4.0.6)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)(utf-8-validate@5.0.9)
-      '@solana/spl-token-registry':
-        specifier: ^0.2.4574
-        version: 0.2.4574
       '@solana/web3.js':
         specifier: ^1.91.6
         version: 1.95.2(bufferutil@4.0.6)(utf-8-validate@5.0.9)
@@ -440,10 +437,6 @@ packages:
     peerDependencies:
       '@solana/web3.js': ^1.91.6
 
-  '@solana/spl-token-registry@0.2.4574':
-    resolution: {integrity: sha512-JzlfZmke8Rxug20VT/VpI2XsXlsqMlcORIUivF+Yucj7tFi7A0dXG7h+2UnD0WaZJw8BrUz2ABNkUnv89vbv1A==}
-    engines: {node: '>=10'}
-
   '@solana/spl-token@0.4.8':
     resolution: {integrity: sha512-RO0JD9vPRi4LsAbMUdNbDJ5/cv2z11MGhtAvFeRzT4+hAGE/FUzRi0tkkWtuCfSIU3twC6CtmAihRp/+XXjWsA==}
     engines: {node: '>=16'}
@@ -763,9 +756,6 @@ packages:
 
   convert-source-map@1.8.0:
     resolution: {integrity: sha512-+OQdjP49zViI/6i7nIJpA8rAl4sV/JdPfU9nZs3VqOwGIgizICvuN2ru6fMd+4llL0tar18UYJXfZ/TWtmhUjA==}
-
-  cross-fetch@3.0.6:
-    resolution: {integrity: sha512-KBPUbqgFjzWlVcURG+Svp9TlhA5uliYtiNx/0r8nv0pdypeQCRJ9IaSIc3q/x3q8t3F75cHuwxVql1HFGHCNJQ==}
 
   cross-fetch@3.1.5:
     resolution: {integrity: sha512-lvb1SBsI0Z7GDwmuid+mU3kWVBwTVUbe7S0H52yaaAdQOXq2YktTCZdlAcNKFzE6QtRz0snpw9bNiPeOIkkQvw==}
@@ -1362,10 +1352,6 @@ packages:
 
   no-case@3.0.4:
     resolution: {integrity: sha512-fgAN3jGAh+RoxUGZHTSOLJIqUc2wmoBwGR4tbpNAKmmovFoWq0OdRkb0VkldReO2a2iBT/OEulG9XSUc10r3zg==}
-
-  node-fetch@2.6.1:
-    resolution: {integrity: sha512-V4aYg89jEoVRxRb2fJdAg8FHvI7cEyYdVAh94HH0UIK8oJxUfkjlDQN9RbMx+bEjP7+ggMiFRprSti032Oipxw==}
-    engines: {node: 4.x || >=6.0.0}
 
   node-fetch@2.6.7:
     resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
@@ -2392,10 +2378,6 @@ snapshots:
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
 
-  '@solana/spl-token-registry@0.2.4574':
-    dependencies:
-      cross-fetch: 3.0.6
-
   '@solana/spl-token@0.4.8(@solana/web3.js@1.95.2(bufferutil@4.0.6)(utf-8-validate@5.0.9))(bufferutil@4.0.6)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.5.4)(utf-8-validate@5.0.9)':
     dependencies:
       '@solana/buffer-layout': 4.0.1
@@ -2777,10 +2759,6 @@ snapshots:
   convert-source-map@1.8.0:
     dependencies:
       safe-buffer: 5.1.2
-
-  cross-fetch@3.0.6:
-    dependencies:
-      node-fetch: 2.6.1
 
   cross-fetch@3.1.5:
     dependencies:
@@ -3516,8 +3494,6 @@ snapshots:
     dependencies:
       lower-case: 2.0.2
       tslib: 2.4.0
-
-  node-fetch@2.6.1: {}
 
   node-fetch@2.6.7:
     dependencies:
