@@ -59,7 +59,7 @@ export const StrategyProgram: Record<
 export const KEEPER_URL: Record<Cluster, string> = {
   testnet: 'https://staging-keeper.raccoons.dev',
   devnet: 'https://dev-keeper.raccoons.dev',
-  'mainnet-beta': 'https://merv2-api.mercurial.finance',
+  'mainnet-beta': 'https://merv2-api.meteora.ag',
 };
 
 export const VAULT_STRATEGY_ADDRESS = '11111111111111111111111111111111';
